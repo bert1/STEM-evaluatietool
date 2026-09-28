@@ -41,28 +41,7 @@ function copyTable() {
     showNotice("warn", "Kopiëren lukte niet", "Gebruik Exporteren naar Excel in plaats daarvan.");
   }
 
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(function () {
-      if (legacyCopy(text)) done(); else failed();
-    });
-  } else if (legacyCopy(text)) {
-    done();
-  } else {
-    failed();
-  }
-}
-
-function legacyCopy(text) {
-  var ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.left = "-9999px";
-  document.body.appendChild(ta);
-  ta.select();
-  var okCopy = false;
-  try { okCopy = document.execCommand("copy"); } catch (e) { okCopy = false; }
-  document.body.removeChild(ta);
-  return okCopy;
+  copyText(text, done, failed);
 }
 
 /* ---- overgenomen uit core.js ---- */

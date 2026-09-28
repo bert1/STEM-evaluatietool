@@ -1146,6 +1146,49 @@ table.skore-table td.skore-missing { color: #cbd5e1; font-weight: 400; }
 table.skore-table td.skore-exempt { color: var(--muted); font-size: 12.5px; font-weight: 500; font-style: italic; }
 table.skore-table td.skore-dup { background: var(--warning-soft); color: var(--warning); }
 table.skore-table tr.skore-extra td { color: var(--muted); font-style: italic; }
+table.skore-table td.num { white-space: nowrap; }
+/* Kopieerknop naast het punt: altijd zichtbaar (ook op een touchscreen),
+   klein genoeg om de kolom niet breder te maken. */
+.skore-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 5px;
+  padding: 0;
+  vertical-align: -4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+}
+.skore-copy:hover, .skore-copy:focus-visible { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
+td.skore-copied .skore-copy { color: var(--success); border-color: transparent; background: var(--success-soft); }
+.skore-copy-hint { margin: 0 0 8px; }
+
+/* Korte bevestiging onderaan het scherm (showToast in js/ui.js). */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--text);
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 1000;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.warn { background: var(--warning); }
+@media print { .toast, .skore-copy { display: none; } }
 
 .period-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .period-row .period-name { width: 110px; }
@@ -1690,7 +1733,7 @@ table.feedup-table td {
       <div class="wizard-card">
         <h2>Welkom</h2>
         <p class="hint">
-          Voor je begint, een paar instellingen. Dit hoef je maar één keer te doen — daarna opent
+          Voor je begint, een paar instellingen. Dit hoef je maar één keer te doen. Daarna opent
           de tool voortaan meteen op het evaluatiescherm.
         </p>
 
@@ -1712,7 +1755,7 @@ table.feedup-table td {
         <div class="form-group" id="wizardFolderGroup">
           <label>Gedeelde map</label>
           <p class="hint" style="margin: 0 0 8px">
-            Werk je samen met collega's? Kies de map die jullie delen — een map op OneDrive, of een
+            Werk je samen met collega's? Kies de map die jullie delen: een map op OneDrive, of een
             netwerkschijf van de school. Ken je dit pad niet, vraag het aan je ICT-verantwoordelijke.
             Dit kan ook later nog, via het Team-scherm.
           </p>
@@ -1784,7 +1827,7 @@ table.feedup-table td {
             Kies Smartschool-bestand(en)
           </button>
           <span class="hint" style="margin: 0; align-self: center" id="xlsxHint">
-            Meerdere klassen tegelijk mag — één bestand per klas.
+            Meerdere klassen tegelijk mag, met één bestand per klas.
           </span>
         </div>
 
@@ -1863,7 +1906,7 @@ table.feedup-table td {
         </div>
         <p class="hint">
           Wist alle klassen en leerlingen uit alle leerjaren. Je opgeslagen evaluaties blijven
-          bewaard — die staan op naam en verdwijnen niet mee.
+          bewaard: die staan op naam en verdwijnen niet mee.
         </p>
 
         <details id="moveStudentSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
@@ -1871,7 +1914,7 @@ table.feedup-table td {
             Leerling van klas veranderen
           </summary>
           <p class="hint">
-            Voor wie in het begin van het schooljaar nog wisselt van klasgroep — verplaats één
+            Voor wie in het begin van het schooljaar nog wisselt van klasgroep: verplaats één
             leerling zonder de hele klaslijst opnieuw in te lezen. Opgeslagen evaluaties verhuizen
             zoveel mogelijk mee.
           </p>
@@ -1961,7 +2004,7 @@ table.feedup-table td {
             <summary class="section-toggle">AI-hulp: rubric genereren op basis van een beschrijving</summary>
             <div style="margin-top: 12px">
               <p class="hint">
-                Geen sleutel, geen account nodig — je gebruikt gewoon een AI-gesprek dat je toch al
+                Geen sleutel, geen account nodig: je gebruikt gewoon een AI-gesprek dat je toch al
                 hebt (Claude, ChatGPT, Copilot, …). Beschrijf hieronder de opdracht, laat een prompt
                 genereren, plak die in je AI-gesprek, en plak het antwoord terug hier.
               </p>
@@ -2009,7 +2052,7 @@ table.feedup-table td {
           <label>Open vragen</label>
           <p class="hint" style="margin: 0 0 10px">
             Vrije tekstvelden die je bij elke leerling invult, naast de scores. Laat dit leeg als
-            je ze niet nodig hebt — dan verschijnen ze ook niet in het formulier.
+            je ze niet nodig hebt. Dan verschijnen ze ook niet in het formulier.
           </p>
           <div id="draftQuestions"></div>
           <div class="add-block" style="margin: 10px 0 24px">
@@ -2058,7 +2101,7 @@ table.feedup-table td {
 
         <span class="add-label">Collega's</span>
         <p class="hint" style="margin: 6px 0 12px">
-          Voeg je collega's toe met hun initialen — dezelfde die zij bovenaan invullen. Dat is wat
+          Voeg je collega's toe met hun initialen, dezelfde die zij bovenaan invullen. Dat is wat
           hun evaluaties aan hun naam koppelt.
         </p>
         <div id="memberRows"></div>
@@ -2257,7 +2300,7 @@ table.feedup-table td {
         </h2>
 
         <p class="hint" style="margin: -6px 0 14px">
-          Typ <strong>1-5</strong> om een criterium te scoren — springt automatisch naar het
+          Typ <strong>1-5</strong> om een criterium te scoren. De tool springt automatisch naar het
           volgende. Na het opslaan van één leerling schuift de tool door naar de eerstvolgende.
         </p>
 
@@ -2271,7 +2314,7 @@ table.feedup-table td {
         </div>
 
         <div class="form-group">
-          <label>Leerling(en) — vink meerdere aan voor groepswerk</label>
+          <label>Leerling(en): vink meerdere aan voor groepswerk</label>
           <div id="studentGrid" class="checkbox-grid"></div>
         </div>
 
@@ -2283,11 +2326,11 @@ table.feedup-table td {
 
         <div class="feedback-pair">
           <div class="form-group" style="margin-top: 18px">
-            <label for="feedback">Feedback — wat ging goed, wat kon beter?</label>
+            <label for="feedback">Feedback: wat ging goed, wat kon beter?</label>
             <textarea id="feedback" placeholder="Wat viel op aan dit werk…"></textarea>
           </div>
           <div class="form-group" style="margin-top: 18px">
-            <label for="feedforward">Feedforward — wat doet de leerling de volgende keer anders?</label>
+            <label for="feedforward">Feedforward: wat doet de leerling de volgende keer anders?</label>
             <textarea id="feedforward" placeholder="Eén concrete volgende stap…"></textarea>
           </div>
         </div>
@@ -2340,10 +2383,10 @@ table.feedup-table td {
         </div>
 
         <p class="hint">
-          <strong>Kopieer tabel</strong> zet de resultaten op je klembord — plak ze rechtstreeks in
+          <strong>Kopieer tabel</strong> zet de resultaten op je klembord. Plak ze rechtstreeks in
           een openstaand Excel-blad, zonder bestand en zonder gedoe met scheidingstekens. De
           Excel-export doet hetzelfde als bestand. Beide gaan alleen over de klas en het
-          evaluatiemoment die je hierboven gekozen hebt, met één rij per opgeslagen evaluatie —
+          evaluatiemoment die je hierboven gekozen hebt, met één rij per opgeslagen evaluatie:
           een groep blijft dus één regel.
         </p>
 
@@ -4242,6 +4285,51 @@ function el(tag, className, text) {
   return n;
 }
 
+/* Klembord: eerst de moderne manier, anders de oude met een verborgen
+   tekstvak (werkt ook als de browser navigator.clipboard weigert). Eén
+   plek, gebruikt door Kopieer tabel, de AI-rubriekhulp en Skore. */
+function copyText(text, onDone, onFail) {
+  function fallback() {
+    if (legacyCopy(text)) { if (onDone) onDone(); } else if (onFail) onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { if (onDone) onDone(); }, fallback);
+  } else {
+    fallback();
+  }
+}
+
+function legacyCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  var okCopy = false;
+  try { okCopy = document.execCommand("copy"); } catch (e) { okCopy = false; }
+  document.body.removeChild(ta);
+  return okCopy;
+}
+
+/* Korte bevestiging onderaan het scherm, die vanzelf verdwijnt. Handig
+   waar een melding bovenaan buiten beeld zou vallen (lange tabellen). */
+var toastTimer = null;
+function showToast(text, kind) {
+  var t = $("toast");
+  if (!t) {
+    t = el("div", "toast");
+    t.id = "toast";
+    t.setAttribute("role", "status");
+    t.setAttribute("aria-live", "polite");
+    document.body.appendChild(t);
+  }
+  t.textContent = text;
+  t.className = "toast show" + (kind ? " " + kind : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.className = "toast" + (kind ? " " + kind : ""); }, 3000);
+}
+
 /* Zoeksleutel: kleine letters, zonder accenten en met enkele spaties,
    zodat "creme" ook "Crème" vindt en "  proef" ook "Proef". */
 function searchKey(text) {
@@ -4562,7 +4650,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.22.0";
+var APP_VERSION = "1.23.0";
 
 var DB_VERSION = 4;
 
@@ -5385,7 +5473,7 @@ function updateFileButtons() {
     part("Opslaan (download)", "downloadt " + fileName + " opnieuw. Automatisch opslaan kan hier niet, dus doe het na elke les zelf.");
     part("Opslaan als…", "maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.");
   } else {
-    part("Opslaan", "schrijft naar " + fileName + " — gebeurt ook vanzelf.");
+    part("Opslaan", "schrijft naar " + fileName + ". Dat gebeurt ook vanzelf.");
     part("Opslaan als…", "maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.");
   }
   if (folderHandle) {
@@ -5595,7 +5683,7 @@ function handleIncoming(text, name, handleForOpen) {
       "good",
       "Bestand geopend",
       read.legacy
-        ? "Dit was nog een bestand van de vorige versie. Het is omgezet — sla het opnieuw op om de nieuwe versie te bewaren."
+        ? "Dit was nog een bestand van de vorige versie. Het is omgezet. Sla het opnieuw op om de nieuwe versie te bewaren."
         : countRows(db) + " evaluatie(s) ingeladen uit " + name + ".",
     );
     return;
@@ -5801,7 +5889,7 @@ function readTeamFolder(dirHandle, ownFileName, config) {
           db: read.db,
         });
       } catch (err) {
-        problems.push(entry.name + " (kon niet gelezen worden — nog aan het synchroniseren?)");
+        problems.push(entry.name + " (kon niet gelezen worden, misschien nog aan het synchroniseren?)");
       }
     }
     found.sort(function (a, b) { return a.name.localeCompare(b.name, "nl"); });
@@ -6038,7 +6126,7 @@ function moveStudentToClass() {
   var msg = student + ' van "' + fromKlas + '" naar "' + toKlas + '" verplaatsen?';
   if (alreadyThere) {
     msg += "\n\n" + student + " staat toevallig ook al in " + toKlas +
-      " — die naam wordt niet nog eens toegevoegd, enkel uit " + fromKlas + " verwijderd.";
+      ". Die naam wordt niet nog eens toegevoegd, enkel uit " + fromKlas + " verwijderd.";
   }
   if (soloCount) {
     msg += "\n\n" + soloCount + " individuele evaluatie(s) verhuizen volledig mee naar " + toKlas + ".";
@@ -6184,7 +6272,7 @@ function onPasteChange() {
     if (id === "mapName2Col") sel.appendChild(new Option("Geen", "-1"));
     for (var i = 0; i < cols; i++) {
       var label = "Kolom " + (i + 1);
-      if (headers[i]) label += " — " + headers[i].slice(0, 22);
+      if (headers[i]) label += ": " + headers[i].slice(0, 22);
       sel.appendChild(new Option(label, String(i)));
     }
     if (prev !== "" && sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
@@ -6368,7 +6456,7 @@ function deleteClass(year, klas) {
       "good", 'Klas "' + klas + '" verwijderd',
       scope === "iedereen"
         ? "Komt na synchroniseren ook bij collega's niet meer terug."
-        : "Blijft enkel bij jou weg — collega's behouden hun eigen versie.",
+        : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie.",
     );
   });
 }
@@ -6503,7 +6591,7 @@ function onXlsxFiles(e) {
       classes[k].sort(function (a, b) { return a.localeCompare(b, "nl"); });
     });
 
-    $("xlsxHint").textContent = "Meerdere klassen tegelijk mag — één bestand per klas.";
+    $("xlsxHint").textContent = "Meerdere klassen tegelijk mag, met één bestand per klas.";
 
     if (!Object.keys(classes).length) {
       xlsxClasses = null;
@@ -7817,7 +7905,7 @@ function openSession(year, klassen, evaluation) {
 
   if (!db.sessions[cur.key]) db.sessions[cur.key] = [];
 
-  $("formTitle").textContent = cur.klassen.join(" + ") + " — " + evaluation;
+  $("formTitle").textContent = cur.klassen.join(" + ") + ": " + evaluation;
   $("maxTotal").textContent = maxScoreOf(cur.rubrics);
 
   renderStudents();
@@ -8125,7 +8213,7 @@ function updateTotals() {
   if (!missing) {
     $("formHint").textContent = "";
   } else if (isFormative) {
-    $("formHint").textContent = missing + " van de " + cur.rubrics.length + " criteria nog niet gescoord — mag bij een tussentijdse check.";
+    $("formHint").textContent = missing + " van de " + cur.rubrics.length + " criteria nog niet gescoord. Dat mag bij een tussentijdse check.";
   } else {
     $("formHint").textContent = missing + " van de " + cur.rubrics.length + " criteria nog niet gescoord";
   }
@@ -8159,7 +8247,7 @@ function renderCorrections(groupTotal, max, studentCount) {
   host.appendChild(el("div", "correction-heading", "Individuele correctie (optioneel)"));
   host.appendChild(el("p", "hint",
     "De score hierboven (" + groupTotal + "/" + max + ") geldt voor de hele groep. Wil je voor " +
-      "iemand een punt bij- of aftrekken voor individuele inzet, vul dat hier in — de rest van de " +
+      "iemand een punt bij- of aftrekken voor individuele inzet, vul dat hier in. De rest van de " +
       "groep blijft ongemoeid.",
   ));
 
@@ -8225,7 +8313,7 @@ function saveEvaluation() {
     return;
   }
   if (!students.length) {
-    showNotice("warn", "Geen leerling geselecteerd", "Vink minstens één leerling aan. Voor groepswerk vink je ze allemaal aan — dan krijgen ze dezelfde score.");
+    showNotice("warn", "Geen leerling geselecteerd", "Vink minstens één leerling aan. Voor groepswerk vink je ze allemaal aan. Dan krijgen ze dezelfde score.");
     return;
   }
   var isFormative = $("formativeToggle").checked;
@@ -8238,7 +8326,7 @@ function saveEvaluation() {
       showNotice(
         "warn", "Nog niet alle criteria gescoord",
         "Ontbreekt: " + missing.map(function (r) { return r.name; }).join(", ") +
-          ". Gaat het om een tussentijdse controle, vink dan 'Tussentijdse check' aan — dan hoeft niet alles ingevuld te zijn.",
+          ". Gaat het om een tussentijdse controle, vink dan 'Tussentijdse check' aan. Dan hoeft niet alles ingevuld te zijn.",
       );
       return;
     }
@@ -8446,24 +8534,24 @@ function renderTable() {
     }
     tr.appendChild(nameCell);
 
-    tr.appendChild(el("td", null, row.assessor || "—"));
+    tr.appendChild(el("td", null, row.assessor || "–"));
 
     var total = rowTotal(row, cur.rubrics);
     cur.rubrics.forEach(function (r) {
       var v = row.scores[r.id];
-      tr.appendChild(el("td", "num", typeof v === "number" ? v : "—"));
+      tr.appendChild(el("td", "num", typeof v === "number" ? v : "–"));
     });
 
     tr.appendChild(el("td", "total", total + "/" + max));
-    tr.appendChild(el("td", "num", max ? Math.round((total / max) * 100) + "%" : "—"));
+    tr.appendChild(el("td", "num", max ? Math.round((total / max) * 100) + "%" : "–"));
 
-    var fb = el("td", "feedback-cell", row.feedback || "—");
+    var fb = el("td", "feedback-cell", row.feedback || "–");
     fb.title = row.feedback || "";
     tr.appendChild(fb);
 
     cur.questions.forEach(function (q) {
       var text = (row.answers && row.answers[q.id]) || "";
-      var cell = el("td", "feedback-cell", text || "—");
+      var cell = el("td", "feedback-cell", text || "–");
       cell.title = text;
       tr.appendChild(cell);
     });
@@ -8495,7 +8583,7 @@ function renderConflictNotice(dupes) {
   box.appendChild(el("strong", null, "Deze leerlingen staan in meer dan één rij"));
   box.appendChild(document.createTextNode(
     names + ". Meestal betekent dit dat jij en je collega dezelfde groep beoordeeld hebben. " +
-    "Er is niets weggegooid — verwijder zelf de rij die weg mag, of laat beide staan als je de scores wil vergelijken.",
+    "Er is niets weggegooid. Verwijder zelf de rij die weg mag, of laat beide staan als je de scores wil vergelijken.",
   ));
   host.appendChild(box);
 }
@@ -8656,7 +8744,7 @@ function renderEvalFolderGroup(year, folderName, names, folderIndex, folderCount
     delBtn.addEventListener("click", function () {
       askDeleteScope(
         'Map "' + folderName + '" verwijderen?',
-        ["De evaluaties erin blijven gewoon bestaan — ze komen terug bij \"Geen map\"."],
+        ["De evaluaties erin blijven gewoon bestaan: ze komen terug bij \"Geen map\"."],
         function (scope) {
           deleteEvaluationFolder(db, year, folderName, scope);
           persist();
@@ -8665,7 +8753,7 @@ function renderEvalFolderGroup(year, folderName, names, folderIndex, folderCount
             "good", 'Map "' + folderName + '" verwijderd',
             scope === "iedereen"
               ? "Komt na synchroniseren ook bij collega's niet meer terug."
-              : "Blijft enkel bij jou weg — collega's behouden hun eigen versie.",
+              : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie.",
           );
         },
       );
@@ -8725,7 +8813,7 @@ function renderEvalRow(year, name) {
 
   var feedup = el("button", "btn-ghost btn-small", "Voor leerlingen afdrukken");
   feedup.type = "button";
-  feedup.title = "Print de criteria en niveaus zonder scores — geef dit vooraf mee";
+  feedup.title = "Print de criteria en niveaus zonder scores. Geef dit vooraf mee.";
   feedup.addEventListener("click", function () { printFeedUp(year, name); });
   var edit = el("button", "btn-ghost btn-small", "Bewerk");
   edit.type = "button";
@@ -8830,7 +8918,7 @@ function deleteEvaluation(year, name) {
       '"' + name + '" staat niet meer in ' + year + ". " +
         (scope === "iedereen"
           ? "Komt na synchroniseren ook bij collega's niet meer terug."
-          : "Blijft enkel bij jou weg — collega's behouden hun eigen versie."),
+          : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie."),
     );
   });
 }
@@ -9412,7 +9500,7 @@ function buildAiRubricPrompt(description, year) {
     "",
     "Maak een rubric met 4 tot 7 duidelijke, meetbare criteria die samen deze opdracht " +
       "dekken. Geef voor elk criterium 4 of 5 niveaus, van zwak naar sterk, met bij elk " +
-      "niveau een concrete, waarneembare omschrijving van 1 tot 2 zinnen — vermijd vage " +
+      "niveau een concrete, waarneembare omschrijving van 1 tot 2 zinnen. Vermijd vage " +
       "woorden zoals \"goed\" of \"voldoende\" zonder uit te leggen wat je dan precies ziet.",
   ];
 
@@ -9421,13 +9509,13 @@ function buildAiRubricPrompt(description, year) {
       "",
       "Koppel daarnaast bij elk criterium de leerplandoelen (uit de lijst hieronder) die er " +
         "inhoudelijk bij aansluiten, met hun code (bijvoorbeeld \"SW05\"). Een criterium mag ook " +
-        "geen enkel doel krijgen als er echt niets goed past — verzin er dan liever geen bij dan " +
+        "geen enkel doel krijgen als er echt niets goed past. Verzin er dan liever geen bij dan " +
         "een zwakke match te forceren. Meerdere doelen per criterium mag.",
       "",
       "Leerplandoelen om uit te kiezen:",
     );
     goals.forEach(function (g) {
-      lines.push(g.id + " — " + g.text);
+      lines.push(g.id + ": " + g.text);
     });
   }
 
@@ -9458,7 +9546,7 @@ function buildAiRubricPrompt(description, year) {
     "```",
   );
   if (goals.length) {
-    lines.push("", "Laat \"leerplandoelen\" gewoon weg bij een criterium waar niets bij past — een lege lijst mag ook.");
+    lines.push("", "Laat \"leerplandoelen\" gewoon weg bij een criterium waar niets bij past. Een lege lijst mag ook.");
   }
 
   return lines.join("\n");
@@ -9492,7 +9580,7 @@ function parseAiRubricResponse(text, year) {
   }
 
   if (!data || !Array.isArray(data.criteria) || !data.criteria.length) {
-    throw new Error("Verwacht een lijst \"criteria\" met minstens één criterium — die ontbreekt of is leeg.");
+    throw new Error("Verwacht een lijst \"criteria\" met minstens één criterium, maar die ontbreekt of is leeg.");
   }
 
   var taken = takenIds();
@@ -9553,7 +9641,7 @@ function initAiRubricHelper() {
   $("btnAiGeneratePrompt").addEventListener("click", function () {
     var desc = $("aiDescription").value.trim();
     if (!desc) {
-      showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan — hoe concreter, hoe beter de rubric.");
+      showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan. Hoe concreter, hoe beter de rubric.");
       return;
     }
     var year = (draft && draft.year) || $("draftYear").value || "2de jaar";
@@ -9567,15 +9655,11 @@ function initAiRubricHelper() {
     function done() {
       showNoticeIn("aiImportState", "good", "Gekopieerd", "Plak dit in je AI-gesprek (Claude, ChatGPT, Copilot, …) en kom terug met het antwoord.");
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(field.value).then(done).catch(function () {
-        field.select();
-        if (legacyCopy(field.value)) done();
-      });
-    } else {
+    function failed() {
       field.select();
-      if (legacyCopy(field.value)) done();
+      showNoticeIn("aiImportState", "warn", "Kopiëren lukte niet", "De tekst staat geselecteerd: druk Ctrl+C om hem zelf te kopiëren.");
     }
+    copyText(field.value, done, failed);
   });
 
   $("btnAiImport").addEventListener("click", function () {
@@ -9610,7 +9694,7 @@ function initAiRubricHelper() {
 
     var gekoppeld = criteria.reduce(function (n, c) { return n + c.goals.length; }, 0);
     var extra = [];
-    if (gekoppeld) extra.push(gekoppeld + " leerplandoel(en) alvast gekoppeld — controleer of ze kloppen.");
+    if (gekoppeld) extra.push(gekoppeld + " leerplandoel(en) alvast gekoppeld. Controleer of ze kloppen.");
     if (criteria.goalsSkipped) extra.push(criteria.goalsSkipped + " voorgestelde code(s) van de AI niet herkend en genegeerd.");
 
     showNoticeIn(
@@ -9670,28 +9754,7 @@ function copyTable() {
     showNotice("warn", "Kopiëren lukte niet", "Gebruik Exporteren naar Excel in plaats daarvan.");
   }
 
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(function () {
-      if (legacyCopy(text)) done(); else failed();
-    });
-  } else if (legacyCopy(text)) {
-    done();
-  } else {
-    failed();
-  }
-}
-
-function legacyCopy(text) {
-  var ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.left = "-9999px";
-  document.body.appendChild(ta);
-  ta.select();
-  var okCopy = false;
-  try { okCopy = document.execCommand("copy"); } catch (e) { okCopy = false; }
-  document.body.removeChild(ta);
-  return okCopy;
+  copyText(text, done, failed);
 }
 
 /* ---- overgenomen uit core.js ---- */
@@ -10228,7 +10291,7 @@ function printReports(data, entries, single) {
     var meta = el("div", "report-meta");
     meta.appendChild(el("span", null, "Beoordeeld door " + (entry.assessor || "onbekend")));
     if (entry.formative) {
-      meta.appendChild(el("span", "flag", "Tussentijdse check — niet de eindbeoordeling"));
+      meta.appendChild(el("span", "flag", "Tussentijdse check, niet de eindbeoordeling"));
     }
     if (entry.groupSize > 1) {
       meta.appendChild(el("span", null,
@@ -10275,7 +10338,7 @@ function printReports(data, entries, single) {
           var g = findGoal(year, k);
           return g ? goalCodeLabel(g) : k;
         });
-        goalCell.textContent = codes.length ? codes.join(", ") : "—";
+        goalCell.textContent = codes.length ? codes.join(", ") : "–";
         if (codes.length) {
           goalCell.title = (r.goals || []).map(function (k) {
             var g = findGoal(year, k);
@@ -10286,9 +10349,9 @@ function printReports(data, entries, single) {
       }
 
       tr.appendChild(el("td", null, chosen ? chosen.label : "niet gescoord"));
-      tr.appendChild(el("td", "muted", chosen && chosen.desc ? chosen.desc : "—"));
+      tr.appendChild(el("td", "muted", chosen && chosen.desc ? chosen.desc : "–"));
 
-      var scoreCell = el("td", "score-cell", typeof v === "number" ? v + " / " + rMax : "—");
+      var scoreCell = el("td", "score-cell", typeof v === "number" ? v + " / " + rMax : "–");
       if (typeof v === "number" && rMax > 0 && v / rMax < 0.5) scoreCell.classList.add("low");
       tr.appendChild(scoreCell);
 
@@ -10306,7 +10369,7 @@ function printReports(data, entries, single) {
 
     if (entry.feedforward) {
       var ff = el("div", "report-block feedforward-block");
-      ff.appendChild(el("h2", null, "Feedforward — de volgende stap"));
+      ff.appendChild(el("h2", null, "Feedforward: de volgende stap"));
       ff.appendChild(el("p", null, entry.feedforward));
       page.appendChild(ff);
     }
@@ -10493,7 +10556,7 @@ function buildGoalCoverageTable(year, usage, attainment) {
     tr.appendChild(el("td", "muted", linked
       ? linked.map(function (l) { return l.evaluation; })
           .filter(function (v, i, a) { return a.indexOf(v) === i; }).join(", ")
-      : "—"));
+      : "–"));
 
     var res = el("td", "score-cell");
     if (!linked) res.textContent = "niet gekoppeld";
@@ -10650,7 +10713,7 @@ function printYearOverview(year) {
             });
           });
         }
-        tr.appendChild(el("td", "muted", hasGoals ? (goalCodes.length ? goalCodes.join(", ") : "—") : "n.v.t."));
+        tr.appendChild(el("td", "muted", hasGoals ? (goalCodes.length ? goalCodes.join(", ") : "–") : "n.v.t."));
         tbody.appendChild(tr);
       });
     }
@@ -11119,7 +11182,7 @@ function renderGrowthPanel() {
     .filter(Boolean)
     .sort(function (a, b) { return a.id.localeCompare(b.id, "nl", { numeric: true }); })
     .forEach(function (g) {
-      goalSelect.appendChild(new Option(goalCodeLabel(g) + " — " + g.text.slice(0, 60), g.id));
+      goalSelect.appendChild(new Option(goalCodeLabel(g) + ": " + g.text.slice(0, 60), g.id));
     });
   goalGroup.appendChild(goalSelect);
   controls.appendChild(goalGroup);
@@ -11212,7 +11275,7 @@ function renderGrowthChart(year, goalKeyVal, klas, student) {
 
   box.appendChild(el("p", "hint",
     "Score op " + goalCodeLabel(cmp.goal) + " over de evaluaties heen die dit doel raken, in de klas " +
-    klas + ". Tussentijdse checks tellen niet mee — dit gaat over eindbeoordelingen."));
+    klas + ". Tussentijdse checks tellen niet mee: dit gaat over eindbeoordelingen."));
 
   var series = cmp.classSeries;
   if (!series.length) {
@@ -11278,7 +11341,7 @@ function renderGrowthChart(year, goalKeyVal, klas, student) {
     points.forEach(function (p, i) {
       var dot = svgEl("circle", { cx: xAt(i), cy: yAt(p.pct), r: 4.5, fill: color });
       dot.appendChild(svgEl("title")).textContent =
-        label + " — " + p.evaluation + ": " + p.pct + "%" +
+        label + ", " + p.evaluation + ": " + p.pct + "%" +
         (p.studentCount > 1 ? " (" + p.studentCount + " leerlingen)" : "");
       svg.appendChild(dot);
     });
@@ -11666,7 +11729,7 @@ function renderFolderSection() {
     var box = el("div", "folder-state");
     box.appendChild(document.createTextNode("Verbonden met "));
     box.appendChild(el("code", null, folderName));
-    box.appendChild(document.createTextNode(" — jouw werk gaat naar "));
+    box.appendChild(document.createTextNode(". Jouw werk gaat naar "));
     box.appendChild(el("code", null, teamFileName(db.assessor)));
     state.appendChild(box);
   } else {
@@ -12051,6 +12114,132 @@ function progressByAssessor(rows, students) {
 
 
 /* ------------------------------------------------------------------
+   FEEDBACK VOOR SMARTSCHOOL
+   Bouwt uit de rubric en één beoordeling een korte feedbacktekst voor
+   één leerling, om te plakken bij het resultaat in Skore. Volledig
+   offline en zonder AI: dezelfde beoordeling geeft altijd dezelfde tekst.
+
+   Steunt op Hattie en Timperley: goede feedback beantwoordt drie vragen.
+     Waar ga je naartoe?      (feed-up: opdracht en criteria)
+     Waar sta je nu?          (feedback: sterk punt en werkpunt)
+     Wat is je volgende stap? (feed-forward: één concrete stap)
+   De tool haalt enkel taak- en procesfeedback uit de rubric. Wat over
+   zelfregulatie of de leerling zelf gaat, komt alleen uit de eigen
+   tekst van de leerkracht (row.feedback en row.feedforward), die
+   letterlijk en onverkort wordt overgenomen.
+
+   Regels:
+   - De rubric zoals hij was bij het beoordelen (row.rubricVersion).
+   - Niet gescoorde criteria tellen niet mee.
+   - Positie van een niveau = (score - laagste) / (hoogste - laagste),
+     zodat criteria met een verschillend aantal niveaus vergelijkbaar zijn.
+   - Werkpunt: laagste positie, bij gelijke stand het eerste criterium
+     van de rubric. Geen werkpunt als dat al het hoogste niveau is.
+   - Sterk punt: hoogste positie (zelfde volgorde bij gelijke stand),
+     enkel vanaf het middelste niveau en enkel als het hoger ligt dan het
+     werkpunt. Zo komt er nooit valse lof.
+   - Volgende stap: de eigen feedforward als die er is, anders de
+     beschrijving van het niveau net boven het werkpunt.
+   - Nooit punten, percentages of niveaulabels: Smartschool toont het
+     punt al, en een cijfer naast commentaar doet de commentaar vergeten.
+   - Richtwaarde FEEDBACK_MAX_CHARS. Is het te lang, dan wordt eerst de
+     lijst met criteria korter en valt daarna het sterke punt weg (dat
+     laatste enkel als er een werkpunt is). Werkpunt, volgende stap en de
+     tekst van de leerkracht blijven altijd staan en worden nooit afgekort.
+   ------------------------------------------------------------------ */
+
+var FEEDBACK_MAX_CHARS = 700;
+
+/* "a", "a en b", "a, b en c" */
+function joinNl(list) {
+  if (list.length <= 1) return list.join("");
+  return list.slice(0, -1).join(", ") + " en " + list[list.length - 1];
+}
+
+/* Per gescoord criterium: naam, behaald niveau, niveau erboven, positie. */
+function scoredCriteria(rubrics, scores) {
+  var out = [];
+  (rubrics || []).forEach(function (r) {
+    var v = scores ? scores[r.id] : undefined;
+    if (typeof v !== "number") return;
+    var opts = (r.options || []).filter(function (o) { return isFinite(Number(o.score)); })
+      .slice().sort(function (a, b) { return Number(a.score) - Number(b.score); });
+    var idx = -1;
+    opts.forEach(function (o, i) { if (Number(o.score) === v) idx = i; });
+    if (idx === -1) return;
+    var low = Number(opts[0].score), high = Number(opts[opts.length - 1].score);
+    out.push({
+      name: String(r.name || "").trim(),
+      level: opts[idx],
+      next: opts[idx + 1] || null,
+      pos: high > low ? (v - low) / (high - low) : 1,
+    });
+  });
+  return out;
+}
+
+function criterionLine(prefix, c, option) {
+  var desc = String((option && option.desc) || "").trim();
+  return prefix + " " + c.name + (desc ? ": " + desc : ".");
+}
+
+/* De tekst voor één leerling bij één beoordeling (rij). Puur: leest
+   enkel dbObj en row, verandert niets. */
+function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
+  var rubrics = rubricsForVersion(dbObj, year, evaluation, row.rubricVersion);
+  var crit = scoredCriteria(rubrics, row.scores);
+  var ownFeedback = String(row.feedback || "").trim();
+  var ownForward = String(row.feedforward || "").trim();
+  var isGroup = (row.students || []).length > 1;
+
+  var werk = null, sterk = null;
+  crit.forEach(function (c) {
+    if (!werk || c.pos < werk.pos) werk = c;
+    if (!sterk || c.pos > sterk.pos) sterk = c;
+  });
+  if (werk && !werk.next) werk = null;
+  if (sterk && !(sterk.pos >= 0.5 && (!werk || sterk.pos > werk.pos))) sterk = null;
+
+  function compose(fullList, withSterk) {
+    var blocks = [];
+
+    var up = ["Waar ga je naartoe?"];
+    var names = crit.map(function (c) { return c.name; }).filter(Boolean);
+    if (!names.length) {
+      up.push("Bij \"" + evaluation + "\" werd je beoordeeld met de rubric.");
+    } else if (fullList) {
+      up.push("Bij \"" + evaluation + "\" werd je beoordeeld op: " + joinNl(names) + ".");
+    } else {
+      up.push("Bij \"" + evaluation + "\" werd je beoordeeld op " +
+        (names.length === 1 ? "1 criterium" : "de " + names.length + " criteria") + " van de rubric.");
+    }
+    if (isGroup) up.push("Dit is een groepsbeoordeling: de beschrijvingen gaan over het werk van jullie groep.");
+    blocks.push(up.join("\n"));
+
+    var nu = [];
+    if (sterk && withSterk) nu.push(criterionLine("Sterk punt bij", sterk, sterk.level));
+    if (werk) nu.push(criterionLine("Werkpunt bij", werk, werk.level));
+    if (ownFeedback) nu.push(ownFeedback);
+    if (nu.length) blocks.push(["Waar sta je nu?"].concat(nu).join("\n"));
+
+    if (ownForward) {
+      blocks.push("Wat is je volgende stap?\n" + ownForward);
+    } else if (werk && String(werk.next.desc || "").trim()) {
+      blocks.push("Wat is je volgende stap?\nOm een niveau hoger te komen bij " + werk.name + ": " + String(werk.next.desc).trim());
+    }
+
+    return blocks.join("\n\n");
+  }
+
+  var text = compose(true, true);
+  if (text.length <= FEEDBACK_MAX_CHARS) return text;
+  text = compose(false, true);
+  if (text.length <= FEEDBACK_MAX_CHARS || !werk) return text;
+  return compose(false, false);
+}
+
+
+/* ------------------------------------------------------------------
    SKORE
    Overzicht per klas en per rapportperiode (GE1, GE2, …) van de punten
    die in Skore (Smartschool) ingebracht moeten worden. De leerlingen
@@ -12069,6 +12258,15 @@ function progressByAssessor(rows, students) {
    Welke evaluatie in welke periode valt, volgt uit de datum van de
    beoordeling zelf (row.createdAt, sinds 1.21.0; oudere rijen vallen
    terug op row.updatedAt). Tussentijdse checks tellen niet mee.
+
+   Het punt wordt berekend met de rubric zoals hij was bij het beoordelen
+   (row.rubricVersion, sinds 1.23.0), net als het afgedrukte rapport.
+   Had die versie een ander maximum dan de huidige rubric, dan wordt het
+   punt omgerekend naar het maximum van de kolom.
+
+   Naast elk punt staat een kopieerknop voor de feedbacktekst (zie
+   js/feedback.js). Welke cellen al gekopieerd zijn, onthoudt enkel deze
+   sessie (skoreCopied), niet het werkbestand.
 
    "Overgezet naar Skore" wordt ook per schooljaar bewaard en gedeeld:
    db.schoolYears[label].skoreDone["leerjaar||klas||evaluatie||periode"]
@@ -12191,7 +12389,8 @@ function rowDateIso(row) {
 /* Verzamelt per evaluatie de punten van de leerlingen van deze klas die
    in de gekozen periode beoordeeld werden.
    Geeft { evaluations: [{ name, folder, max, dates: [iso], byStudent:
-   { naam: { total, date, duplicate } } }], students: [namen] }. */
+   { naam: { total, max, date, duplicate, row } } }], students: [namen] }.
+   "max" per leerling is het maximum van de rubricversie van die rij. */
 function collectSkore(dbObj, year, klas, periods, periodIndex) {
   var range = periodRanges(periods)[periodIndex];
   var byEval = {};
@@ -12199,13 +12398,14 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
   Object.keys(dbObj.sessions || {}).forEach(function (key) {
     var p = parseSessionKey(key);
     if (p.year !== year) return;
-    var rubrics = rubricsFor(dbObj, year, p.evaluation);
-    var max = maxScoreOf(rubrics);
+    var max = maxScoreOf(rubricsFor(dbObj, year, p.evaluation));
 
     (dbObj.sessions[key] || []).forEach(function (row) {
       if (row.formative) return;
       var date = rowDateIso(row);
       if (!range || date < range.start || date > range.end) return;
+      var rubrics = rubricsForVersion(dbObj, year, p.evaluation, row.rubricVersion);
+      var rowMax = maxScoreOf(rubrics);
       var groupTotal = rowTotal(row, rubrics);
 
       (row.students || []).forEach(function (name) {
@@ -12218,14 +12418,14 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
         }
         var entry = byEval[p.evaluation];
         var correction = (row.corrections && typeof row.corrections[name] === "number") ? row.corrections[name] : 0;
-        var total = Math.max(0, Math.min(max, groupTotal + correction));
+        var total = Math.max(0, Math.min(rowMax, groupTotal + correction));
         if (entry.dates.indexOf(date) === -1) entry.dates.push(date);
 
         var prev = entry.byStudent[name];
         // Twee beoordelingen voor dezelfde leerling: de recentste telt,
         // maar we tonen dat er iets te controleren valt.
         if (!prev || (row.updatedAt || 0) > prev.updatedAt) {
-          entry.byStudent[name] = { total: total, date: date, updatedAt: row.updatedAt || 0, duplicate: !!prev };
+          entry.byStudent[name] = { total: total, max: rowMax, date: date, updatedAt: row.updatedAt || 0, duplicate: !!prev, row: row };
         } else {
           prev.duplicate = true;
         }
@@ -12258,6 +12458,13 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
 function scaleScore(total, max, scale) {
   if (!scale || !max) return total;
   return Math.round((total / max) * scale * 10) / 10;
+}
+
+/* Het punt zoals het in de tabel komt: omgerekend naar de gekozen schaal,
+   of naar het kolommaximum als de rubricversie een ander maximum had. */
+function skoreCellScore(v, columnMax, scale) {
+  var target = scale || (v.max && v.max !== columnMax ? columnMax : 0);
+  return scaleScore(v.total, v.max || columnMax, target);
 }
 
 function formatScore(v) {
@@ -12369,6 +12576,10 @@ function renderSkore() {
   ));
 
   host.appendChild(buildSkoreEvalList(data, year, klas, range, scale));
+  host.appendChild(el(
+    "p", "hint skore-copy-hint",
+    "Klik op het kopieericoon naast een punt om de feedback te kopiëren. Plak die in Smartschool bij het resultaat.",
+  ));
   host.appendChild(buildSkoreTable(data, year, klas, scale));
 
   if (data.notInRoster.length) {
@@ -12406,7 +12617,7 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
     tr.appendChild(nameTd);
     tr.appendChild(el("td", null, e.folder || "–"));
     var first = e.dates[0], last = e.dates[e.dates.length - 1];
-    tr.appendChild(el("td", null, first === last ? formatShortDate(first) : formatShortDate(first) + " – " + formatShortDate(last)));
+    tr.appendChild(el("td", null, first === last ? formatShortDate(first) : formatShortDate(first) + " t/m " + formatShortDate(last)));
     var n = Object.keys(e.byStudent).filter(function (s) { return data.students.indexOf(s) !== -1; }).length;
     var vrij = data.students.filter(function (s) {
       return !e.byStudent[s] && getExemption(year, e.name, klas, s);
@@ -12465,11 +12676,17 @@ function buildSkoreTable(data, year, klas, scale) {
       var v = e.byStudent[s];
       var td = el("td", "num");
       if (v) {
-        td.textContent = formatScore(scaleScore(v.total, e.max, scale));
+        td.appendChild(el("span", "skore-score", formatScore(skoreCellScore(v, e.max, scale))));
+        td.appendChild(buildSkoreCopyButton(td, year, e.name, v, s));
+        var notes = [];
         if (v.duplicate) {
           td.classList.add("skore-dup");
-          td.title = "Deze leerling is meer dan eens beoordeeld; de recentste beoordeling telt.";
+          notes.push("Deze leerling is meer dan eens beoordeeld; de recentste beoordeling telt.");
         }
+        if (v.max !== e.max) {
+          notes.push("Beoordeeld met een oudere rubric (op " + v.max + "), omgerekend naar " + (scale || e.max) + ".");
+        }
+        if (notes.length) td.title = notes.join(" ");
       } else if (data.notInRoster.indexOf(s) === -1 && getExemption(year, e.name, klas, s)) {
         // Vrijgesteld op het Controle-tabblad: geen punt in Skore nodig.
         var ex = getExemption(year, e.name, klas, s);
@@ -12488,6 +12705,55 @@ function buildSkoreTable(data, year, klas, scale) {
   table.appendChild(tbody);
   wrap.appendChild(table);
   return wrap;
+}
+
+/* ---- feedback kopiëren ---- */
+
+/* Enkel voor deze sessie: welke feedback al gekopieerd is, zodat je bij
+   het overtypen ziet waar je gebleven bent. Bewust niet in db: niet
+   bewaren, niet synchroniseren. Na een aanpassing van de beoordeling
+   verandert updatedAt en verdwijnt het vinkje vanzelf. */
+var skoreCopied = {};
+
+function skoreCopyKey(row, student) {
+  return [row.id, row.updatedAt || 0, student].join("||");
+}
+
+var SKORE_COPY_ICON =
+  '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h8"></path></svg>';
+var SKORE_CHECK_ICON =
+  '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+
+/* Kopiëren wijzigt niets, dus dit werkt ook in een gearchiveerd jaar. */
+function buildSkoreCopyButton(td, year, evaluation, v, student) {
+  var key = skoreCopyKey(v.row, student);
+  var btn = el("button", "skore-copy");
+  btn.type = "button";
+  var label = "Feedback voor " + student + " kopiëren";
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+
+  function markCopied() {
+    td.classList.add("skore-copied");
+    btn.innerHTML = SKORE_CHECK_ICON;
+    btn.title = label + " (al gekopieerd)";
+  }
+  btn.innerHTML = SKORE_COPY_ICON;
+  if (skoreCopied[key]) markCopied();
+
+  btn.addEventListener("click", function () {
+    var text = buildSkoreFeedback(db, year, evaluation, v.row, student);
+    copyText(text, function () {
+      skoreCopied[key] = true;
+      markCopied();
+      showToast("Feedback voor " + student + " gekopieerd");
+    }, function () {
+      showToast("Kopiëren lukte niet. Probeer het nog eens.", "warn");
+    });
+  });
+  return btn;
 }
 
 /* ---- periodes aanpassen ---- */
@@ -13269,7 +13535,7 @@ function initControle() {
 
 function init() {
   $("appVersion").textContent = "v" + APP_VERSION;
-  $("appVersion").title = "STEM Evaluatietool " + APP_VERSION + " — zie CHANGELOG.md voor wat er veranderd is";
+  $("appVersion").title = "STEM Evaluatietool " + APP_VERSION + ". Zie CHANGELOG.md voor wat er veranderd is.";
 
   Object.keys(CONFIG).forEach(function (year) {
     $("yearSelect").appendChild(new Option(year, year));
@@ -13598,7 +13864,7 @@ function onAddSchoolYear() {
   var suggestion = suggestNextSchoolYearLabel(db.activeSchoolYear);
   var label = prompt(
     "Naam voor het nieuwe schooljaar (bijvoorbeeld " + suggestion + "):\n\n" +
-      "De klaslijsten beginnen helemaal leeg. Rubrics en team blijven behouden — " +
+      "De klaslijsten beginnen helemaal leeg. Rubrics en team blijven behouden, en " +
       db.activeSchoolYear + " blijft gewoon bewaard en te bekijken.",
     suggestion,
   );

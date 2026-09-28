@@ -114,7 +114,7 @@ function renderEvalFolderGroup(year, folderName, names, folderIndex, folderCount
     delBtn.addEventListener("click", function () {
       askDeleteScope(
         'Map "' + folderName + '" verwijderen?',
-        ["De evaluaties erin blijven gewoon bestaan — ze komen terug bij \"Geen map\"."],
+        ["De evaluaties erin blijven gewoon bestaan: ze komen terug bij \"Geen map\"."],
         function (scope) {
           deleteEvaluationFolder(db, year, folderName, scope);
           persist();
@@ -123,7 +123,7 @@ function renderEvalFolderGroup(year, folderName, names, folderIndex, folderCount
             "good", 'Map "' + folderName + '" verwijderd',
             scope === "iedereen"
               ? "Komt na synchroniseren ook bij collega's niet meer terug."
-              : "Blijft enkel bij jou weg — collega's behouden hun eigen versie.",
+              : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie.",
           );
         },
       );
@@ -183,7 +183,7 @@ function renderEvalRow(year, name) {
 
   var feedup = el("button", "btn-ghost btn-small", "Voor leerlingen afdrukken");
   feedup.type = "button";
-  feedup.title = "Print de criteria en niveaus zonder scores — geef dit vooraf mee";
+  feedup.title = "Print de criteria en niveaus zonder scores. Geef dit vooraf mee.";
   feedup.addEventListener("click", function () { printFeedUp(year, name); });
   var edit = el("button", "btn-ghost btn-small", "Bewerk");
   edit.type = "button";
@@ -288,7 +288,7 @@ function deleteEvaluation(year, name) {
       '"' + name + '" staat niet meer in ' + year + ". " +
         (scope === "iedereen"
           ? "Komt na synchroniseren ook bij collega's niet meer terug."
-          : "Blijft enkel bij jou weg — collega's behouden hun eigen versie."),
+          : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie."),
     );
   });
 }

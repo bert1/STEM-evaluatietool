@@ -1105,6 +1105,49 @@ table.skore-table td.skore-missing { color: #cbd5e1; font-weight: 400; }
 table.skore-table td.skore-exempt { color: var(--muted); font-size: 12.5px; font-weight: 500; font-style: italic; }
 table.skore-table td.skore-dup { background: var(--warning-soft); color: var(--warning); }
 table.skore-table tr.skore-extra td { color: var(--muted); font-style: italic; }
+table.skore-table td.num { white-space: nowrap; }
+/* Kopieerknop naast het punt: altijd zichtbaar (ook op een touchscreen),
+   klein genoeg om de kolom niet breder te maken. */
+.skore-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin-left: 5px;
+  padding: 0;
+  vertical-align: -4px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+}
+.skore-copy:hover, .skore-copy:focus-visible { color: var(--primary); border-color: var(--primary); background: var(--primary-soft); }
+td.skore-copied .skore-copy { color: var(--success); border-color: transparent; background: var(--success-soft); }
+.skore-copy-hint { margin: 0 0 8px; }
+
+/* Korte bevestiging onderaan het scherm (showToast in js/ui.js). */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translate(-50%, 20px);
+  max-width: calc(100% - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  background: var(--text);
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+  z-index: 1000;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.warn { background: var(--warning); }
+@media print { .toast, .skore-copy { display: none; } }
 
 .period-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
 .period-row .period-name { width: 110px; }

@@ -176,7 +176,7 @@ function updateFileButtons() {
     part("Opslaan (download)", "downloadt " + fileName + " opnieuw. Automatisch opslaan kan hier niet, dus doe het na elke les zelf.");
     part("Opslaan als…", "maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.");
   } else {
-    part("Opslaan", "schrijft naar " + fileName + " — gebeurt ook vanzelf.");
+    part("Opslaan", "schrijft naar " + fileName + ". Dat gebeurt ook vanzelf.");
     part("Opslaan als…", "maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.");
   }
   if (folderHandle) {
@@ -386,7 +386,7 @@ function handleIncoming(text, name, handleForOpen) {
       "good",
       "Bestand geopend",
       read.legacy
-        ? "Dit was nog een bestand van de vorige versie. Het is omgezet — sla het opnieuw op om de nieuwe versie te bewaren."
+        ? "Dit was nog een bestand van de vorige versie. Het is omgezet. Sla het opnieuw op om de nieuwe versie te bewaren."
         : countRows(db) + " evaluatie(s) ingeladen uit " + name + ".",
     );
     return;
@@ -592,7 +592,7 @@ function readTeamFolder(dirHandle, ownFileName, config) {
           db: read.db,
         });
       } catch (err) {
-        problems.push(entry.name + " (kon niet gelezen worden — nog aan het synchroniseren?)");
+        problems.push(entry.name + " (kon niet gelezen worden, misschien nog aan het synchroniseren?)");
       }
     }
     found.sort(function (a, b) { return a.name.localeCompare(b.name, "nl"); });

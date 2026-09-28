@@ -32,7 +32,7 @@ function buildAiRubricPrompt(description, year) {
     "",
     "Maak een rubric met 4 tot 7 duidelijke, meetbare criteria die samen deze opdracht " +
       "dekken. Geef voor elk criterium 4 of 5 niveaus, van zwak naar sterk, met bij elk " +
-      "niveau een concrete, waarneembare omschrijving van 1 tot 2 zinnen — vermijd vage " +
+      "niveau een concrete, waarneembare omschrijving van 1 tot 2 zinnen. Vermijd vage " +
       "woorden zoals \"goed\" of \"voldoende\" zonder uit te leggen wat je dan precies ziet.",
   ];
 
@@ -41,13 +41,13 @@ function buildAiRubricPrompt(description, year) {
       "",
       "Koppel daarnaast bij elk criterium de leerplandoelen (uit de lijst hieronder) die er " +
         "inhoudelijk bij aansluiten, met hun code (bijvoorbeeld \"SW05\"). Een criterium mag ook " +
-        "geen enkel doel krijgen als er echt niets goed past — verzin er dan liever geen bij dan " +
+        "geen enkel doel krijgen als er echt niets goed past. Verzin er dan liever geen bij dan " +
         "een zwakke match te forceren. Meerdere doelen per criterium mag.",
       "",
       "Leerplandoelen om uit te kiezen:",
     );
     goals.forEach(function (g) {
-      lines.push(g.id + " — " + g.text);
+      lines.push(g.id + ": " + g.text);
     });
   }
 
@@ -78,7 +78,7 @@ function buildAiRubricPrompt(description, year) {
     "```",
   );
   if (goals.length) {
-    lines.push("", "Laat \"leerplandoelen\" gewoon weg bij een criterium waar niets bij past — een lege lijst mag ook.");
+    lines.push("", "Laat \"leerplandoelen\" gewoon weg bij een criterium waar niets bij past. Een lege lijst mag ook.");
   }
 
   return lines.join("\n");
@@ -112,7 +112,7 @@ function parseAiRubricResponse(text, year) {
   }
 
   if (!data || !Array.isArray(data.criteria) || !data.criteria.length) {
-    throw new Error("Verwacht een lijst \"criteria\" met minstens één criterium — die ontbreekt of is leeg.");
+    throw new Error("Verwacht een lijst \"criteria\" met minstens één criterium, maar die ontbreekt of is leeg.");
   }
 
   var taken = takenIds();
@@ -173,7 +173,7 @@ function initAiRubricHelper() {
   $("btnAiGeneratePrompt").addEventListener("click", function () {
     var desc = $("aiDescription").value.trim();
     if (!desc) {
-      showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan — hoe concreter, hoe beter de rubric.");
+      showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan. Hoe concreter, hoe beter de rubric.");
       return;
     }
     var year = (draft && draft.year) || $("draftYear").value || "2de jaar";
@@ -187,15 +187,11 @@ function initAiRubricHelper() {
     function done() {
       showNoticeIn("aiImportState", "good", "Gekopieerd", "Plak dit in je AI-gesprek (Claude, ChatGPT, Copilot, …) en kom terug met het antwoord.");
     }
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(field.value).then(done).catch(function () {
-        field.select();
-        if (legacyCopy(field.value)) done();
-      });
-    } else {
+    function failed() {
       field.select();
-      if (legacyCopy(field.value)) done();
+      showNoticeIn("aiImportState", "warn", "Kopiëren lukte niet", "De tekst staat geselecteerd: druk Ctrl+C om hem zelf te kopiëren.");
     }
+    copyText(field.value, done, failed);
   });
 
   $("btnAiImport").addEventListener("click", function () {
@@ -230,7 +226,7 @@ function initAiRubricHelper() {
 
     var gekoppeld = criteria.reduce(function (n, c) { return n + c.goals.length; }, 0);
     var extra = [];
-    if (gekoppeld) extra.push(gekoppeld + " leerplandoel(en) alvast gekoppeld — controleer of ze kloppen.");
+    if (gekoppeld) extra.push(gekoppeld + " leerplandoel(en) alvast gekoppeld. Controleer of ze kloppen.");
     if (criteria.goalsSkipped) extra.push(criteria.goalsSkipped + " voorgestelde code(s) van de AI niet herkend en genegeerd.");
 
     showNoticeIn(

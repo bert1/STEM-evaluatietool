@@ -205,7 +205,7 @@ function moveStudentToClass() {
   var msg = student + ' van "' + fromKlas + '" naar "' + toKlas + '" verplaatsen?';
   if (alreadyThere) {
     msg += "\n\n" + student + " staat toevallig ook al in " + toKlas +
-      " — die naam wordt niet nog eens toegevoegd, enkel uit " + fromKlas + " verwijderd.";
+      ". Die naam wordt niet nog eens toegevoegd, enkel uit " + fromKlas + " verwijderd.";
   }
   if (soloCount) {
     msg += "\n\n" + soloCount + " individuele evaluatie(s) verhuizen volledig mee naar " + toKlas + ".";
@@ -351,7 +351,7 @@ function onPasteChange() {
     if (id === "mapName2Col") sel.appendChild(new Option("Geen", "-1"));
     for (var i = 0; i < cols; i++) {
       var label = "Kolom " + (i + 1);
-      if (headers[i]) label += " — " + headers[i].slice(0, 22);
+      if (headers[i]) label += ": " + headers[i].slice(0, 22);
       sel.appendChild(new Option(label, String(i)));
     }
     if (prev !== "" && sel.querySelector('option[value="' + prev + '"]')) sel.value = prev;
@@ -535,7 +535,7 @@ function deleteClass(year, klas) {
       "good", 'Klas "' + klas + '" verwijderd',
       scope === "iedereen"
         ? "Komt na synchroniseren ook bij collega's niet meer terug."
-        : "Blijft enkel bij jou weg — collega's behouden hun eigen versie.",
+        : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie.",
     );
   });
 }
@@ -670,7 +670,7 @@ function onXlsxFiles(e) {
       classes[k].sort(function (a, b) { return a.localeCompare(b, "nl"); });
     });
 
-    $("xlsxHint").textContent = "Meerdere klassen tegelijk mag — één bestand per klas.";
+    $("xlsxHint").textContent = "Meerdere klassen tegelijk mag, met één bestand per klas.";
 
     if (!Object.keys(classes).length) {
       xlsxClasses = null;

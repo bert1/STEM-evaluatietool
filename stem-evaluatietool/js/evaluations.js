@@ -272,7 +272,7 @@ function openSession(year, klassen, evaluation) {
 
   if (!db.sessions[cur.key]) db.sessions[cur.key] = [];
 
-  $("formTitle").textContent = cur.klassen.join(" + ") + " — " + evaluation;
+  $("formTitle").textContent = cur.klassen.join(" + ") + ": " + evaluation;
   $("maxTotal").textContent = maxScoreOf(cur.rubrics);
 
   renderStudents();
@@ -580,7 +580,7 @@ function updateTotals() {
   if (!missing) {
     $("formHint").textContent = "";
   } else if (isFormative) {
-    $("formHint").textContent = missing + " van de " + cur.rubrics.length + " criteria nog niet gescoord — mag bij een tussentijdse check.";
+    $("formHint").textContent = missing + " van de " + cur.rubrics.length + " criteria nog niet gescoord. Dat mag bij een tussentijdse check.";
   } else {
     $("formHint").textContent = missing + " van de " + cur.rubrics.length + " criteria nog niet gescoord";
   }
@@ -614,7 +614,7 @@ function renderCorrections(groupTotal, max, studentCount) {
   host.appendChild(el("div", "correction-heading", "Individuele correctie (optioneel)"));
   host.appendChild(el("p", "hint",
     "De score hierboven (" + groupTotal + "/" + max + ") geldt voor de hele groep. Wil je voor " +
-      "iemand een punt bij- of aftrekken voor individuele inzet, vul dat hier in — de rest van de " +
+      "iemand een punt bij- of aftrekken voor individuele inzet, vul dat hier in. De rest van de " +
       "groep blijft ongemoeid.",
   ));
 
@@ -680,7 +680,7 @@ function saveEvaluation() {
     return;
   }
   if (!students.length) {
-    showNotice("warn", "Geen leerling geselecteerd", "Vink minstens één leerling aan. Voor groepswerk vink je ze allemaal aan — dan krijgen ze dezelfde score.");
+    showNotice("warn", "Geen leerling geselecteerd", "Vink minstens één leerling aan. Voor groepswerk vink je ze allemaal aan. Dan krijgen ze dezelfde score.");
     return;
   }
   var isFormative = $("formativeToggle").checked;
@@ -693,7 +693,7 @@ function saveEvaluation() {
       showNotice(
         "warn", "Nog niet alle criteria gescoord",
         "Ontbreekt: " + missing.map(function (r) { return r.name; }).join(", ") +
-          ". Gaat het om een tussentijdse controle, vink dan 'Tussentijdse check' aan — dan hoeft niet alles ingevuld te zijn.",
+          ". Gaat het om een tussentijdse controle, vink dan 'Tussentijdse check' aan. Dan hoeft niet alles ingevuld te zijn.",
       );
       return;
     }
@@ -901,24 +901,24 @@ function renderTable() {
     }
     tr.appendChild(nameCell);
 
-    tr.appendChild(el("td", null, row.assessor || "—"));
+    tr.appendChild(el("td", null, row.assessor || "–"));
 
     var total = rowTotal(row, cur.rubrics);
     cur.rubrics.forEach(function (r) {
       var v = row.scores[r.id];
-      tr.appendChild(el("td", "num", typeof v === "number" ? v : "—"));
+      tr.appendChild(el("td", "num", typeof v === "number" ? v : "–"));
     });
 
     tr.appendChild(el("td", "total", total + "/" + max));
-    tr.appendChild(el("td", "num", max ? Math.round((total / max) * 100) + "%" : "—"));
+    tr.appendChild(el("td", "num", max ? Math.round((total / max) * 100) + "%" : "–"));
 
-    var fb = el("td", "feedback-cell", row.feedback || "—");
+    var fb = el("td", "feedback-cell", row.feedback || "–");
     fb.title = row.feedback || "";
     tr.appendChild(fb);
 
     cur.questions.forEach(function (q) {
       var text = (row.answers && row.answers[q.id]) || "";
-      var cell = el("td", "feedback-cell", text || "—");
+      var cell = el("td", "feedback-cell", text || "–");
       cell.title = text;
       tr.appendChild(cell);
     });
@@ -950,7 +950,7 @@ function renderConflictNotice(dupes) {
   box.appendChild(el("strong", null, "Deze leerlingen staan in meer dan één rij"));
   box.appendChild(document.createTextNode(
     names + ". Meestal betekent dit dat jij en je collega dezelfde groep beoordeeld hebben. " +
-    "Er is niets weggegooid — verwijder zelf de rij die weg mag, of laat beide staan als je de scores wil vergelijken.",
+    "Er is niets weggegooid. Verwijder zelf de rij die weg mag, of laat beide staan als je de scores wil vergelijken.",
   ));
   host.appendChild(box);
 }

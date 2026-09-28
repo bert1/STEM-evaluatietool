@@ -416,7 +416,7 @@ function renderGrowthPanel() {
     .filter(Boolean)
     .sort(function (a, b) { return a.id.localeCompare(b.id, "nl", { numeric: true }); })
     .forEach(function (g) {
-      goalSelect.appendChild(new Option(goalCodeLabel(g) + " — " + g.text.slice(0, 60), g.id));
+      goalSelect.appendChild(new Option(goalCodeLabel(g) + ": " + g.text.slice(0, 60), g.id));
     });
   goalGroup.appendChild(goalSelect);
   controls.appendChild(goalGroup);
@@ -509,7 +509,7 @@ function renderGrowthChart(year, goalKeyVal, klas, student) {
 
   box.appendChild(el("p", "hint",
     "Score op " + goalCodeLabel(cmp.goal) + " over de evaluaties heen die dit doel raken, in de klas " +
-    klas + ". Tussentijdse checks tellen niet mee — dit gaat over eindbeoordelingen."));
+    klas + ". Tussentijdse checks tellen niet mee: dit gaat over eindbeoordelingen."));
 
   var series = cmp.classSeries;
   if (!series.length) {
@@ -575,7 +575,7 @@ function renderGrowthChart(year, goalKeyVal, klas, student) {
     points.forEach(function (p, i) {
       var dot = svgEl("circle", { cx: xAt(i), cy: yAt(p.pct), r: 4.5, fill: color });
       dot.appendChild(svgEl("title")).textContent =
-        label + " — " + p.evaluation + ": " + p.pct + "%" +
+        label + ", " + p.evaluation + ": " + p.pct + "%" +
         (p.studentCount > 1 ? " (" + p.studentCount + " leerlingen)" : "");
       svg.appendChild(dot);
     });

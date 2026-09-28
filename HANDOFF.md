@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.22.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.23.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -58,13 +58,15 @@ Sinds 28 september 2026 staat alles in de GitHub-repository
   geen apart "shell"-sjabloon.
 
 **Modules** (`js/`, sinds 1.19.1 is `evaluations.js` opgesplitst, zie
-boven): `ui.js` ($/el-hulpfuncties en `makeSearchCombo`, moet als eerste laden),
+boven): `ui.js` ($/el-hulpfuncties, `makeSearchCombo`, klembord `copyText()`
+en `legacyCopy()`, melding `showToast()`; moet als eerste laden),
 `state.js` (db-model, opslaan/laden, mergeDb, schooljaren), `storage.js`
 (bestand openen/opslaan, File System Access API), `rosters.js` (klaslijsten,
 Excel-import), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
 `results.js` (statistieken, grafieken, kalibratie), `reports.js` (rapport,
 feed-up-blad), `goals.js` (leerplandoelen-UI, groeigrafiek), `sync.js`
-(gedeelde map, team), `app.js` (opstart, wizard,
+(gedeelde map, team), `feedback.js` (feedbacktekst voor Smartschool, sinds
+1.23.0), `skore.js`, `controle.js`, `app.js` (opstart, wizard,
 navigatie, moet als laatste laden).
 
 **Belangrijke valkuil, al één keer misgegaan:** `build.js` gebruikt
@@ -88,7 +90,50 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.22.0)
+## Volledige featurelijst (huidige stand, 1.23.0)
+
+- **Feedback kopiëren vanuit Skore** (1.23.0, `js/feedback.js` en
+  `buildSkoreCopyButton()` in `js/skore.js`): naast elk punt een
+  kopieerknop die een feedbacktekst voor Smartschool op het klembord zet
+  (tekst plakken kan daar wel, punten niet).
+  **Welke beoordeling:** dezelfde als het punt. `collectSkore()` bewaart
+  de gekozen rij in `byStudent[naam].row` (recentste bij dubbel, geen
+  tussentijdse checks, binnen de periode). Er is dus één plek die bepaalt
+  welke beoordeling telt. `buildSkoreFeedback(dbObj, year, evaluation,
+  row, student)` is puur en krijgt die rij mee (bewust niet zelf zoeken).
+  **Theorie (Hattie en Timperley):** drie vragen als kopjes in je-vorm:
+  "Waar ga je naartoe?" (feed-up: opdracht en criterianamen, geen
+  leerplancodes), "Waar sta je nu?" (feedback), "Wat is je volgende
+  stap?" (feed-forward). Informatierijke taak- en procesfeedback werkt,
+  lof over de persoon en cijfers naast commentaar niet. De tool leidt
+  enkel taak en proces af uit de rubric; regulatie en persoon komen enkel
+  uit de eigen tekst van de leerkracht.
+  **Keuzes (afgesproken met de gebruiker):** positie van een niveau =
+  (score - laagste) / (hoogste - laagste). Werkpunt = laagste positie,
+  bij gelijke stand het eerste criterium van de rubric, niet als het al
+  het hoogste niveau is. Sterk punt = hoogste positie, enkel vanaf 0,5
+  ("Voldoende" telt mee) en hoger dan het werkpunt. Volgende stap = eigen
+  feedforward, anders de `desc` van het niveau boven het werkpunt ("Om een
+  niveau hoger te komen bij X: ..."). `row.feedback` komt na het sterke
+  punt en werkpunt. Niveaubeschrijvingen letterlijk (derde persoon), geen
+  omzetting naar je-vorm. Geen punten, percentages, niveaulabels.
+  Groepswerk krijgt één zin, de individuele correctie niet. Richtwaarde
+  `FEEDBACK_MAX_CHARS` = 700: te lang, dan eerst "op de N criteria van de
+  rubric" in plaats van de lijst, daarna geen sterk punt (enkel als er een
+  werkpunt is). Werkpunt, volgende stap en eigen tekst blijven altijd.
+  **Vinkje:** `skoreCopied` in het geheugen, sleutel rij-id + `updatedAt`
+  + leerling; niet in db, niet gesynchroniseerd.
+  **Bugfix meegenomen:** `collectSkore()` rekent het punt nu met
+  `rubricsForVersion()`; een ander maximum in die versie wordt omgerekend
+  naar het kolommaximum (`skoreCellScore()`).
+  **Gepland als 1.24.0 (akkoord gebruiker):** optioneel veld `next` per
+  niveau (eigen "volgende stap"-zin in je-vorm), in de rubric-editor en
+  in de AI-rubriekhulp (prompt en omzetting). Belangrijk: `next` mag NIET
+  meetellen in `rubricsDiffer()`, anders maakt het aanvullen van zinnen
+  een nieuwe rubricversie en krijgen alle eerdere beoordelingen de
+  melding "oudere rubricversie" bij Controle. Ontbreekt `next` in de
+  versie van de rij, dan opzoeken in de huidige rubric (zelfde id en
+  score). Samenvoegen en `DB_VERSION` blijven ongewijzigd.
 
 - **Tabblad Controle** (1.22.0, `js/controle.js`, was Resultaten): toont
   enkel wat ontbreekt of niet klopt, zonder punten of grafieken. Interne
@@ -115,8 +160,9 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   afgedrukte overzicht.
 
 - **Tabblad Skore** (1.21.0, `js/skore.js`): per leerjaar, klas en
-  rapportperiode de punten om over te typen in Skore (Smartschool; plakken
-  kan daar niet, dus bewust geen kopieerknop).
+  rapportperiode de punten om over te typen in Skore (Smartschool; punten
+  plakken kan daar niet, dus geen kopieerknop voor punten; sinds 1.23.0
+  wel een kopieerknop voor de feedbacktekst, zie hierboven).
   Periodes per schooljaar in `db.schoolYears[label].periods`
   (`{list: [{name, start}], end, updatedAt}`, een periode loopt tot de dag
   vóór de volgende start; zonder eigen periodes geldt `defaultPeriods()`,
@@ -390,6 +436,15 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   beoordeeld, meeverhuizen, twee-personen-synchronisatie)
 - `skore.spec.js`: periodes, overzicht per klas en periode, omrekenen,
   overgezet-vinkjes, periodes aanpassen, `createdAt`, samenvoegen
+- `feedback.spec.js`: de feedbacktekst (de drie voorbeelden uit het plan
+  letterlijk, gelijke stand, geen valse lof, eigen tekst letterlijk en
+  onverkort, lengtegrens, rubricversie, niet gescoord, groepswerk, geen
+  punten/labels/gedachtestreep), welke beoordeling telt, punt met de
+  juiste rubricversie, en de knop (enkel bij punten, klembord uitlezen,
+  melding, vinkje per sessie, terugvaloptie, mislukt kopiëren,
+  gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
+  (huidige rubric, gelijke stand, drempel): de tests faalden zoals
+  verwacht.
 
 Elke test controleert ook dat er geen JavaScript-fouten waren
 (`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:
@@ -457,12 +512,15 @@ geen test.
 - `README.md` is de handleiding voor leerkrachten en wordt bij elke
   wijziging mee bijgewerkt (zie `CLAUDE.md`, een test bewaakt het
   versienummer erin)
-- Geen gedachtestreep in Nederlandse teksten die de gebruiker leest
+- Geen gedachtestreep in Nederlandse teksten die de gebruiker leest (in
+  1.23.0 opgeruimd in alle zichtbare teksten; lege cellen tonen "–")
 - Eenvoud voor collega's staat boven ontwikkelaarsgemak — bij twijfel dat
   toetsen
 
 ## Suggesties voor een volgende sessie (niet gevraagd, enkel ter overweging)
 
+- 1.24.0: eigen "volgende stap"-zin per niveau (zie "Feedback kopiëren
+  vanuit Skore" hierboven), met akkoord van de gebruiker
 - De testreeks uitbreiden met de onderdelen onder "Nog niet gedekt"
 - Automatische reservekopie met datum in de gedeelde OneDrive-map
 - Laatst gebruikte evaluatie bovenaan in de zoeklijsten
