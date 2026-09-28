@@ -116,6 +116,9 @@ test.describe("prompt", () => {
     [r.eerste, r.nakijken].forEach((p) => {
       expect(p).toContain("LEERLINGENTAAL\nDe leerlingen lezen deze rubric zelf. Schrijf zo dat een leerling van 12 tot 13 jaar elk niveau begrijpt zonder uitleg.");
       expect(p).toContain("Schrijf elk niveau in de je-vorm");
+      expect(p).toContain("De naam van een criterium zegt concreet wat de leerling in deze opdracht maakte of deed");
+      expect(p).toContain("Elke zin is duidelijk zonder de rubric erbij");
+      expect(p).toContain("- Begrijpt een leerling elke naam en elke feedbackzin ook weken later, zonder de rubric erbij?");
       expect(p).toContain("hoogstens 15 woorden");
       expect(p).toContain("\"adequaat\", \"coherent\", \"relevant\", \"optimaal\", \"systematisch\" of \"correct\"");
       expect(p).toContain("Schrijf actief: \"je meet\", niet \"er wordt gemeten\".");
@@ -362,10 +365,10 @@ test.describe("feedback in Skore: volgorde bij Zo pak je het de volgende keer aa
     });
     const NEXT = "Zo pak je het de volgende keer aan:\n";
     expect(r.zonder).toContain(NEXT + "Om een niveau hoger te komen bij Realisatie & Soldeerwerk: functioneel gesoldeerd, maar oogt wat slordig.");
-    expect(r.metZin).toContain(NEXT + "Bij Realisatie & Soldeerwerk: laat elke verbinding afkoelen voor je eraan trekt.");
+    expect(r.metZin).toContain(NEXT + "Laat elke verbinding afkoelen voor je eraan trekt.");
     expect(r.metZin).not.toContain("Om een niveau hoger");
     expect(r.eigen.endsWith(NEXT + "Eigen stap.")).toBe(true);
-    expect(r.oudeVersie).toContain("Bij Realisatie & Soldeerwerk: laat elke verbinding afkoelen");
+    expect(r.oudeVersie).toContain(NEXT + "Laat elke verbinding afkoelen");
     expect(r.zonder).toContain("Dit ging goed:\nBij Elektrische Schakeling");
     expect(r.drempel).not.toContain("Dit ging goed");
     page.expectNoErrors();
@@ -658,12 +661,25 @@ test("volledige flow in leerlingentaal: rubric met AI-hulp, beoordelen, feedback
   await page.click("#btnAiGeneratePrompt");
   expect(await page.inputValue("#aiPromptOut")).toContain("(12 tot 13 jaar)");
 
-  const niveaus = (crit) => [0, 1, 2, 3].map((i) => (i < 3
-    ? { omschrijving: `Je toont bij ${crit} stap ${i + 1} in je werk.`, feedbackZin: `Je deed bij ${crit} stap ${i + 1}.`, volgendeStap: `Zet bij ${crit} stap ${i + 2}.` }
-    : { omschrijving: `Je toont bij ${crit} alle stappen in je werk.`, feedbackZin: `Je deed bij ${crit} alle stappen.`, uitdaging: `Probeer bij ${crit} een zwaarder ei.` }));
+  // Zoals de AI het sinds 1.25.1 moet schrijven: namen die zeggen wat de
+  // leerling maakte of deed, en zinnen die zonder rubric duidelijk zijn.
+  const lv = (omschrijving, feedbackZin, stap, top) => (top
+    ? { omschrijving, feedbackZin, uitdaging: stap }
+    : { omschrijving, feedbackZin, volgendeStap: stap });
+  await page.fill("#draftName", "Windei maken");
   await page.fill("#aiResponseIn", JSON.stringify({ criteria: [
-    { naam: "Voorspellen", beschrijving: "Je schrijft vooraf op wat je verwacht.", niveaus: niveaus("voorspellen") },
-    { naam: "Meten", beschrijving: "Je meet en noteert.", niveaus: niveaus("meten") },
+    { naam: "Je voorspellingen vooraf", beschrijving: "Je schrijft vooraf op wat er met het ei zal gebeuren.", niveaus: [
+      lv("Je schrijft vooraf niets op over het ei.", "Je schreef vooraf niet op wat er met het ei zou gebeuren.", "Schrijf voor elke proef op wat er volgens jou met het ei gebeurt."),
+      lv("Je schrijft op wat er zal gebeuren, zonder reden.", "Je schreef op wat er met het ei zou gebeuren, maar niet waarom.", "Schrijf bij elke voorspelling het woord \"omdat\" en je reden erbij."),
+      lv("Je schrijft bij elke proef op wat er gebeurt en waarom.", "Je schreef bij elke proef op wat je verwachtte, met een reden.", "Zeg ook hoe je na de proef ziet of je gelijk had."),
+      lv("Je zegt ook hoe je ziet of je voorspelling klopt.", "Je schreef op wat je verwachtte, waarom, en hoe je dat zou nagaan.", "Vergelijk na de proef je voorspelling met wat je echt zag.", true),
+    ] },
+    { naam: "Je filmpjes van het ei", beschrijving: "Je filmt hoe het ei verandert en vertelt wat je ziet.", niveaus: [
+      lv("Je maakt geen enkel filmpje van het ei.", "Je maakte geen filmpjes van het ei.", "Film het ei na 12, 24 en 36 uur."),
+      lv("Je maakt één of twee filmpjes van het ei.", "Je maakte niet op elk moment een filmpje.", "Zet een wekker voor elk moment dat je moet filmen."),
+      lv("Je filmt het ei na 12, 24 en 36 uur.", "Je filmde op de drie momenten, maar zei weinig over het ei.", "Vertel in elk filmpje wat er aan het ei veranderde."),
+      lv("Je filmt op tijd en vertelt wat er verandert.", "Je filmde na 12, 24 en 36 uur en vertelde wat er veranderde.", "Leg in je laatste filmpje uit waarom het ei zo veranderde.", true),
+    ] },
   ] }));
   await page.click("#btnAiImport");
   await expect(page.locator("#draftRubrics .rubric-edit")).toHaveCount(2);
@@ -674,24 +690,24 @@ test("volledige flow in leerlingentaal: rubric met AI-hulp, beoordelen, feedback
   // Beoordelen: meteen de rij klaarzetten zoals het Evalueren-scherm doet.
   const naam = await page.evaluate(() => {
     const n = studentsFor(db, "1ste jaar", "1WM")[0];
-    const ids = rubricsFor(db, "1ste jaar", "Brug bouwen").map((r) => r.id);
-    const scores = {}; scores[ids[0]] = 4; scores[ids[1]] = 2;
-    db.sessions[sessionKey("1ste jaar", "1WM", "Brug bouwen")] = [{ id: "r1", assessor: "TST", students: [n], studentKlas: { [n]: "1WM" }, scores, rubricVersion: 1, createdAt: Date.now(), updatedAt: Date.now(), corrections: {}, feedback: "", feedforward: "" }];
+    const ids = rubricsFor(db, "1ste jaar", "Windei maken").map((r) => r.id);
+    const scores = {}; scores[ids[0]] = 2; scores[ids[1]] = 4;
+    db.sessions[sessionKey("1ste jaar", "1WM", "Windei maken")] = [{ id: "r1", assessor: "TST", students: [n], studentKlas: { [n]: "1WM" }, scores, rubricVersion: 1, createdAt: Date.now(), updatedAt: Date.now(), corrections: {}, feedback: "", feedforward: "" }];
     persist();
     return n;
   });
   await page.click("#btnSkore");
   await page.selectOption("#skoreYear", "1ste jaar");
   await page.selectOption("#skoreKlas", "1WM");
-  const kop = page.locator(".skore-table th", { hasText: "Brug bouwen" });
+  const kop = page.locator(".skore-table th", { hasText: "Windei maken" });
   await expect(kop.locator(".skore-th-hint")).toHaveCount(0); // heeft feedbackzinnen
   await page.locator(".skore-table tbody tr").first().locator(".skore-copy").click();
-  const zin = await page.evaluate((n) => confidenceSentence(n, "Brug bouwen"), naam);
+  const zin = await page.evaluate((n) => confidenceSentence(n, "Windei maken"), naam);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
-    "Bij \"Brug bouwen\" werd je beoordeeld op: Voorspellen en Meten.\n\n" +
-    "Dit ging goed:\nBij Voorspellen: je deed bij voorspellen alle stappen.\n\n" +
-    "Hier kan je groeien:\nBij Meten: je deed bij meten stap 2.\n" + zin + "\n\n" +
-    "Zo pak je het de volgende keer aan:\nBij Meten: zet bij meten stap 3.",
+    "Dit is je feedback bij \"Windei maken\".\n\n" +
+    "Dit ging goed:\nBij je filmpjes van het ei: je filmde na 12, 24 en 36 uur en vertelde wat er veranderde.\n\n" +
+    "Hier kan je groeien:\nBij je voorspellingen vooraf: je schreef op wat er met het ei zou gebeuren, maar niet waarom.\n" + zin + "\n\n" +
+    "Zo pak je het de volgende keer aan:\nSchrijf bij elke voorspelling het woord \"omdat\" en je reden erbij.",
   );
   page.expectNoErrors();
 });

@@ -30,13 +30,17 @@
    de je-vorm maakt hem persoonlijk (namen uit Smartschool staan niet
    betrouwbaar als voornaam in de klaslijst).
 
-   Opbouw (sinds 1.25.0):
-     Bij "opdracht" werd je beoordeeld op: criteria.
+   Opbouw (sinds 1.25.0, aanhef en volgende stap aangepast in 1.25.1):
+     Dit is je feedback bij "opdracht".
      Dit ging goed:        Bij [criterium]: [feedbackzin]
      Hier kan je groeien:  Bij [criterium]: [feedbackzin]
                            vertrouwenszin, daarna de eigen feedback
      Zo pak je het de volgende keer aan: eigen feedforward, anders de
-       volgende stap van het werkpunt, anders het niveau erboven.
+       volgende stap van het werkpunt (zonder "Bij ...", die gaat over
+       het werkpunt net erboven), anders het niveau erboven.
+   Criterianamen zeggen sinds 1.25.1 wat de leerling maakte of deed
+   ("Je voorspellingen vooraf"); de AI-prompt vraagt dat. Na "Bij" wordt
+   "Je" dan "je".
      Zonder werkpunt: "Een uitdaging voor de volgende keer:" met de
        uitdaging van het eerste criterium dat er een heeft.
 
@@ -59,9 +63,8 @@
    - Nooit punten, percentages of niveaulabels: Smartschool toont het
      punt al, en een cijfer naast commentaar doet de commentaar vergeten.
    - Richtwaarde FEEDBACK_MAX_CHARS, zonder de eigen tekst van de
-     leerkracht. Is het te lang, dan wordt eerst de lijst met criteria
-     korter en valt daarna het sterke punt weg (dat laatste enkel als er
-     een werkpunt is). Werkpunt, volgende stap en de tekst van de
+     leerkracht. Is het te lang, dan valt het sterke punt weg (enkel als
+     er een werkpunt is). Werkpunt, volgende stap en de tekst van de
      leerkracht blijven altijd staan en worden nooit afgekort.
    ------------------------------------------------------------------ */
 
@@ -100,12 +103,6 @@ function feedbackHash(text) {
 
 function confidenceSentence(student, evaluation) {
   return CONFIDENCE_SENTENCES[feedbackHash(student + "|" + evaluation) % CONFIDENCE_SENTENCES.length];
-}
-
-/* "a", "a en b", "a, b en c" */
-function joinNl(list) {
-  if (list.length <= 1) return list.join("");
-  return list.slice(0, -1).join(", ") + " en " + list[list.length - 1];
 }
 
 /* Na "Bij criterium:" komt altijd een kleine letter, zodat alle regels
@@ -167,9 +164,20 @@ function scoredCriteria(rubrics, scores, currentRubrics) {
   return out;
 }
 
-function criterionLine(c, text) {
+/* Een zin als losse regel: met een hoofdletter en een punt. */
+function standaloneSentence(text) {
   var sentence = feedbackSentence(text);
-  return c.name ? "Bij " + c.name + ": " + sentence : sentence.charAt(0).toUpperCase() + sentence.slice(1);
+  return sentence.charAt(0).toUpperCase() + sentence.slice(1);
+}
+
+/* "Bij [criterium]:" met een naam als "Je voorspellingen vooraf" wordt
+   "Bij je voorspellingen vooraf:" (sinds 1.25.1). */
+function criterionName(name) {
+  return /^(je|jouw|jullie)\s/i.test(name) ? name.charAt(0).toLowerCase() + name.slice(1) : name;
+}
+
+function criterionLine(c, text) {
+  return c.name ? "Bij " + criterionName(c.name) + ": " + feedbackSentence(text) : standaloneSentence(text);
 }
 
 /* De tekst voor één leerling bij één beoordeling (rij). Puur: leest
@@ -198,21 +206,14 @@ function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
     crit.forEach(function (c) { if (!challenge && !c.next && c.nextStep) challenge = c; });
   }
 
-  function compose(fullList, withSterk, withOwn) {
+  function compose(withSterk, withOwn) {
     var blocks = [];
     var feedback = withOwn ? ownFeedback : "";
     var forward = withOwn ? ownForward : "";
 
-    var names = crit.map(function (c) { return c.name; }).filter(Boolean);
-    var up;
-    if (!names.length) {
-      up = "Bij \"" + evaluation + "\" werd je beoordeeld met de rubric.";
-    } else if (fullList) {
-      up = "Bij \"" + evaluation + "\" werd je beoordeeld op: " + joinNl(names) + ".";
-    } else {
-      up = "Bij \"" + evaluation + "\" werd je beoordeeld op " +
-        (names.length === 1 ? "1 onderdeel." : names.length + " onderdelen.");
-    }
+    // Geen lijst met criterianamen: die zegt een leerling weken later
+    // niets meer (1.25.1). Elke regel hieronder noemt zelf waarover hij gaat.
+    var up = "Dit is je feedback bij \"" + evaluation + "\".";
     if (isGroup) up += "\n" + FEEDBACK_GROUP_NOTE;
     blocks.push(up);
 
@@ -236,9 +237,11 @@ function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
       // Enkel bij het meten: de eigen feedforward telt niet mee, en de
       // automatische stap komt er dan toch niet.
     } else if (werk && werk.nextStep) {
-      blocks.push(FEEDBACK_LABELS.next + "\n" + criterionLine(werk, werk.nextStep));
+      // Gaat over het werkpunt net erboven: zonder "Bij ...", de zin zegt
+      // zelf wat de leerling moet doen.
+      blocks.push(FEEDBACK_LABELS.next + "\n" + standaloneSentence(werk.nextStep));
     } else if (werk && String(werk.next.desc || "").trim()) {
-      blocks.push(FEEDBACK_LABELS.next + "\nOm een niveau hoger te komen bij " + werk.name + ": " +
+      blocks.push(FEEDBACK_LABELS.next + "\nOm een niveau hoger te komen bij " + criterionName(werk.name) + ": " +
         feedbackSentence(werk.next.desc));
     } else if (challenge) {
       blocks.push(FEEDBACK_LABELS.challenge + "\n" + criterionLine(challenge, challenge.nextStep));
@@ -249,12 +252,8 @@ function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
 
   /* Meten zonder de eigen tekst van de leerkracht: die telt niet mee en
      wordt nooit ingekort. */
-  function fits(fullList, withSterk) {
-    return compose(fullList, withSterk, false).length <= FEEDBACK_MAX_CHARS;
-  }
-  if (fits(true, true)) return compose(true, true, true);
-  if (fits(false, true) || !werk) return compose(false, true, true);
-  return compose(false, false, true);
+  if (compose(true, false).length <= FEEDBACK_MAX_CHARS || !werk) return compose(true, true);
+  return compose(false, true);
 }
 
 /* Heeft de huidige rubric van een evaluatie al feedbackzinnen? Zo niet,

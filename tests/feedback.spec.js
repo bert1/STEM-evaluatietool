@@ -12,10 +12,9 @@ const PINKERS = "Maken van pinkers";
 const IDS = ["elektrische-schakeling", "realisatie-soldeerwerk", "behuizing-fietsmontage", "werkproces-veiligheid"];
 const DASH = /—|\s–\s/;
 
-const FEED_UP =
-  "Bij \"Maken van pinkers\" werd je beoordeeld op: Elektrische Schakeling, Realisatie & Soldeerwerk, " +
-  "Behuizing & Fietsmontage en Werkproces & Veiligheid.";
-const FEED_UP_KORT = "Bij \"Maken van pinkers\" werd je beoordeeld op 4 onderdelen.";
+// Sinds 1.25.1 geen lijst met criterianamen meer: die zegt een leerling
+// weken later niets. Elke regel noemt zelf waarover hij gaat.
+const FEED_UP = "Dit is je feedback bij \"Maken van pinkers\".";
 
 /* Bouwt de tekst voor een rij met deze scores (in de volgorde van IDS). */
 async function feedback(page, scores, extra, evaluation, student) {
@@ -83,7 +82,7 @@ test.describe("feedbacktekst", () => {
     const t = await feedback(page, [4, 3, 3, 4]);
     const zin = await vertrouwen(page);
     expect(t).toBe(
-      FEED_UP_KORT + "\n\n" +
+      FEED_UP + "\n\n" +
       "Dit ging goed:\n" +
       "Bij Elektrische Schakeling: schakeling is correct en werkt zeer betrouwbaar.\n\n" +
       "Hier kan je groeien:\n" +
@@ -99,7 +98,8 @@ test.describe("feedbacktekst", () => {
     const t = await feedback(page, [4, 2, 3, 4]);
     expect(t).toContain("Dit ging goed:\nBij Elektrische Schakeling: je toont bij criterium 1 niveau 4.");
     expect(t).toContain("Hier kan je groeien:\nBij Realisatie & Soldeerwerk: je toont bij criterium 2 niveau 2.");
-    expect(t).toContain("Zo pak je het de volgende keer aan:\nBij Realisatie & Soldeerwerk: zet bij criterium 2 de stap naar niveau 3.");
+    // De volgende stap hoort bij het werkpunt net erboven: geen "Bij ..." ervoor.
+    expect(t).toContain("Zo pak je het de volgende keer aan:\nZet bij criterium 2 de stap naar niveau 3.");
     expect(t).not.toContain("Om een niveau hoger");
     // Ontbreekt een feedbackzin, dan de omschrijving.
     await page.evaluate(({ YEAR, PINKERS }) => { db.evaluations[YEAR][PINKERS].rubrics[1].options[1].say = ""; }, { YEAR, PINKERS });
@@ -179,26 +179,27 @@ test.describe("feedbacktekst", () => {
     const t = await feedback(page, [5, 3, 5, 5], { feedback: lang, feedforward: lang + " Einde." });
     expect(t).toContain(lang + "\n");
     expect(t).toContain(lang + " Einde.");
-    // De eigen tekst telt niet mee: de volledige lijst en het sterke punt blijven staan.
+    // De eigen tekst telt niet mee: het sterke punt blijft staan.
     expect(t).toContain(FEED_UP);
     expect(t).toContain("Dit ging goed:");
   });
 
-  test("lengtegrens van 500 tekens zonder eigen tekst: eerst een kortere criterialijst, dan geen sterk punt", async ({ page }) => {
+  test("lengtegrens van 500 tekens zonder eigen tekst: te lang, dan valt het sterke punt weg", async ({ page }) => {
     const windei = await page.evaluate(() => rubricsFor(db, "1ste jaar", "Challenge windei").length);
     expect(windei).toBe(7);
     // Een oude rubric met lange omschrijvingen: maximaal ingekort. Het
     // werkpunt en de volgende stap zelf worden nooit afgekapt.
     const t = await feedback(page, [5, 4, 4, 2, 4, 4, 4], null, "Challenge windei");
-    expect(t).toContain("werd je beoordeeld op 7 onderdelen.");
+    expect(t.startsWith("Dit is je feedback bij \"Challenge windei\".\n\n")).toBe(true);
+    expect(t).not.toContain("Planning en stappenplan"); // geen lijst met namen
     expect(t).not.toContain("Dit ging goed");
     expect(t).toContain("Hier kan je groeien:\nBij Lichttest en fotografie: de foto is erg onduidelijk, onscherp of overbelicht, waardoor het rubberachtige gloeieffect van het ei nauwelijks te beoordelen is.");
     expect(t).toContain("Zo pak je het de volgende keer aan:\nOm een niveau hoger te komen bij Lichttest en fotografie: er is een herkenbare foto in het donker gemaakt waarbij het doorschijnen van het licht door het ei zichtbaar is gemaakt.");
     t.split("\n").filter(Boolean).forEach((line) => expect(line).toMatch(/[.?!:)]$/));
-    // Past alles, dan blijft de volledige lijst staan.
+    // Past alles, dan blijft het sterke punt staan.
     const kort = await feedback(page, [5, 5, 5, 5]);
     expect(kort.length).toBeLessThanOrEqual(500);
-    expect(kort).toContain("beoordeeld op: Elektrische Schakeling");
+    expect(kort).toContain("Dit ging goed:");
     // Met korte feedbackzinnen blijft ook een tekst met werkpunt onder 500 tekens.
     await metZinnen(page);
     const zinnen = await feedback(page, [4, 2, 3, 4]);
@@ -210,7 +211,6 @@ test.describe("feedbacktekst", () => {
     const t = await feedback(page, [null, 2, 4, null]);
     expect(t).not.toContain("Elektrische Schakeling");
     expect(t).not.toContain("Werkproces");
-    expect(t).toMatch(/beoordeeld op: Realisatie & Soldeerwerk en Behuizing & Fietsmontage\.|beoordeeld op 2 onderdelen\./);
     expect(t).toContain("Hier kan je groeien:\nBij Realisatie & Soldeerwerk");
   });
 
@@ -288,7 +288,7 @@ test.describe("feedbacktekst", () => {
     expect(r.oud).toEqual([]);
     expect(r.version).toBe(1);
     expect(r.tekst).toContain("Bij Realisatie & Soldeerwerk: je soldeerde, maar de verbindingen zijn dof.");
-    expect(r.tekst).toContain("Bij Realisatie & Soldeerwerk: verwarm de draad en het tin samen tot het tin glanst.");
+    expect(r.tekst).toContain("Zo pak je het de volgende keer aan:\nVerwarm de draad en het tin samen tot het tin glanst.");
     page.expectNoErrors();
   });
 
@@ -488,7 +488,7 @@ test.describe("kopieerknop in Skore", () => {
     });
     await page.locator(".skore-table .skore-copy").first().click();
     const tekst = await page.evaluate(() => window.__gekopieerd);
-    expect(tekst).toContain("werd je beoordeeld op");
+    expect(tekst).toContain("Dit is je feedback bij");
     await expect(page.locator("#toast")).toContainText("gekopieerd");
     await expect(page.locator(".skore-table td.skore-copied")).toHaveCount(1);
     page.expectNoErrors();

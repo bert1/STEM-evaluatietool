@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.25.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.25.1.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -217,7 +217,10 @@ Open **AI-hulp: rubric laten maken of nakijken** bovenaan de evaluatie.
    de tool de vorige tekst, zodat eerdere beoordelingen kloppen.
 
 De AI schrijft de rubric in leerlingentaal, aangepast aan de leeftijd van
-het leerjaar, en maakt meteen de feedbackzinnen, volgende stappen en
+het leerjaar. De namen van de criteria zeggen wat de leerling maakte of
+deed, bijvoorbeeld "Je voorspellingen vooraf" in plaats van "Voorspellen",
+zodat een leerling weken later nog weet waarover het gaat. De AI maakt ook
+meteen de feedbackzinnen, volgende stappen en
 uitdagingen. Bij het nakijken herschrijft ze een bestaande rubric zo, en
 vult ze ontbrekende zinnen aan. Ze verandert nooit het aantal criteria of
 niveaus. Controleer het resultaat altijd zelf.
@@ -347,8 +350,9 @@ de tool voor je, uit de rubric en je beoordeling.
 De tekst spreekt de leerling aan met "je". Er staat geen naam in. Zo ziet
 hij eruit:
 
-- Eerst de opdracht en de criteria: "Bij "Challenge windei" werd je
-  beoordeeld op: ...".
+- Eerst de opdracht: "Dit is je feedback bij "Challenge windei"." Er staat
+  geen lijst met criteria: elke regel zegt zelf waarover hij gaat, zodat
+  de leerling de rubric niet opnieuw moet bekijken.
 - **Dit ging goed:** het sterkste criterium, met de feedbackzin uit de
   rubric.
 - **Hier kan je groeien:** het criterium dat het meest aandacht nodig
@@ -357,7 +361,8 @@ hij eruit:
   jouw eigen **feedback**, als je die invulde bij het beoordelen.
 - **Zo pak je het de volgende keer aan:** jouw eigen **feedforward**.
   Vulde je die niet in, dan de **volgende stap** uit de rubric bij het
-  werkpunt. Staat die er ook niet, dan wat de leerling moet doen om een
+  werkpunt, als gewone zin: "Schrijf bij elke voorspelling het woord
+  "omdat" en je reden erbij." Staat die er ook niet, dan wat de leerling moet doen om een
   niveau hoger te komen.
 - Haalt een leerling overal het hoogste niveau, dan staat er **Een
   uitdaging voor de volgende keer:** met de uitdaging uit de rubric.

@@ -101,7 +101,9 @@ var AI_QUALITY_RULES = [
    leerkracht dat in de context invulde. */
 function aiLanguageRules(hasPrior) {
   return [
-    "De naam van een criterium is kort, hoogstens vijf woorden, in gewone woorden.",
+    "De naam van een criterium zegt concreet wat de leerling in deze opdracht maakte of deed, in hoogstens vijf gewone woorden. " +
+      "Schrijf \"Je voorspellingen vooraf\" of \"Je filmpjes van het ei\", niet \"Voorspellen\" of \"Observatie\". " +
+      "Een leerling moet weken later nog weten waarover het gaat.",
     "De beschrijving van een criterium zegt in één zin wat de leerling moet kunnen of tonen.",
     "Schrijf elk niveau in de je-vorm: wat toont de leerling in het werk? Bijvoorbeeld: \"Je schrijft vooraf op wat je verwacht te zien en waarom.\"",
     "Korte zinnen: hoogstens 15 woorden, één idee per zin.",
@@ -216,6 +218,8 @@ function buildAiRubricPrompt(opts, legacyYear) {
     "- \"volgendeStap\", bij elk niveau behalve het hoogste: wat de leerling concreet moet doen om het " +
       "volgende niveau te halen. Bijvoorbeeld: \"Schrijf bij je hypothese vooraf op welk verschil je verwacht te meten.\"",
     "- \"uitdaging\", enkel bij het hoogste niveau: één concrete stap om nog verder te gaan.",
+    "Elke zin is duidelijk zonder de rubric erbij: noem concreet wat de leerling maakte of deed, zoals de " +
+      "voorspelling, de tabel of de filmpjes. Schrijf dus niet \"Je deed alle stappen\" of \"Zet de volgende stap\".",
     "Deze zinnen volgen dezelfde taalregels. Ze bevatten geen naam, geen tijdelijke aanduiding zoals {naam}, " +
       "geen punten en geen namen van niveaus. Ze kloppen voor elke leerling op dat niveau.",
   );
@@ -255,6 +259,7 @@ function buildAiRubricPrompt(opts, legacyYear) {
   checks.push(
     "Kan " + pupil + " elk niveau lezen en zeggen: dit zie ik in mijn werk, of dit zie ik er niet in?",
     "Staat elk niveau in de je-vorm, met korte zinnen en alledaagse woorden?",
+    "Begrijpt een leerling elke naam en elke feedbackzin ook weken later, zonder de rubric erbij?",
     "Heeft elk niveau een feedbackZin, elk niveau behalve het hoogste een volgendeStap, en het hoogste niveau een uitdaging?",
     "Staat er in de feedbackzinnen geen naam, geen punt en geen naam van een niveau?",
     "Staat er nergens een gedachtestreep?",

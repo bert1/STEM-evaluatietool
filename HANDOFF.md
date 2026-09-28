@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.25.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.25.1**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,20 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.25.0)
+## Volledige featurelijst (huidige stand, 1.25.1)
+
+- **Feedback duidelijk zonder de rubric** (1.25.1). De gebruiker vond
+  "Bij Meten: ..." onduidelijk: een leerling weet weken later niet meer
+  wat "Meten" of "Voorspellen" betekent. Gekozen (uit twee voorstellen;
+  het andere was de beschrijving van het criterium tussen haakjes):
+  concrete namen en zinnen. De prompt vraagt nu criterianamen die zeggen
+  wat de leerling in deze opdracht maakte of deed ("Je voorspellingen
+  vooraf", "Je filmpjes van het ei") en feedbackzinnen die zonder rubric
+  duidelijk zijn, met een extra vraag in de zelfcontrole. De aanhef heeft
+  geen lijst met criterianamen meer: "Dit is je feedback bij "opdracht"."
+  De volgende stap van het werkpunt staat zonder "Bij ..." (ze hoort bij
+  het werkpunt net erboven). `criterionName()` maakt van "Je ..." na
+  "Bij" een kleine letter. Inkorten: enkel nog het sterke punt weglaten.
 
 - **Rubrics in leerlingentaal en feedbackzinnen per niveau** (1.25.0,
   `js/ai-rubric.js`, `js/rubric-model.js`, `js/rubric-editor.js`,
@@ -245,13 +258,15 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
     uitdaging uit de rubric.
   De tool leidt enkel taak en proces af uit de rubric; regulatie en
   persoon komen enkel uit de eigen tekst van de leerkracht.
-  **Opbouw sinds 1.25.0:** zonder naam, in de je-vorm. Aanhef "Bij
-  "opdracht" werd je beoordeeld op: criteria." (plus bij groepswerk "Dit
+  **Opbouw sinds 1.25.0:** zonder naam, in de je-vorm. Aanhef "Dit is je
+  feedback bij "opdracht"." (sinds 1.25.1, was een lijst met
+  criterianamen; plus bij groepswerk "Dit
   was een groepsopdracht, de feedback gaat over het werk van jullie
   groep."), dan "Dit ging goed:" (sterk punt), "Hier kan je groeien:"
   (werkpunt, dan een vertrouwenszin, dan `row.feedback`), en "Zo pak je
   het de volgende keer aan:" (eigen feedforward, anders `next` van het
-  werkpunt, anders `desc` van het niveau erboven). Zonder werkpunt: "Een
+  werkpunt als losse zin zonder "Bij ...", anders `desc` van het niveau
+  erboven). Zonder werkpunt: "Een
   uitdaging voor de volgende keer:" met de uitdaging van het eerste
   criterium dat er een heeft, tenzij er een eigen feedforward is. Zonder
   werkpunt komt `row.feedback` onder "Dit ging goed:". Per regel "Bij
@@ -278,8 +293,8 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   niveaulabels. De individuele correctie bij groepswerk wordt niet
   vermeld. Richtwaarde `FEEDBACK_MAX_CHARS` = 500 sinds 1.25.0 (was 700),
   **zonder** de eigen tekst van de leerkracht mee te tellen: te lang, dan
-  eerst "op N onderdelen" in plaats van de lijst, daarna geen sterk punt
-  (enkel als er een werkpunt is). Werkpunt, volgende stap en eigen tekst
+  geen sterk punt (enkel als er een werkpunt is). De stap met een kortere
+  criterialijst verviel in 1.25.1, samen met de lijst. Werkpunt, volgende stap en eigen tekst
   blijven altijd, dus bij een oude rubric met lange omschrijvingen kan de
   tekst toch langer zijn.
   **Vinkje:** `skoreCopied` in het geheugen, sleutel rij-id + `updatedAt`

@@ -13,6 +13,25 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.25.1 · 28 september 2026
+
+**Feedback in Skore is duidelijk zonder de rubric erbij**
+
+- De feedbacktekst begint nu met "Dit is je feedback bij "opdracht"." in
+  plaats van een lijst met criterianamen. Namen als "Meten" of
+  "Voorspellen" zeggen een leerling weken later niets meer.
+- De volgende stap staat als gewone zin, zonder "Bij ...": ze hoort bij
+  het werkpunt net erboven.
+- De AI-prompt vraagt criterianamen die zeggen wat de leerling in de
+  opdracht maakte of deed ("Je voorspellingen vooraf" in plaats van
+  "Voorspellen"), en feedbackzinnen die zonder de rubric duidelijk zijn.
+  De zelfcontrole vraagt of een leerling elke naam en zin ook weken later
+  begrijpt. Na "Bij" wordt een naam die met "Je" begint "je".
+- Te lange tekst: enkel nog het sterke punt valt weg (de kortere
+  criterialijst bestaat niet meer).
+- Tests aangepast aan de nieuwe aanhef; de volledige flow gebruikt nu een
+  rubric zoals de AI hem moet schrijven.
+
 ## 1.25.0 · 28 september 2026
 
 **Rubrics in leerlingentaal en persoonlijkere feedback in Skore**
