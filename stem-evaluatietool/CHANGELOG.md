@@ -13,6 +13,37 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.21.0 · 28 september 2026
+
+**Nieuw tabblad Skore: punten per rapportperiode, klaar om over te zetten
+naar Skore (Smartschool).**
+
+- Kies leerjaar, klas en periode (GE1 tot GE4). Standaard staat de
+  periode van vandaag open; met ‹ en › blader je naar andere periodes.
+- Bovenaan een lijst van de evaluaties in die periode, in de volgorde
+  waarin ze gebeurden: map, datum, hoeveel leerlingen beoordeeld zijn,
+  maximum en een vinkje "Overgezet naar Skore" (gedeeld met collega's).
+  Een kopieerknop is bewust weggelaten: plakken kan niet in Skore.
+- Daaronder een tabel: leerlingen alfabetisch en genummerd zoals in
+  Skore, per evaluatie een kolom met de punten (komma als decimaalteken). Groepsscores tellen met
+  de individuele correctie. Tussentijdse checks tellen niet mee.
+- "Punten op": zoals in de rubric, of omgerekend naar 10, 20 of 100.
+- Periodes zijn per schooljaar aan te passen onder "Periodes van dit
+  schooljaar" en worden gedeeld met je collega's. Voor 2026-2027 staan
+  standaard: GE1 vanaf 1 september, GE2 vanaf 11 oktober, GE3 vanaf 13
+  december, GE4 vanaf 28 februari, tot en met 13 juni. Een periode loopt
+  tot de dag vóór de volgende.
+- Elke beoordeling onthoudt nu de datum waarop ze gebeurde
+  (`row.createdAt`), ook als ze later bewerkt wordt. Oudere beoordelingen
+  gebruiken de datum van hun laatste wijziging.
+- Samenvoegen volgt het vaste patroon: de nieuwste periode-indeling wint,
+  en "overgezet"-vinkjes gaan nooit verloren (nieuwste per evaluatie
+  wint).
+- Nieuwe code in `js/skore.js`; 8 nieuwe testen in `tests/skore.spec.js`.
+- `README.md` in de hoofdmap is nu een volledige handleiding voor
+  leerkrachten, per tabblad. Ze wordt bij elke wijziging mee bijgewerkt
+  (afspraak in `CLAUDE.md`; een test controleert het versienummer erin).
+
 ## 1.20.0 · 28 september 2026
 
 **Opgeruimd en automatisch getest.**

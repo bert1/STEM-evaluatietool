@@ -51,6 +51,7 @@ stem-evaluatietool/
 │   ├── reports.js         leerlingrapport, feed-up-blad afdrukken
 │   ├── goals.js           leerplandoelen, drempels, groei over het jaar
 │   ├── sync.js            gedeelde map (bv. in OneDrive), team
+│   ├── skore.js           tabblad Skore: punten per rapportperiode
 │   └── app.js             opstarten, wizard, schermnavigatie
 │
 └── data/
