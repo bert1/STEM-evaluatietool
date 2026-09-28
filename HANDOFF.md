@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.18.1**.
+Laatst bijgewerkt: 28 september 2026, versie **1.19.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -84,7 +84,14 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.18.1)
+## Volledige featurelijst (huidige stand, 1.19.0)
+
+- **Slimmer zoeken in de evaluatielijsten** (1.19.0): in
+  `makeSearchCombo()` (`js/ui.js`) zonder accenten/hoofdletters via
+  `searchKey()`, ook op mapnaam, Enter kiest bij één resultaat, huidige
+  keuze krijgt `.current`, ARIA-combobox. Paneelstructuur:
+  `.eval-combo-section` > `.eval-combo-group` + `.eval-combo-items` >
+  `.eval-combo-option`.
 
 - **Veiliger opslaan** (1.18.1): onleesbare browseropslag wordt bewaard
   onder `STEM_EVAL_DB_V3_BESCHADIGD` (`STORAGE_RESCUE_KEY`) in plaats van

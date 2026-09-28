@@ -9,6 +9,17 @@ function el(tag, className, text) {
   return n;
 }
 
+/* Zoeksleutel: kleine letters, zonder accenten en met enkele spaties,
+   zodat "creme" ook "Crème" vindt en "  proef" ook "Proef". */
+function searchKey(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /* Zelfgetekende zoek-vervolgkeuzelijst met mappen als koppen. Gebruikt
    door het evaluatiemoment bij Evalueren én de evaluatiekeuze bij
    Resultaten, zodat beide er exact hetzelfde uitzien en werken. De echte
@@ -16,6 +27,14 @@ function el(tag, className, text) {
    "change"-event, en dus ook voor tests) maar is onzichtbaar; dit paneel
    is wat een leerkracht ziet. Het paneel is absoluut gepositioneerd en
    opent dus altijd naar beneden, wat met een kale <select> niet kan.
+
+   Zoeken negeert hoofdletters en accenten, en vindt ook mapnamen: typ
+   "september" en je ziet alle evaluaties uit die map. Staat er maar één
+   resultaat, dan kiest Enter dat meteen.
+
+   Voor schermlezers volgt het het ARIA-patroon "combobox met listbox":
+   het invoerveld houdt de focus, aria-activedescendant wijst naar de
+   gemarkeerde optie.
 
    cfg: inputId, panelId, selectId, wrapId,
         groups()        -> [{label, names}], label "" = geen kop
@@ -30,6 +49,11 @@ function makeSearchCombo(cfg) {
   function isOpen() { return !panel().classList.contains("hidden"); }
   function options() {
     return Array.prototype.slice.call(panel().querySelectorAll(".eval-combo-option"));
+  }
+
+  function showPanel(show) {
+    panel().classList.toggle("hidden", !show);
+    input().setAttribute("aria-expanded", show ? "true" : "false");
   }
 
   function sync() {
@@ -47,42 +71,66 @@ function makeSearchCombo(cfg) {
     input().value = "";
     highlight = -1;
     render();
-    panel().classList.remove("hidden");
+    showPanel(true);
   }
 
   function close() {
-    panel().classList.add("hidden");
+    showPanel(false);
     highlight = -1;
+    input().removeAttribute("aria-activedescendant");
     input().value = select().value || "";
   }
 
   function render() {
     var p = panel();
     p.innerHTML = "";
-    var needle = input().value.trim().toLowerCase();
+    var needle = searchKey(input().value);
+    var current = select().value;
     var flat = [];
 
-    cfg.groups().forEach(function (g) {
-      var matches = g.names.filter(function (n) { return !needle || n.toLowerCase().indexOf(needle) !== -1; });
+    cfg.groups().forEach(function (g, gi) {
+      // Past de mapnaam zelf bij het zoekwoord, dan tonen we de hele map.
+      var folderMatch = !!(needle && g.label && searchKey(g.label).indexOf(needle) !== -1);
+      var matches = g.names.filter(function (n) {
+        return !needle || folderMatch || searchKey(n).indexOf(needle) !== -1;
+      });
       if (!matches.length) return;
-      if (g.label) p.appendChild(el("div", "eval-combo-group", g.label));
+
+      var section = el("div", "eval-combo-section");
+      var parent = section;
+      if (g.label) {
+        var headId = cfg.panelId + "-g" + gi;
+        var head = el("div", "eval-combo-group", g.label);
+        head.id = headId;
+        head.setAttribute("role", "presentation");
+        section.appendChild(head);
+        parent = el("div", "eval-combo-items");
+        parent.setAttribute("role", "group");
+        parent.setAttribute("aria-labelledby", headId);
+        section.appendChild(parent);
+      }
       matches.forEach(function (name) {
         var row = el("div", "eval-combo-option" + (g.label ? " in-folder" : ""), name);
         row.dataset.value = name;
+        row.id = cfg.panelId + "-o" + flat.length;
+        row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", name === current ? "true" : "false");
+        if (name === current) row.classList.add("current");
         row.addEventListener("mousedown", function (e) {
           e.preventDefault(); // voorkomt dat het invoerveld al "blurt" vóór de klik telt
           choose(name);
         });
-        p.appendChild(row);
+        parent.appendChild(row);
         flat.push(row);
       });
+      p.appendChild(section);
     });
 
     if (!flat.length) {
       p.appendChild(el(
         "div", "eval-combo-empty",
         needle
-          ? "Geen evaluaties gevonden voor \"" + input().value.trim() + "\"."
+          ? "Geen evaluaties of mappen gevonden voor \"" + input().value.trim() + "\"."
           : cfg.emptyText,
       ));
     }
@@ -94,7 +142,12 @@ function makeSearchCombo(cfg) {
   function updateHighlight(flat) {
     flat = flat || options();
     flat.forEach(function (row, i) { row.classList.toggle("highlight", i === highlight); });
-    if (highlight >= 0 && flat[highlight]) flat[highlight].scrollIntoView({ block: "nearest" });
+    if (highlight >= 0 && flat[highlight]) {
+      input().setAttribute("aria-activedescendant", flat[highlight].id);
+      flat[highlight].scrollIntoView({ block: "nearest" });
+    } else {
+      input().removeAttribute("aria-activedescendant");
+    }
   }
 
   function choose(name) {
@@ -118,20 +171,28 @@ function makeSearchCombo(cfg) {
       e.preventDefault();
       flat = options();
       if (highlight >= 0 && flat[highlight]) choose(flat[highlight].dataset.value);
+      else if (flat.length === 1) choose(flat[0].dataset.value);
     } else if (e.key === "Escape") {
       if (isOpen()) { e.preventDefault(); close(); }
     }
   }
 
   function init() {
-    input().addEventListener("focus", open);
-    input().addEventListener("click", open);
-    input().addEventListener("input", function () {
+    var inp = input();
+    inp.setAttribute("role", "combobox");
+    inp.setAttribute("aria-autocomplete", "list");
+    inp.setAttribute("aria-controls", cfg.panelId);
+    inp.setAttribute("aria-expanded", "false");
+    panel().setAttribute("role", "listbox");
+
+    inp.addEventListener("focus", open);
+    inp.addEventListener("click", open);
+    inp.addEventListener("input", function () {
       highlight = -1;
       render();
-      panel().classList.remove("hidden");
+      showPanel(true);
     });
-    input().addEventListener("keydown", onKeydown);
+    inp.addEventListener("keydown", onKeydown);
 
     document.addEventListener("mousedown", function (e) {
       var wrap = $(cfg.wrapId);

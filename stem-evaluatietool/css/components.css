@@ -173,7 +173,7 @@ textarea { resize: vertical; min-height: 70px; }
   color: #0f172a;
   padding: 10px 10px 5px;
 }
-.eval-combo-group:not(:first-child) {
+.eval-combo-section + .eval-combo-section {
   border-top: 1px solid var(--border);
   margin-top: 6px;
 }
@@ -184,6 +184,8 @@ textarea { resize: vertical; min-height: 70px; }
   cursor: pointer;
 }
 .eval-combo-option.in-folder { padding-left: 18px; }
+.eval-combo-option.current { font-weight: 600; }
+.eval-combo-option.current::after { content: " ✓"; color: var(--primary); }
 .eval-combo-option:hover, .eval-combo-option.highlight {
   background: var(--primary-soft);
   color: var(--primary);

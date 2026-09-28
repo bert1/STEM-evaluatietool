@@ -13,6 +13,25 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.19.0 · 28 september 2026
+
+**Slimmer zoeken in de evaluatielijsten** (Evalueren en Resultaten).
+
+- Zoeken negeert hoofdletters en accenten: "creme" vindt "Crème"
+  (`searchKey()` in `js/ui.js`).
+- Zoeken vindt ook mapnamen: typ "september" en je ziet alle evaluaties
+  uit die map.
+- Blijft er maar één evaluatie over, dan kiest Enter die meteen, zonder
+  eerst een pijltje te moeten gebruiken.
+- De evaluatie die nu gekozen is, staat vetgedrukt met een vinkje in de
+  lijst.
+- Toegankelijk voor schermlezers: het zoekveld is een ARIA-combobox
+  (`role`, `aria-expanded`, `aria-controls`, `aria-activedescendant`),
+  het paneel een listbox met opties per map in een `role="group"`.
+  De HTML van het paneel heeft daardoor een extra laag per map
+  (`.eval-combo-section`), `.eval-combo-option` en `.eval-combo-group`
+  blijven dezelfde klassen.
+
 ## 1.18.1 · 28 september 2026
 
 **Veiliger opslaan: geen stil verlies van werk meer.**
