@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.24.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.24.1.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -144,7 +144,9 @@ Doe dit **aan het begin van het schooljaar**, of als er een klas bijkomt.
 
 ## 5. Rubrics
 
-Hier maak je de evaluaties die je bij Evalueren kan kiezen.
+Hier maak je de evaluaties die je bij Evalueren kan kiezen. De knoppen
+**Nieuwe evaluatie**, **+ Nieuwe map** en **Jaaroverzicht afdrukken** staan
+bovenaan, boven de lijst.
 
 - **Nieuwe evaluatie:** geef een naam, voeg **criteria** toe en kies per
   criterium 3, 4 of 5 niveaus. Geef bij voorkeur alle criteria hetzelfde

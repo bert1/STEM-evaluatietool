@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.24.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.24.1**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,11 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.24.0)
+## Volledige featurelijst (huidige stand, 1.24.1)
+
+- **Knoppenrij bij Rubrics bovenaan** (1.24.1, `index.html`): "Nieuwe
+  evaluatie", "+ Nieuwe map" en "Jaaroverzicht afdrukken" staan boven de
+  filters en de lijst in `#evalListView`.
 
 - **AI-rubriekhulp herwerkt** (1.24.0, `js/ai-rubric.js`, controle in
   `js/rubric-model.js`). Blijft kopiëren en plakken zonder sleutel.

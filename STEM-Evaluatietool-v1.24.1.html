@@ -2002,6 +2002,11 @@ table.feedup-table td {
         </h2>
 
         <div id="evalListView">
+          <div class="btn-row" style="margin: 0 0 16px">
+            <button type="button" class="btn-primary" id="btnNewEval">Nieuwe evaluatie</button>
+            <button type="button" class="btn-ghost" id="btnNewFolder">+ Nieuwe map</button>
+            <button type="button" class="btn-ghost" id="btnYearOverview">Jaaroverzicht afdrukken</button>
+          </div>
           <div class="selection-grid" style="margin-bottom: 16px">
             <div class="form-group" style="margin: 0">
               <label for="evalListYear">Leerjaar</label>
@@ -2018,11 +2023,6 @@ table.feedup-table td {
             </div>
           </div>
           <div id="evalList"></div>
-          <div class="btn-row" style="margin-top: 16px">
-            <button type="button" class="btn-primary" id="btnNewEval">Nieuwe evaluatie</button>
-            <button type="button" class="btn-ghost" id="btnNewFolder">+ Nieuwe map</button>
-            <button type="button" class="btn-ghost" id="btnYearOverview">Jaaroverzicht afdrukken</button>
-          </div>
         </div>
 
         <div id="evalEditView" class="hidden">
@@ -4766,7 +4766,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.24.0";
+var APP_VERSION = "1.24.1";
 
 var DB_VERSION = 4;
 

@@ -13,6 +13,14 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.24.1 · 28 september 2026
+
+**Knoppen bij Rubrics staan bovenaan**
+
+- De knoppen "Nieuwe evaluatie", "+ Nieuwe map" en "Jaaroverzicht
+  afdrukken" staan nu boven de lijst met evaluaties in plaats van eronder
+  (`index.html`). Bij een lange lijst hoef je niet meer te scrollen.
+
 ## 1.24.0 · 28 september 2026
 
 **De AI-rubriekhulp maakt correctere rubrics**
