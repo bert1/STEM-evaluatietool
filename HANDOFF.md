@@ -32,6 +32,8 @@ Sinds 28 september 2026 staat alles in de GitHub-repository
 - **Automatische controle:** `.github/workflows/controle.yml` bouwt en test
   bij elke push; het gebouwde HTML-bestand staat bij elke geslaagde run
   onder "Artifacts"
+- **Handleiding voor leerkrachten:** `README.md` (bij elke wijziging bijwerken)
+- **Werkafspraken voor ontwikkelsessies:** `CLAUDE.md`
 - **Laatst gebouwde versie voor collega's:** `STEM-Evaluatietool-vX.Y.Z.html`
   in de hoofdmap van de repository
 
@@ -421,6 +423,9 @@ verwijderen voor iedereen/mezelf, cijfertoetsen, jaaroverzicht afdrukken.
 - Versiebeheer bij elke wijziging, met onderscheid groot/klein
 - Volledige regressie vóór elke oplevering, geen uitzonderingen (`npm test`)
 - Enkel OneDrive voor het delen, geen NAS of eigen server
+- `README.md` is de handleiding voor leerkrachten en wordt bij elke
+  wijziging mee bijgewerkt (zie `CLAUDE.md`, een test bewaakt het
+  versienummer erin)
 - Geen gedachtestreep in Nederlandse teksten die de gebruiker leest
 - Eenvoud voor collega's staat boven ontwikkelaarsgemak — bij twijfel dat
   toetsen

@@ -40,6 +40,9 @@ naar Skore (Smartschool).**
   en "overgezet"-vinkjes gaan nooit verloren (nieuwste per evaluatie
   wint).
 - Nieuwe code in `js/skore.js`; 8 nieuwe testen in `tests/skore.spec.js`.
+- `README.md` in de hoofdmap is nu een volledige handleiding voor
+  leerkrachten, per tabblad. Ze wordt bij elke wijziging mee bijgewerkt
+  (afspraak in `CLAUDE.md`; een test controleert het versienummer erin).
 
 ## 1.20.0 · 28 september 2026
 

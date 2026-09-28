@@ -59,3 +59,11 @@ test("alle tabbladen openen zonder fouten", async ({ page }) => {
   await expect(page.locator("#folderButtons")).toBeVisible();
   page.expectNoErrors();
 });
+
+test("de handleiding (README.md) vermeldt de huidige versie", async () => {
+  const version = fs.readFileSync(path.join(src, "js", "state.js"), "utf8").match(/var APP_VERSION = "([^"]+)"/)[1];
+  const readme = fs.readFileSync(path.join(__dirname, "..", "README.md"), "utf8");
+  const m = readme.match(/Huidige versie: ([\d.]+)\./);
+  expect(m, "README.md moet 'Huidige versie: X.Y.Z.' bevatten").not.toBeNull();
+  expect(m[1], "werk README.md bij voor deze versie").toBe(version);
+});
