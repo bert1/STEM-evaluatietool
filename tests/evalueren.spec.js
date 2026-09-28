@@ -9,7 +9,7 @@ async function kiesKlasEnEvaluatie(page) {
   await page.locator("#evalComboPanel .eval-combo-option").first().click();
 }
 
-test("een leerling beoordelen, opslaan en terugzien bij Resultaten", async ({ page }) => {
+test("een leerling beoordelen, opslaan en terugzien bij Controle", async ({ page }) => {
   await openTool(page);
   await page.fill("#assessor", "TST");
   await kiesKlasEnEvaluatie(page);
@@ -27,7 +27,13 @@ test("een leerling beoordelen, opslaan en terugzien bij Resultaten", async ({ pa
 
   await page.click("#btnResults");
   await page.selectOption("#resYear", "1ste jaar");
-  await expect(page.locator("#resultsBody")).toContainText(leerling);
+  // Eén leerling beoordeeld: de evaluatie is gestart maar nog niet in orde.
+  const item = page.locator(".controle-open").first();
+  await expect(item).toContainText("1/");
+  await item.locator(".controle-detail-btn").click();
+  const rij = page.locator(".controle-table tr", { hasText: leerling });
+  await expect(rij.locator(".status-badge")).toHaveText("In orde");
+  await expect(rij.locator("button", { hasText: "Rapport" })).toBeVisible();
   page.expectNoErrors();
 });
 
@@ -39,14 +45,5 @@ test("opslaan zonder alle criteria geeft een duidelijke melding", async ({ page 
   await page.click("#btnSave");
   await expect(page.locator("#notice")).toContainText("Nog niet alle criteria gescoord");
   expect(await page.evaluate(() => rows().length)).toBe(0);
-  page.expectNoErrors();
-});
-
-test("klik op een leeg vakje in de dekkingstabel zet Klas op Alle klassen", async ({ page }) => {
-  await openTool(page);
-  await page.click("#btnResults");
-  await page.selectOption("#resYear", "1ste jaar");
-  await page.locator(".cov-cell button").last().click();
-  await expect(page.locator("#resKlas")).toHaveValue("*");
   page.expectNoErrors();
 });

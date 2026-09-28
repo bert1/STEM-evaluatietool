@@ -717,48 +717,10 @@ tr.conflict:hover { background: #fef3c7; }
   .member-row { grid-template-columns: 90px 1fr auto; }
 }
 
-/* ---------- Resultaten ---------- */
+/* ---------- Grafieken (groeigrafiek, nu niet op het scherm, zie js/goals.js) ---------- */
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.stat {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  background: #fbfcfe;
-}
-.stat .value {
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-.stat .label { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
-
-.workpoints { margin: 26px 0; }
-.workpoints h3, .chart-box h3 {
-  margin: 0 0 3px;
-  font-size: 16px;
-}
-.workpoints .hint, .chart-box .hint { margin: 0 0 12px; }
-
-.workpoint {
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--warning);
-  border-radius: 8px;
-  padding: 11px 14px;
-  margin-bottom: 8px;
-  background: #fff;
-}
-.wp-head { display: flex; align-items: baseline; gap: 10px; }
-.wp-name { font-weight: 700; font-size: 15px; }
-.wp-pct { margin-left: auto; font-weight: 700; font-size: 17px; }
-.wp-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
-
+.chart-box h3 { margin: 0 0 3px; font-size: 16px; }
+.chart-box .hint { margin: 0 0 12px; }
 .chart-box { margin: 26px 0; }
 .chart {
   width: 100%;
@@ -766,9 +728,6 @@ tr.conflict:hover { background: #fef3c7; }
   display: block;
   overflow: visible;
 }
-.chart .bar-label { font-size: 12.5px; fill: var(--text); }
-.chart .bar-value { font-size: 12px; fill: var(--muted); font-weight: 600; }
-.chart .seg-value { font-size: 11.5px; fill: #fff; font-weight: 700; }
 .chart .axis { font-size: 11px; fill: var(--muted); }
 
 .legend {
@@ -782,12 +741,8 @@ tr.conflict:hover { background: #fef3c7; }
 .legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .legend .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 
-th.sortable { cursor: pointer; user-select: none; }
-th.sortable:hover { color: var(--primary); }
 td.low { color: var(--danger); font-weight: 700; }
 
-@media (max-width: 620px) {
-  .stat .value { font-size: 22px; }
 }
 
 /* ---------- Waarschuwing: werk staat nergens vast ---------- */
@@ -877,29 +832,6 @@ td.low { color: var(--danger); font-weight: 700; }
   margin-bottom: 8px;
 }
 
-details.chart-group {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin: 18px 0;
-}
-details.chart-group > summary { margin-bottom: 0; }
-
-table.coverage th, table.coverage td { text-align: center; }
-table.coverage th:first-child, table.coverage td:first-child { text-align: left; }
-table.coverage td.cov-cell { padding: 5px 6px; }
-button.cov {
-  min-width: 62px;
-  padding: 5px 8px;
-  font-size: 13px;
-  font-weight: 700;
-  border-radius: 6px;
-  border: 1px solid transparent;
-}
-button.cov.full { background: var(--success-soft); color: var(--success); border-color: #a7f3d0; }
-button.cov.part { background: var(--warning-soft); color: var(--warning); border-color: #fde68a; }
-button.cov.none { background: #f1f5f9; color: var(--muted); border-color: var(--border); }
-button.cov:hover { filter: brightness(0.96); }
 
 /* ---------- Leerplandoelen ---------- */
 
@@ -1056,7 +988,7 @@ button.cov:hover { filter: brightness(0.96); }
 .goal-option .goal-text { flex: 1; }
 .goal-option .muted { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 
-/* Overzicht bij de resultaten */
+/* Statuslijst op het Controle-tabblad */
 .goal-row {
   display: flex;
   align-items: center;
@@ -1070,28 +1002,7 @@ button.cov:hover { filter: brightness(0.96); }
 }
 .goal-row .goal-main { display: flex; align-items: center; gap: 6px; min-width: 190px; }
 .goal-row .goal-title { font-size: 13.5px; color: var(--muted); flex: 1; min-width: 200px; }
-.goal-row .goal-score { font-weight: 700; font-size: 14px; white-space: nowrap; }
-.goal-row .goal-bar {
-  width: 110px;
-  height: 8px;
-  background: #f1f5f9;
-  border-radius: 999px;
-  overflow: hidden;
-  flex: none;
-}
-.goal-row .goal-bar span { display: block; height: 100%; border-radius: 999px; }
-.goal-row.untouched { background: #fafbfc; }
-.goal-row.untouched .goal-title { color: #94a3b8; }
 
-.threshold-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  margin: 10px 0 16px;
-}
-.threshold-row .form-group { margin: 0; }
-.threshold-row input { width: 78px; text-align: center; }
 
 .plan-badge {
   display: inline-block;
@@ -1232,6 +1143,7 @@ table.skore-table th .skore-th-max { display: block; margin-top: 3px; }
 table.skore-table td.skore-student { white-space: nowrap; }
 table.skore-table td.num { font-size: 15px; font-weight: 600; }
 table.skore-table td.skore-missing { color: #cbd5e1; font-weight: 400; }
+table.skore-table td.skore-exempt { color: var(--muted); font-size: 12.5px; font-weight: 500; font-style: italic; }
 table.skore-table td.skore-dup { background: var(--warning-soft); color: var(--warning); }
 table.skore-table tr.skore-extra td { color: var(--muted); font-style: italic; }
 
@@ -1250,6 +1162,96 @@ table.skore-table th:first-child { width: 1%; white-space: nowrap; }
   margin: 0;
 }
 .period-row input[type="date"] { width: auto; }
+
+/* ---------- Controle ---------- */
+
+.controle-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .controle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .controle-grid { grid-template-columns: 1fr; } }
+
+.controle-summary { margin-bottom: 18px; }
+.controle-heading { margin: 4px 0 10px; font-size: 17px; }
+
+.controle-group { margin-bottom: 16px; }
+.controle-group-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+  margin: 12px 0 6px;
+}
+
+.controle-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.controle-item.controle-open { border-left: 4px solid var(--warning); }
+.controle-item.controle-note { border-left: 4px solid #94a3b8; background: #fafbfc; }
+.controle-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.controle-title { font-weight: 700; font-size: 15px; }
+.controle-klas {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.controle-count { color: var(--muted); font-size: 13.5px; }
+.controle-actions { margin-left: auto; }
+
+.controle-issues { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+.controle-issues li { margin: 3px 0; }
+.controle-issue.controle-info { color: var(--muted); }
+.controle-issue-vrijgesteldToch { color: var(--danger); }
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.controle-detail { margin-top: 12px; }
+.controle-table td { vertical-align: middle; }
+.controle-row-actions { white-space: nowrap; text-align: right; }
+.controle-row-actions button + button { margin-left: 6px; }
+.controle-remark { font-size: 13px; color: var(--muted); }
+.controle-remark.controle-warn { color: var(--danger); font-weight: 600; }
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status-ok { background: var(--success-soft); color: var(--success); }
+.status-onvolledig, .status-tussentijds { background: var(--warning-soft); color: var(--warning); }
+.status-ontbreekt, .status-dubbel { background: var(--danger-soft); color: var(--danger); }
+.status-vrijgesteld, .status-nietInLijst { background: #f1f5f9; color: #475569; }
+
+details.controle-fold { margin: 14px 0; }
+.controle-notstarted .controle-klassen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.goal-status-summary { font-weight: 600; margin: 0 0 6px; }
+.goal-rubriek { margin-top: 16px; }
+.goal-row .goal-status { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.goal-row .goal-evals { font-size: 12.5px; color: var(--muted); }
+.goal-badge-niet { background: #f1f5f9; color: #475569; }
+.goal-badge-gekoppeld { background: var(--warning-soft); color: var(--warning); }
+.goal-badge-beoordeeld { background: var(--success-soft); color: var(--success); }
+.goal-row.goal-status-niet .goal-title { color: #94a3b8; }
 </style>
     <style>
 /* ---------- Voortgang ---------- */
@@ -1752,7 +1754,7 @@ table.feedup-table td {
         <button type="button" class="nav-btn active" id="btnHome">Evalueren</button>
         <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
         <button type="button" class="nav-btn" id="btnEvals">Rubrics</button>
-        <button type="button" class="nav-btn" id="btnResults">Resultaten</button>
+        <button type="button" class="nav-btn" id="btnResults">Controle</button>
         <button type="button" class="nav-btn" id="btnSkore">Skore</button>
         <button type="button" class="nav-btn" id="btnTeam">Team</button>
       </nav>
@@ -2085,54 +2087,35 @@ table.feedup-table td {
 
       <div class="card hidden" id="resultsCard2">
         <h2>
-          Resultaten
-          <span class="sub">Hoe scoort de klas, en waar moet je op inzetten?</span>
+          Controle
+          <span class="sub">Wat ontbreekt er nog?</span>
           <button type="button" class="btn-ghost btn-small" id="btnCloseResults" style="margin-left: auto">
             Terug naar evalueren
           </button>
         </h2>
 
-        <div class="selection-grid" style="margin-bottom: 20px">
+        <div class="selection-grid controle-grid" style="margin-bottom: 18px">
           <div class="form-group" style="margin: 0">
             <label for="resYear">Leerjaar</label>
             <select id="resYear"></select>
-          </div>
-          <div class="form-group eval-combo-wrap" id="resEvalComboWrap" style="margin: 0; position: relative">
-            <label for="resEvalComboInput">Evaluatie</label>
-            <input
-              type="text"
-              id="resEvalComboInput"
-              class="eval-combo-input"
-              placeholder="Zoek een evaluatie…"
-              autocomplete="off"
-            />
-            <div id="resEvalComboPanel" class="eval-combo-panel hidden"></div>
-            <select id="resEval" class="eval-select-hidden" tabindex="-1" aria-hidden="true"></select>
           </div>
           <div class="form-group" style="margin: 0">
             <label for="resKlas">Klas</label>
             <select id="resKlas"></select>
           </div>
+          <div class="form-group" style="margin: 0">
+            <label for="resMap">Map</label>
+            <select id="resMap"></select>
+          </div>
+          <div class="form-group" style="margin: 0">
+            <label for="resPeriod">Periode</label>
+            <select id="resPeriod"></select>
+          </div>
         </div>
 
-        <div id="resultsBody"></div>
+        <div id="controleBody"></div>
 
-        <details id="coverageWrap" open style="margin-bottom: 14px">
-          <summary class="section-toggle">Dekking over het schooljaar</summary>
-          <div id="coverageBody" style="margin-top: 10px"></div>
-        </details>
-
-        <details id="growthWrap" style="margin-bottom: 22px">
-          <summary class="section-toggle">Groei over het jaar</summary>
-          <div style="margin-top: 10px">
-            <div class="growth-sub-heading">Per leerling</div>
-            <div id="growthBody"></div>
-
-            <div id="growthWorkpoints" style="margin-top: 22px"></div>
-          </div>
-        </details>
-
-        <details id="goalsWrap" style="margin-bottom: 22px">
+        <details id="goalsWrap" class="controle-fold">
           <summary class="section-toggle">Leerplandoelen</summary>
           <div id="goalsBody" style="margin-top: 10px"></div>
         </details>
@@ -4579,7 +4562,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.21.0";
+var APP_VERSION = "1.22.0";
 
 var DB_VERSION = 4;
 
@@ -4670,8 +4653,13 @@ function emptyDb() {
    localTombstones (enkel bij mezelf): wordt nooit meegestuurd, maar
    telt intern wél mee — zo blijft "voor mezelf" verwijderd ook al heeft
    een collega het item nog. */
+/* "exemptions" (sinds 1.22.0): een opgeheven vrijstelling, zie
+   js/controle.js. Oudere bestanden hebben die soort niet; dat is gewoon
+   "nog nooit iets opgeheven". */
+var TOMBSTONE_KINDS = ["roster", "evaluations", "folders", "exemptions"];
+
 function emptyTombstones() {
-  return { roster: {}, evaluations: {}, folders: {} };
+  return { roster: {}, evaluations: {}, folders: {}, exemptions: {} };
 }
 
 /* Later moment van beide lagen samen — het maakt voor de vraag "moet
@@ -4882,7 +4870,8 @@ function mergeSessionsInto(targetSessions, incomingSessions) {
 function mergeTombstonesInto(target, incomingTombstones) {
   if (!incomingTombstones) return;
   if (!target.tombstones) target.tombstones = emptyTombstones();
-  ["roster", "evaluations", "folders"].forEach(function (kind) {
+  TOMBSTONE_KINDS.forEach(function (kind) {
+    if (!target.tombstones[kind]) target.tombstones[kind] = {};
     Object.keys(incomingTombstones[kind] || {}).forEach(function (key) {
       var t = Number(incomingTombstones[kind][key]) || 0;
       if (t > (target.tombstones[kind][key] || 0)) target.tombstones[kind][key] = t;
@@ -4921,6 +4910,7 @@ function mergeDb(target, incoming) {
 
     mergePeriods(bucket, incBucket.periods);
     mergeSkoreDone(bucket, incBucket.skoreDone);
+    mergeExemptions(bucket, incBucket.exemptions);
 
     var sessResult = mergeSessionsInto(bucket.sessions, incBucket.sessions);
     stats.added += sessResult.added;
@@ -5084,6 +5074,9 @@ function normaliseDb(db) {
     if (src.skoreDone && typeof src.skoreDone === "object") {
       bucket.skoreDone = JSON.parse(JSON.stringify(src.skoreDone));
     }
+    if (src.exemptions && typeof src.exemptions === "object") {
+      bucket.exemptions = JSON.parse(JSON.stringify(src.exemptions));
+    }
     out.schoolYears[yearLabel] = bucket;
   });
 
@@ -5151,7 +5144,7 @@ function normaliseDb(db) {
 
   function copyTombstones(src) {
     var t = emptyTombstones();
-    ["roster", "evaluations", "folders"].forEach(function (kind) {
+    TOMBSTONE_KINDS.forEach(function (kind) {
       Object.keys((src && src[kind]) || {}).forEach(function (key) {
         var v = Number(src[kind][key]);
         if (v) t[kind][key] = v;
@@ -5662,7 +5655,6 @@ function refreshAll() {
   if (currentView === "results") {
     fillResultSelectors();
     renderResults();
-    if ($("growthWrap").open) renderGrowthPanel();
   }
 
   // Is een van de klassen verdwenen uit de klaslijsten, dan sluiten we de
@@ -5964,8 +5956,12 @@ function updateMoveButton() {
      of hem vanaf nu bij de nieuwe klas tellen.
    Rijen zonder row.studentKlas (van vóór 1.14.0) hadden altijd precies
    één echte klas per sessie — die klas wordt dan alsnog voor iedereen in
-   de rij vastgelegd, vóór de klas van deze ene leerling verandert. */
-function migrateStudentEvaluations(year, student, toKlas) {
+   de rij vastgelegd, vóór de klas van deze ene leerling verandert.
+   Sinds 1.22.0 verhuizen ook de vrijstellingen ("niet te beoordelen")
+   van fromKlas mee, zie migrateExemptions() in js/controle.js. */
+function migrateStudentEvaluations(year, student, toKlas, fromKlas) {
+  if (fromKlas) migrateExemptions(year, student, fromKlas, toKlas);
+
   var now = Date.now();
   var movedRows = 0;
   var relabeledOnly = 0;
@@ -6065,7 +6061,7 @@ function moveStudentToClass() {
   }
   db.roster[year][toKlas].updatedAt = now;
 
-  var migrated = migrateStudentEvaluations(year, student, toKlas);
+  var migrated = migrateStudentEvaluations(year, student, toKlas, fromKlas);
 
   persist();
   refreshAll();
@@ -7772,6 +7768,23 @@ function onYearChange() {
   $("evalSelect").value = "";
   syncEvalComboDisplay();
   syncKlasMultiDisplay();
+}
+
+/* Opent het Evalueren-scherm met dit leerjaar, deze klas en deze
+   evaluatie al gekozen (knop "Nu beoordelen" op het Controle-tabblad).
+   Doet exact wat een leerkracht met de hand doet: leerjaar kiezen, klas
+   aanvinken, evaluatie kiezen, zodat dezelfde functies het werk doen. */
+function openEvaluationFor(year, klas, evaluation) {
+  $("yearSelect").value = year;
+  onYearChange();
+  Array.prototype.forEach.call($("classSelect").options, function (o) { o.selected = o.value === klas; });
+  $("evalSelect").value = evaluation;
+  syncKlasMultiDisplay();
+  syncEvalComboDisplay();
+  onSelectionChange();
+  showView("main");
+  var form = $("formCard");
+  if (form && !form.classList.contains("hidden")) form.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function onSelectionChange() {
@@ -9843,6 +9856,9 @@ function collectResults(db, year, evaluation, klasFilter) {
   });
 
   return {
+    year: year,
+    evaluation: evaluation,
+    klas: klasFilter || "*",
     rubrics: rubrics,
     max: max,
     entries: entries,
@@ -9935,30 +9951,6 @@ function statsFor(entries, rubrics) {
 
 
 
-/* De criteria waar de klas het zwakst op scoort, zwakste eerst. */
-function weakPoints(stats, limit) {
-  return stats.perCriterion
-    .filter(function (c) { return c.scored > 0; })
-    .slice()
-    .sort(function (a, b) { return a.avgPct - b.avgPct; })
-    .slice(0, limit || 3);
-}
-
-
-
-/* Wie zit onder de helft op dit criterium? */
-function strugglingOn(entries, criterion) {
-  return entries
-    .filter(function (e) {
-      var v = e.scores[criterion.id];
-      return typeof v === "number" && criterion.max > 0 && v / criterion.max < 0.5;
-    })
-    .map(function (e) { return e.name; })
-    .filter(function (n, i, arr) { return arr.indexOf(n) === i; });
-}
-
-
-
 /* ------------------------------------------------------------------
    DEKKING OVER HET SCHOOLJAAR
    ------------------------------------------------------------------ */
@@ -9967,24 +9959,36 @@ function coverageMatrix(db, year) {
   var klassen = classesFor(db, year);
   var evaluaties = evaluationNames(db, year);
 
+  // Eén keer over alle sessies van dit leerjaar: per leerling telt de
+  // echte klas (row.studentKlas), zoals in collectResults() en
+  // evaluatedMap(). Zo tellen combinatiesessies en leerlingen die van
+  // klas veranderden correct mee. Oudere rijen zonder dat veld hadden
+  // altijd precies één klas per sessie, dus daar is p.klas juist.
+  var doneBy = {};
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year !== year) return;
+    (db.sessions[key] || []).forEach(function (row) {
+      (row.students || []).forEach(function (s) {
+        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var cellKey = klas + "||" + p.evaluation;
+        if (!doneBy[cellKey]) doneBy[cellKey] = {};
+        doneBy[cellKey][s] = true;
+      });
+    });
+  });
+
   var cells = {};
   klassen.forEach(function (klas) {
     var students = studentsFor(db, year, klas);
     evaluaties.forEach(function (evaluation) {
-      var key = sessionKey(year, klas, evaluation);
-      var rows = (db.sessions || {})[key] || [];
-      var done = {};
-      rows.forEach(function (row) {
-        (row.students || []).forEach(function (s) {
-          if (students.indexOf(s) !== -1) done[s] = true;
-        });
-      });
-      var count = Object.keys(done).length;
+      var beoordeeld = doneBy[klas + "||" + evaluation] || {};
+      var count = students.filter(function (s) { return beoordeeld[s]; }).length;
       cells[klas + "||" + evaluation] = {
         done: count,
         total: students.length,
         pct: students.length ? Math.round((count / students.length) * 100) : 0,
-        started: rows.length > 0,
+        started: Object.keys(beoordeeld).length > 0,
       };
     });
   });
@@ -10153,13 +10157,6 @@ function svgText(x, y, text, attrs) {
 
 
 
-/* Rood naar groen. Werkt voor elk aantal niveaus. */
-function levelColor(index, total) {
-  if (total <= 1) return "hsl(140, 55%, 42%)";
-  var hue = (index / (total - 1)) * 134;
-  return "hsl(" + Math.round(hue) + ", 62%, 45%)";
-}
-
 function scoreColor(pct) {
   if (pct >= 80) return "hsl(140, 62%, 40%)";
   if (pct >= 60) return "hsl(85, 58%, 42%)";
@@ -10168,762 +10165,7 @@ function scoreColor(pct) {
   return "hsl(0, 70%, 50%)";
 }
 
-function openResults() {
-  if (!$("resYear").options.length) {
-    Object.keys(CONFIG).forEach(function (y) {
-      $("resYear").appendChild(new Option(y, y));
-    });
-    var chosen = $("yearSelect").value;
-    if (chosen) $("resYear").value = chosen;
-  }
-  fillResultSelectors();
-  renderResults();
-  showView("results");
-}
-
-function fillResultSelectors() {
-  var year = $("resYear").value;
-  var prevEval = $("resEval").value;
-  var prevKlas = $("resKlas").value;
-
-  // Zelfde mapindeling als bij Evalueren: <optgroup> per map in de echte
-  // (onzichtbare) <select>, en koppen in de zichtbare zoeklijst.
-  $("resEval").innerHTML = "";
-  fillGroupedEvalSelect($("resEval"), year, "");
-  if (prevEval && evaluationNames(db, year).indexOf(prevEval) !== -1) {
-    $("resEval").value = prevEval;
-  }
-
-  var evaluation = $("resEval").value;
-  var found = collectResults(db, year, evaluation, "*");
-
-  $("resKlas").innerHTML = "";
-  $("resKlas").appendChild(new Option("Alle klassen", "*"));
-  found.classes.forEach(function (klas) {
-    $("resKlas").appendChild(new Option(klas, klas));
-  });
-  if (prevKlas && $("resKlas").querySelector('option[value="' + cssEscape(prevKlas) + '"]')) {
-    $("resKlas").value = prevKlas;
-  }
-
-  resEvalCombo.sync();
-}
-
-/* Zoeklijst voor de evaluatie bij Resultaten, exact hetzelfde als het
-   evaluatiemoment bij Evalueren (zie makeSearchCombo() in js/ui.js). */
-var resEvalCombo = makeSearchCombo({
-  inputId: "resEvalComboInput",
-  panelId: "resEvalComboPanel",
-  selectId: "resEval",
-  wrapId: "resEvalComboWrap",
-  groups: function () { return evaluationGroups($("resYear").value); },
-  isEnabled: function () { return !!$("resYear").value; },
-  placeholder: "Zoek een evaluatie…",
-  disabledPlaceholder: "Kies eerst een leerjaar…",
-  emptyText: "Nog geen evaluaties voor dit leerjaar.",
-});
-
-function renderResults() {
-  renderCoverage();
-  if ($("goalsWrap").open) renderGoalOverview();
-  if ($("growthWrap").open) renderGrowthPanel();
-
-  var host = $("resultsBody");
-  host.innerHTML = "";
-
-  var year = $("resYear").value;
-  var evaluation = $("resEval").value;
-  var klas = $("resKlas").value || "*";
-
-  if (!evaluation) {
-    host.appendChild(el("div", "empty", "Er zijn nog geen evaluaties in " + year + "."));
-    return;
-  }
-
-  var data = collectResults(db, year, evaluation, klas);
-  if (!data.entries.length) {
-    host.appendChild(el("div", "empty",
-      "Nog geen resultaten voor " + evaluation + (klas === "*" ? "" : " in " + klas) + "."));
-    return;
-  }
-
-  // Kerncijfers en grafieken gaan over de eindbeoordelingen. Tussentijdse
-  // checks zijn expres vaak onvolledig en zouden het gemiddelde vertekenen.
-  var summativeEntries = data.entries.filter(function (e) { return !e.formative; });
-  var stats = statsFor(summativeEntries.length ? summativeEntries : data.entries, data.rubrics);
-  stats.formativeCount = data.entries.filter(function (e) { return e.formative; }).length;
-
-  host.appendChild(renderSummary(data, stats, klas));
-  host.appendChild(renderCalibration(data, stats));
-  host.appendChild(renderStudentTable(data, stats));
-
-  var chartsWrap = el("details", "chart-group");
-  var chartsSummary = document.createElement("summary");
-  chartsSummary.className = "section-toggle";
-  chartsSummary.textContent = "Grafieken per criterium en spreiding";
-  chartsWrap.appendChild(chartsSummary);
-  var chartsBody = el("div");
-  chartsBody.style.marginTop = "10px";
-  chartsBody.appendChild(renderCriterionChart(stats));
-  chartsBody.appendChild(renderDistributionChart(stats));
-  chartsBody.appendChild(renderSpreadChart(stats));
-  chartsWrap.appendChild(chartsBody);
-  host.appendChild(chartsWrap);
-}
-
-
-
-/* --- kerncijfers --- */
-
-function renderSummary(data, stats, klas) {
-  var wrap = el("div");
-
-  var cards = el("div", "stat-grid");
-  function card(value, label, tone) {
-    var c = el("div", "stat" + (tone ? " " + tone : ""));
-    c.appendChild(el("div", "value", value));
-    c.appendChild(el("div", "label", label));
-    return c;
-  }
-  cards.appendChild(card(stats.count, stats.count === 1 ? "leerling beoordeeld" : "leerlingen beoordeeld"));
-  cards.appendChild(card(stats.avgPct + "%", "klasgemiddelde (" + stats.avg.toFixed(1) + " op " + stats.maxTotal + ")"));
-  cards.appendChild(card(stats.median + "/" + stats.maxTotal, "mediaan"));
-  cards.appendChild(card(stats.lowest + " – " + stats.highest, "laagste en hoogste"));
-  wrap.appendChild(cards);
-
-  if (data.duplicates.length) {
-    var dup = el("div", "notice warn");
-    dup.appendChild(el("strong", null, "Dubbel beoordeeld"));
-    dup.appendChild(document.createTextNode(
-      data.duplicates.join(", ") + " staat meer dan één keer in de resultaten. Die telt dus dubbel mee in de cijfers hieronder.",
-    ));
-    wrap.appendChild(dup);
-  }
-  if (stats.incomplete) {
-    var inc = el("div", "notice warn");
-    inc.appendChild(el("strong", null, stats.incomplete + " onvolledige beoordeling(en)"));
-    inc.appendChild(document.createTextNode(
-      "Bij een of meer leerlingen is niet elk criterium gescoord. Hun totaal ligt daardoor lager dan het hoort. " +
-      "Was dit bedoeld als tussentijdse check, markeer de rij dan als zodanig in het evaluatiescherm.",
-    ));
-    wrap.appendChild(inc);
-  }
-  if (stats.formativeCount) {
-    var fm = el("div", "notice info");
-    fm.appendChild(el("strong", null, stats.formativeCount + " tussentijdse check(s) niet meegeteld"));
-    fm.appendChild(document.createTextNode(
-      "Deze cijfers gaan alleen over de eindbeoordelingen. Tussentijdse checks tellen niet mee in het gemiddelde, de mediaan of de grafieken hieronder.",
-    ));
-    wrap.appendChild(fm);
-  }
-
-  return wrap;
-}
-
-
-
-/* --- werkpunten --- */
-
-function renderWorkPoints(data, stats) {
-  var wrap = el("div", "workpoints");
-  var weak = weakPoints(stats, 3);
-  if (!weak.length) return wrap;
-
-  wrap.appendChild(el("h3", null, "Werkpunten voor de klas"));
-  wrap.appendChild(el("p", "hint", "De criteria waar deze groep het zwakst op scoort, zwakste eerst."));
-
-  weak.forEach(function (c) {
-    var item = el("div", "workpoint");
-
-    var head = el("div", "wp-head");
-    head.appendChild(el("span", "wp-name", c.name));
-    var pct = el("span", "wp-pct", c.avgPct + "%");
-    pct.style.color = scoreColor(c.avgPct);
-    head.appendChild(pct);
-    item.appendChild(head);
-
-    var line = el("div", "wp-meta",
-      "Gemiddeld " + c.avg.toFixed(1) + " op " + c.max +
-      (c.below ? " · " + c.below + " van de " + c.scored + " leerlingen onder de helft" : " · niemand onder de helft"));
-    item.appendChild(line);
-
-    if (c.below) {
-      var names = strugglingOn(data.entries, c);
-      var who = el("div", "chips");
-      who.style.marginTop = "6px";
-      names.slice(0, 12).forEach(function (n) {
-        who.appendChild(el("span", "chip", n));
-      });
-      if (names.length > 12) who.appendChild(el("span", "chip", "+" + (names.length - 12) + " meer"));
-      item.appendChild(who);
-    }
-
-    wrap.appendChild(item);
-  });
-
-  return wrap;
-}
-
-
-
-/* --- gemiddelde per criterium --- */
-
-function renderCriterionChart(stats) {
-  var box = el("div", "chart-box");
-  box.appendChild(el("h3", null, "Gemiddelde per criterium"));
-  box.appendChild(el("p", "hint", "Hoe hoger de balk, hoe beter de klas op dat criterium scoort. Kort betekent werkpunt."));
-
-  var items = stats.perCriterion.filter(function (c) { return c.scored > 0; });
-  if (!items.length) return box;
-
-  var rowH = 34;
-  var labelW = 210;
-  var width = 760;
-  var barW = width - labelW - 60;
-  var height = items.length * rowH + 26;
-
-  var svg = svgEl("svg", {
-    viewBox: "0 0 " + width + " " + height,
-    class: "chart",
-    role: "img",
-    "aria-label": "Gemiddelde score per criterium",
-  });
-
-  // Hulplijnen op 25, 50, 75 en 100 procent
-  [0, 25, 50, 75, 100].forEach(function (p) {
-    var x = labelW + (p / 100) * barW;
-    svg.appendChild(svgEl("line", {
-      x1: x, y1: 8, x2: x, y2: items.length * rowH + 6,
-      stroke: p === 50 ? "#cbd5e1" : "#e2e8f0",
-      "stroke-dasharray": p === 50 ? "4 3" : "0",
-      "stroke-width": 1,
-    }));
-    svg.appendChild(svgText(x, height - 6, p + "%", {
-      "text-anchor": "middle", class: "axis",
-    }));
-  });
-
-  items.forEach(function (c, i) {
-    var y = i * rowH + 8;
-    var label = c.name.length > 30 ? c.name.slice(0, 29) + "…" : c.name;
-    var t = svgText(labelW - 10, y + 16, label, { "text-anchor": "end", class: "bar-label" });
-    t.appendChild(svgEl("title")).textContent = c.name;
-    svg.appendChild(t);
-
-    svg.appendChild(svgEl("rect", {
-      x: labelW, y: y + 4, width: barW, height: 18, rx: 4, fill: "#f1f5f9",
-    }));
-    var w = Math.max(2, (c.avgPct / 100) * barW);
-    var bar = svgEl("rect", {
-      x: labelW, y: y + 4, width: w, height: 18, rx: 4, fill: scoreColor(c.avgPct),
-    });
-    bar.appendChild(svgEl("title")).textContent =
-      c.name + ": gemiddeld " + c.avg.toFixed(1) + " op " + c.max + " (" + c.avgPct + "%)";
-    svg.appendChild(bar);
-
-    svg.appendChild(svgText(labelW + barW + 8, y + 18, c.avgPct + "%", { class: "bar-value" }));
-  });
-
-  box.appendChild(svg);
-  return box;
-}
-
-
-
-/* --- verdeling per criterium --- */
-
-function renderDistributionChart(stats) {
-  var box = el("div", "chart-box");
-  box.appendChild(el("h3", null, "Verdeling per criterium"));
-  box.appendChild(el("p", "hint",
-    "Hoeveel leerlingen op welk niveau zitten. Een gemiddelde verbergt of iedereen in het midden zit of dat de klas uiteenvalt."));
-
-  var items = stats.perCriterion.filter(function (c) { return c.scored > 0; });
-  if (!items.length) return box;
-
-  var rowH = 34;
-  var labelW = 210;
-  var width = 760;
-  var barW = width - labelW - 20;
-  var height = items.length * rowH + 8;
-
-  var svg = svgEl("svg", {
-    viewBox: "0 0 " + width + " " + height,
-    class: "chart",
-    role: "img",
-    "aria-label": "Verdeling van de scores per criterium",
-  });
-
-  items.forEach(function (c, i) {
-    var y = i * rowH + 8;
-    var label = c.name.length > 30 ? c.name.slice(0, 29) + "…" : c.name;
-    var t = svgText(labelW - 10, y + 16, label, { "text-anchor": "end", class: "bar-label" });
-    t.appendChild(svgEl("title")).textContent = c.name;
-    svg.appendChild(t);
-
-    var x = labelW;
-    var sorted = c.options.slice().sort(function (a, b) { return a.score - b.score; });
-    sorted.forEach(function (opt, oi) {
-      var n = c.counts[opt.score] || 0;
-      if (!n) return;
-      var w = (n / c.scored) * barW;
-      var seg = svgEl("rect", {
-        x: x, y: y + 4, width: Math.max(1, w), height: 18,
-        fill: levelColor(oi, sorted.length),
-      });
-      seg.appendChild(svgEl("title")).textContent =
-        c.name + " — " + opt.label + " (" + opt.score + "): " + n +
-        (n === 1 ? " leerling" : " leerlingen");
-      svg.appendChild(seg);
-
-      if (w > 22) {
-        svg.appendChild(svgText(x + w / 2, y + 17, String(n), {
-          "text-anchor": "middle", class: "seg-value",
-        }));
-      }
-      x += w;
-    });
-  });
-
-  box.appendChild(svg);
-  box.appendChild(renderLegend(items[0]));
-  return box;
-}
-
-function renderLegend(criterion) {
-  var legend = el("div", "legend");
-  var sorted = criterion.options.slice().sort(function (a, b) { return a.score - b.score; });
-  sorted.forEach(function (opt, i) {
-    var item = el("span", "legend-item");
-    var dot = el("span", "dot");
-    dot.style.background = levelColor(i, sorted.length);
-    item.appendChild(dot);
-    item.appendChild(document.createTextNode(opt.label + " (" + opt.score + ")"));
-    legend.appendChild(item);
-  });
-  return legend;
-}
-
-
-
-/* --- spreiding van de totalen --- */
-
-function renderSpreadChart(stats) {
-  var box = el("div", "chart-box");
-  box.appendChild(el("h3", null, "Spreiding van de totaalscores"));
-  box.appendChild(el("p", "hint", "Hoeveel leerlingen in elke schijf van tien procent vallen."));
-
-  var width = 760;
-  var height = 200;
-  var padL = 34;
-  var padB = 34;
-  var chartW = width - padL - 10;
-  var chartH = height - padB - 14;
-  var maxCount = Math.max.apply(null, stats.buckets.map(function (b) { return b.count; })) || 1;
-
-  var svg = svgEl("svg", {
-    viewBox: "0 0 " + width + " " + height,
-    class: "chart",
-    role: "img",
-    "aria-label": "Spreiding van de totaalscores",
-  });
-
-  svg.appendChild(svgEl("line", {
-    x1: padL, y1: chartH + 14, x2: width - 10, y2: chartH + 14,
-    stroke: "#cbd5e1", "stroke-width": 1,
-  }));
-
-  var slot = chartW / stats.buckets.length;
-  stats.buckets.forEach(function (b, i) {
-    var h = b.count ? Math.max(3, (b.count / maxCount) * chartH) : 0;
-    var x = padL + i * slot + slot * 0.15;
-    var w = slot * 0.7;
-    if (h) {
-      var bar = svgEl("rect", {
-        x: x, y: chartH + 14 - h, width: w, height: h, rx: 3,
-        fill: scoreColor(b.from + 5),
-      });
-      bar.appendChild(svgEl("title")).textContent =
-        b.from + " tot " + b.to + "%: " + b.count + (b.count === 1 ? " leerling" : " leerlingen");
-      svg.appendChild(bar);
-      svg.appendChild(svgText(x + w / 2, chartH + 8 - h, String(b.count), {
-        "text-anchor": "middle", class: "bar-value",
-      }));
-    }
-    if (i % 2 === 0) {
-      svg.appendChild(svgText(x + w / 2, height - 12, b.from + "%", {
-        "text-anchor": "middle", class: "axis",
-      }));
-    }
-  });
-
-  box.appendChild(svg);
-  return box;
-}
-
-
-
-/* --- tabel per leerling --- */
-
-var resultSort = { key: "name", dir: 1 }
-
-function renderStudentTable(data, stats) {
-  var box = el("div", "chart-box");
-  var head = el("h3", null, "Per leerling");
-  box.appendChild(head);
-
-  var entries = data.entries.slice();
-  entries.sort(function (a, b) {
-    var v;
-    if (resultSort.key === "total") v = a.total - b.total;
-    else if (resultSort.key === "klas") v = a.klas.localeCompare(b.klas, "nl", { numeric: true });
-    else v = a.name.localeCompare(b.name, "nl");
-    if (v === 0) v = a.name.localeCompare(b.name, "nl");
-    return v * resultSort.dir;
-  });
-
-  var wrap = el("div", "table-wrap");
-  var table = document.createElement("table");
-  var thead = document.createElement("thead");
-  var hr = document.createElement("tr");
-
-  function sortable(label, key) {
-    var th = el("th", "sortable", label + (resultSort.key === key ? (resultSort.dir === 1 ? " ↑" : " ↓") : ""));
-    th.addEventListener("click", function () {
-      if (resultSort.key === key) resultSort.dir *= -1;
-      else { resultSort.key = key; resultSort.dir = 1; }
-      renderResults();
-    });
-    return th;
-  }
-
-  hr.appendChild(sortable("Leerling", "name"));
-  hr.appendChild(sortable("Klas", "klas"));
-  data.rubrics.forEach(function (r, i) {
-    var th = el("th", null, String(i + 1));
-    var goalCodes = (r.goals || []).map(function (k) {
-      var g = findGoal($("resYear").value, k);
-      return g ? goalCodeLabel(g) : k;
-    });
-    th.title = r.name + (goalCodes.length ? "\nLeerplandoelen: " + goalCodes.join(", ") : "");
-    th.style.textAlign = "center";
-    hr.appendChild(th);
-  });
-  hr.appendChild(sortable("Totaal", "total"));
-  hr.appendChild(el("th", null, "%"));
-  hr.appendChild(el("th", null, "Door"));
-  hr.appendChild(el("th", null, ""));
-  thead.appendChild(hr);
-  table.appendChild(thead);
-
-  var tbody = document.createElement("tbody");
-  entries.forEach(function (e) {
-    var tr = document.createElement("tr");
-
-    var nameCell = el("td");
-    nameCell.appendChild(el("strong", null, e.name));
-    if (e.groupSize > 1) {
-      var g = el("span", "badge", "groep van " + e.groupSize);
-      g.style.marginLeft = "6px";
-      nameCell.appendChild(g);
-    }
-    var live = evaluationVersion(db, $("resYear").value, $("resEval").value);
-    if (e.rubricVersion && e.rubricVersion !== live) {
-      var vb = el("span", "badge warn", "versie " + e.rubricVersion);
-      vb.style.marginLeft = "6px";
-      vb.title = "Beoordeeld met een oudere versie van de rubric. Het rapport toont die versie.";
-      nameCell.appendChild(vb);
-    }
-    tr.appendChild(nameCell);
-    tr.appendChild(el("td", null, e.klas));
-
-    data.rubrics.forEach(function (r) {
-      var v = e.scores[r.id];
-      var cell = el("td", "num", typeof v === "number" ? v : "—");
-      if (typeof v === "number") {
-        var rMax = rubricMaxScore(r);
-        if (rMax > 0 && v / rMax < 0.5) cell.classList.add("low");
-      }
-      tr.appendChild(cell);
-    });
-
-    var totalCell = el("td", "total", e.total + "/" + data.max);
-    if (e.correction) {
-      var sign = e.correction > 0 ? "+" + e.correction : String(e.correction);
-      var cb = el("span", "badge correction " + (e.correction > 0 ? "up" : "down"), sign);
-      cb.title = "Groepsscore " + e.groupTotal + "/" + data.max + ", individuele correctie " + sign + " → " + e.total + "/" + data.max;
-      cb.style.marginLeft = "6px";
-      totalCell.appendChild(cb);
-    }
-    tr.appendChild(totalCell);
-    var pctCell = el("td", "num", e.pct + "%");
-    pctCell.style.color = scoreColor(e.pct);
-    pctCell.style.fontWeight = "700";
-    tr.appendChild(pctCell);
-    tr.appendChild(el("td", null, e.assessor || "—"));
-
-    var act = el("td");
-    var one = el("button", "btn-ghost btn-small", "Rapport");
-    one.type = "button";
-    one.addEventListener("click", function () { printReports(data, [e], true); });
-    act.appendChild(one);
-    tr.appendChild(act);
-
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  wrap.appendChild(table);
-  box.appendChild(wrap);
-
-  var legend = el("p", "hint");
-  legend.textContent = "De cijferkolommen volgen de volgorde van de criteria; wijs een kolomkop aan voor de naam. Rood betekent onder de helft op dat criterium.";
-  box.appendChild(legend);
-
-  var btns = el("div", "btn-row");
-  btns.style.marginTop = "12px";
-  var copy = el("button", "btn-ghost btn-small", "Kopieer deze tabel");
-  copy.type = "button";
-  copy.addEventListener("click", function () { copyResultTable(data, entries); });
-  btns.appendChild(copy);
-
-  var printAll = el("button", "btn-ghost btn-small", "Rapporten afdrukken (" + entries.length + ")");
-  printAll.type = "button";
-  printAll.id = "btnPrintAll";
-  printAll.addEventListener("click", function () { printReports(data, entries, false); });
-  btns.appendChild(printAll);
-  box.appendChild(btns);
-
-  var printHint = el("p", "hint");
-  printHint.textContent = "Eén blad per leerling, met per criterium het behaalde niveau én de beschrijving die daarbij hoort. Kies in het afdrukvenster \"Opslaan als PDF\" als je het digitaal wil bewaren.";
-  box.appendChild(printHint);
-
-  return box;
-}
-
-function copyResultTable(data, entries) {
-  var lines = [];
-  lines.push(
-    ["Leerling", "Klas"]
-      .concat(data.rubrics.map(function (r) { return r.name; }))
-      .concat(["Groepsscore", "Correctie", "Totaal (op " + data.max + ")", "Percentage", "Beoordelaar"])
-      .join("\t"),
-  );
-  entries.forEach(function (e) {
-    lines.push(
-      [e.name, e.klas]
-        .concat(data.rubrics.map(function (r) {
-          var v = e.scores[r.id];
-          return typeof v === "number" ? v : "";
-        }))
-        .concat([e.groupTotal, e.correction ? (e.correction > 0 ? "+" + e.correction : e.correction) : "",
-          e.total, e.pct + "%", e.assessor || ""])
-        .join("\t"),
-    );
-  });
-  var text = lines.join("\n");
-
-  function done() {
-    showNotice("good", "Gekopieerd naar het klembord",
-      entries.length + " leerling(en). Plak met Ctrl+V in een Excel-blad.");
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(done).catch(function () {
-      if (legacyCopy(text)) done();
-    });
-  } else if (legacyCopy(text)) {
-    done();
-  }
-}
-
-/* ---- overgenomen uit report.js ---- */
-
-
-
-/* ------------------------------------------------------------------
-   KALIBRATIE
-   ------------------------------------------------------------------ */
-
-function renderCalibration(data, stats) {
-  var wrap = el("div", "chart-box");
-  var summativeEntries = data.entries.filter(function (e) { return !e.formative; });
-  var cal = calibration(summativeEntries.length ? summativeEntries : data.entries, data.rubrics);
-
-  if (cal.assessors.length < 2) return wrap;
-
-  wrap.appendChild(el("h3", null, "Vergelijking tussen beoordelaars"));
-  wrap.appendChild(el("p", "hint",
-    "Scoort iemand structureel strenger of milder? Verschillen kunnen ook komen doordat je andere groepen beoordeeld hebt, dus lees dit als een aanleiding om te overleggen, niet als een oordeel."));
-
-  if (!cal.comparable) {
-    var few = el("div", "notice info");
-    few.appendChild(el("strong", null, "Nog te weinig om te vergelijken"));
-    few.appendChild(document.createTextNode(
-      "Er is minstens drie beoordelingen per leerkracht nodig voor een zinvolle vergelijking. Nu: " +
-      cal.assessors.map(function (a) { return a.assessor + " (" + a.count + ")"; }).join(", ") + ".",
-    ));
-    wrap.appendChild(few);
-    return wrap;
-  }
-
-  var summary = el("div", "notice " + (cal.spread >= 15 ? "warn" : "good"));
-  summary.appendChild(el("strong", null,
-    cal.spread >= 15
-      ? "Opvallend verschil van " + cal.spread + " procentpunt"
-      : "Redelijk op één lijn (" + cal.spread + " procentpunt verschil)"));
-  summary.appendChild(document.createTextNode(
-    memberName(db, cal.mildest.assessor) + " geeft gemiddeld " + cal.mildest.avgPct + "%, " +
-    memberName(db, cal.strictest.assessor) + " gemiddeld " + cal.strictest.avgPct + "%." +
-    (cal.spread >= 15
-      ? " De moeite om samen een paar dezelfde leerlingen te scoren en de verschillen te bespreken."
-      : ""),
-  ));
-  wrap.appendChild(summary);
-
-  // Per criterium een balk per beoordelaar
-  var rowH = 20;
-  var groupGap = 14;
-  var labelW = 210;
-  var width = 760;
-  var barW = width - labelW - 60;
-  var items = data.rubrics.filter(function (r) {
-    return cal.assessors.some(function (a) { return a.perCriterion[r.id].count > 0; });
-  });
-  var height = items.length * (cal.assessors.length * rowH + groupGap) + 24;
-
-  var svg = svgEl("svg", {
-    viewBox: "0 0 " + width + " " + height,
-    class: "chart",
-    role: "img",
-    "aria-label": "Gemiddelde per criterium, per beoordelaar",
-  });
-
-  var palette = ["#0284c7", "#7c3aed", "#0891b2", "#c2410c", "#4d7c0f"];
-  var y = 8;
-
-  items.forEach(function (r) {
-    var blockTop = y;
-    cal.assessors.forEach(function (a, ai) {
-      var cell = a.perCriterion[r.id];
-      if (!cell.count) { y += rowH; return; }
-      var pct = cell.pct || 0;
-
-      svg.appendChild(svgEl("rect", {
-        x: labelW, y: y + 3, width: barW, height: rowH - 8, rx: 3, fill: "#f1f5f9",
-      }));
-      var bar = svgEl("rect", {
-        x: labelW, y: y + 3, width: Math.max(2, (pct / 100) * barW), height: rowH - 8, rx: 3,
-        fill: palette[ai % palette.length],
-        opacity: a.reliable ? 1 : 0.45,
-      });
-      bar.appendChild(svgEl("title")).textContent =
-        r.name + " — " + memberName(db, a.assessor) + ": gemiddeld " + cell.avg.toFixed(1) +
-        " (" + pct + "%) over " + cell.count + " leerling(en)";
-      svg.appendChild(bar);
-
-      svg.appendChild(svgText(labelW + barW + 8, y + rowH - 6, a.assessor + " " + pct + "%", {
-        class: "bar-value",
-      }));
-      y += rowH;
-    });
-
-    var label = r.name.length > 30 ? r.name.slice(0, 29) + "…" : r.name;
-    var t = svgText(labelW - 10, blockTop + (y - blockTop) / 2 + 4, label, {
-      "text-anchor": "end", class: "bar-label",
-    });
-    t.appendChild(svgEl("title")).textContent = r.name;
-    svg.appendChild(t);
-
-    y += groupGap;
-  });
-
-  wrap.appendChild(svg);
-  return wrap;
-}
-
-
-
-/* ------------------------------------------------------------------
-   DEKKING OVER HET SCHOOLJAAR
-   ------------------------------------------------------------------ */
-
-function renderCoverage() {
-  var host = $("coverageBody");
-  host.innerHTML = "";
-
-  var year = $("resYear").value;
-  var cov = coverageMatrix(db, year);
-
-  if (!cov.klassen.length || !cov.evaluaties.length) {
-    host.appendChild(el("div", "empty", "Nog geen klassen of rubrics in " + year + "."));
-    return;
-  }
-
-  var totalCells = cov.klassen.length * cov.evaluaties.length;
-  var doneCells = 0;
-  var openCells = 0;
-  cov.klassen.forEach(function (klas) {
-    cov.evaluaties.forEach(function (ev) {
-      var cell = cov.cells[klas + "||" + ev];
-      if (cell.pct === 100) doneCells++;
-      if (!cell.started) openCells++;
-    });
-  });
-
-  var line = el("p", "hint");
-  line.textContent =
-    doneCells + " van de " + totalCells + " combinaties volledig afgewerkt · " +
-    openCells + " nog niet begonnen.";
-  host.appendChild(line);
-
-  var wrap = el("div", "table-wrap");
-  var table = document.createElement("table");
-  table.className = "coverage";
-
-  var thead = document.createElement("thead");
-  var hr = document.createElement("tr");
-  hr.appendChild(el("th", null, "Klas"));
-  cov.evaluaties.forEach(function (ev) {
-    var th = el("th", null, ev.length > 20 ? ev.slice(0, 19) + "…" : ev);
-    th.title = ev;
-    hr.appendChild(th);
-  });
-  thead.appendChild(hr);
-  table.appendChild(thead);
-
-  var tbody = document.createElement("tbody");
-  cov.klassen.forEach(function (klas) {
-    var tr = document.createElement("tr");
-    tr.appendChild(el("td", null, klas)).style.fontWeight = "700";
-
-    cov.evaluaties.forEach(function (ev) {
-      var cell = cov.cells[klas + "||" + ev];
-      var td = el("td", "cov-cell");
-
-      var btn = el("button", "cov" + (cell.pct === 100 ? " full" : cell.started ? " part" : " none"));
-      btn.type = "button";
-      btn.textContent = cell.started ? cell.done + "/" + cell.total : "—";
-      btn.title = klas + " · " + ev + ": " + cell.done + " van de " + cell.total +
-        " leerlingen beoordeeld" + (cell.started ? "" : " (nog niet begonnen)");
-      btn.addEventListener("click", function () {
-        $("resEval").value = ev;
-        fillResultSelectors();
-        $("resKlas").value = klas;
-        // Zonder resultaten staat deze klas niet in de lijst: dan "Alle
-        // klassen" tonen in plaats van een leeg veld.
-        if ($("resKlas").value !== klas) $("resKlas").value = "*";
-        renderResults();
-        $("resultsBody").scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-      td.appendChild(btn);
-      tr.appendChild(td);
-    });
-
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  wrap.appendChild(table);
-  host.appendChild(wrap);
-}
+/* Het scherm zelf (tabblad Controle, sinds 1.22.0) staat in js/controle.js. */
 
 
 /* ---- overgenomen uit report.js ---- */
@@ -10949,8 +10191,10 @@ function printReports(data, entries, single) {
   var host = $("printArea");
   host.innerHTML = "";
 
-  var year = $("resYear").value;
-  var evaluation = $("resEval").value;
+  // Leerjaar en evaluatie komen uit collectResults(), niet meer uit
+  // filtervelden: het Controle-tabblad toont meerdere evaluaties tegelijk.
+  var year = data.year;
+  var evaluation = data.evaluation;
   var currentVersion = evaluationVersion(db, year, evaluation);
   var printed = new Date().toLocaleDateString("nl-BE", {
     day: "numeric", month: "long", year: "numeric",
@@ -11103,7 +10347,7 @@ function printReports(data, entries, single) {
     host.appendChild(page);
   });
 
-  var klasLabel = ($("resKlas").value && $("resKlas").value !== "*") ? $("resKlas").value : "Alle klassen";
+  var klasLabel = (data.klas && data.klas !== "*") ? data.klas : (single && entries.length === 1 ? entries[0].klas : "Alle klassen");
   var suggestedName = single && entries.length === 1
     ? sanitizeFilename(entries[0].name) + "_" + sanitizeFilename(klasLabel) + "_" + sanitizeFilename(evaluation)
     : sanitizeFilename(klasLabel) + "_" + sanitizeFilename(evaluation);
@@ -11722,6 +10966,41 @@ function goalTrendComparison(db, year, goalKey, klas, student) {
    LEERPLANDOELEN OP HET RESULTATENSCHERM
    ------------------------------------------------------------------ */
 
+/* Blok "Leerplandoelen" op het Controle-tabblad (sinds 1.22.0): per
+   rubriek elk doel met één van drie toestanden. Geen percentages meer;
+   "Overzicht afdrukken" en de drempels daarachter blijven wel werken. */
+function goalStatusList(dbObj, year, klas) {
+  var perEvaluation = {};
+  evaluationNames(dbObj, year).forEach(function (name) {
+    var data = collectResults(dbObj, year, name, klas);
+    var finals = data.entries.filter(function (e) { return !e.formative; });
+    if (!finals.length) return;
+    perEvaluation[name] = { rubrics: data.rubrics, entries: finals };
+  });
+
+  var usage = goalUsage(dbObj, year);
+  var attainment = goalAttainment(dbObj, year, Object.keys(usage), perEvaluation);
+
+  var list = goalsForYear(year).map(function (g) {
+    var linked = usage[g.id] || [];
+    var evs = linked.map(function (l) { return l.evaluation; })
+      .filter(function (v, i, a) { return a.indexOf(v) === i; });
+    var assessedIn = evs.filter(function (ev) {
+      var pack = perEvaluation[ev];
+      if (!pack) return false;
+      return pack.rubrics.some(function (r) {
+        return (r.goals || []).indexOf(g.id) !== -1 && pack.entries.some(function (e) {
+          return typeof e.scores[r.id] === "number";
+        });
+      });
+    });
+    var status = !linked.length ? "niet" : assessedIn.length ? "beoordeeld" : "gekoppeld";
+    return { goal: g, status: status, evaluations: evs, assessedIn: assessedIn };
+  });
+
+  return { list: list, usage: usage, attainment: attainment };
+}
+
 function renderGoalOverview() {
   var host = $("goalsBody");
   host.innerHTML = "";
@@ -11731,118 +11010,52 @@ function renderGoalOverview() {
 
   if (!yearHasGoals(year)) {
     host.appendChild(el("div", "empty",
-      "Voor " + year + " zijn er nog geen leerplandoelen in de tool geladen."));
+      "Voor " + year + " zijn er geen leerplandoelen in de tool geladen."));
     return;
   }
 
-  host.appendChild(renderThresholds());
+  var st = goalStatusList(db, year, klas);
+  var count = { niet: 0, gekoppeld: 0, beoordeeld: 0 };
+  st.list.forEach(function (x) { count[x.status]++; });
+  host.appendChild(el("p", "goal-status-summary",
+    count.beoordeeld + " beoordeeld, " + count.gekoppeld + " gekoppeld maar nog niet beoordeeld, " +
+      count.niet + " niet gekoppeld" + (klas === "*" ? "." : " (klas " + klas + ").")));
 
-  // Alle beoordelingen van dit leerjaar, per evaluatie gebundeld.
-  var perEvaluation = {};
-  evaluationNames(db, year).forEach(function (name) {
-    var data = collectResults(db, year, name, klas);
-    if (!data.entries.length) return;
-    perEvaluation[name] = { rubrics: data.rubrics, entries: data.entries };
-  });
-
-  var usage = goalUsage(db, year);
-  var usedKeys = Object.keys(usage);
-  var attainment = goalAttainment(db, year, usedKeys, perEvaluation);
-
-  var list = goalsForYear(year);
-  var totalGoals = list.length;
-
-  var summary = el("div", "stat-grid");
-  function stat(v, l) {
-    var c = el("div", "stat");
-    c.appendChild(el("div", "value", v));
-    c.appendChild(el("div", "label", l));
-    return c;
-  }
-  var assessed = usedKeys.filter(function (k) {
-    return attainment[k] && attainment[k].assessed > 0;
-  });
-  summary.appendChild(stat(usedKeys.length + " / " + totalGoals, "doelen gekoppeld aan een criterium"));
-  summary.appendChild(stat(String(assessed.length), "daarvan effectief beoordeeld"));
-  var weak = assessed.filter(function (k) { return attainment[k].pct !== null && attainment[k].pct < 70; });
-  summary.appendChild(stat(String(weak.length), "doelen onder 70% behaald"));
-  host.appendChild(summary);
-
-  var note = el("p", "hint");
-  note.textContent = "Zestien doelen staan woordelijk in beide leerplannen en zijn hier samengevoegd; " +
-    "die dragen beide codes en gelden dus voor techniek wetenschappen én moderne talen en wetenschappen.";
-  host.appendChild(note);
+  var labels = {
+    niet: "Niet gekoppeld",
+    gekoppeld: "Nog niet beoordeeld",
+    beoordeeld: "Beoordeeld",
+  };
 
   var lastRubriek = null;
-  list.forEach(function (g) {
-    var linked = usage[g.id];
-    var att = attainment[g.id];
-
+  st.list.forEach(function (x) {
+    var g = x.goal;
     if (g.rubriek !== lastRubriek) {
-      var h = el("div", "goal-rubriek", g.rubriek);
-      h.style.marginTop = "16px";
-      host.appendChild(h);
+      host.appendChild(el("div", "goal-rubriek", g.rubriek));
       lastRubriek = g.rubriek;
     }
-
-    var row = el("div", "goal-row" + (linked ? "" : " untouched"));
-
+    var row = el("div", "goal-row goal-status-" + x.status);
     var main = el("div", "goal-main");
     main.appendChild(el("span", "goal-code", goalCodeLabel(g)));
     main.appendChild(planBadge(g));
     main.appendChild(bloomBadge(g.bloom));
     main.appendChild(goalInfo(g));
     row.appendChild(main);
-
     row.appendChild(el("div", "goal-title", g.text));
 
-    if (!linked) {
-      row.appendChild(el("span", "badge", "niet gekoppeld"));
-      host.appendChild(row);
-      return;
-    }
-
-    var where = el("span", "badge");
-    var evs = linked.map(function (l) { return l.evaluation; })
-      .filter(function (v, i, a) { return a.indexOf(v) === i; });
-    where.textContent = evs.length === 1 ? evs[0] : evs.length + " evaluaties";
-    where.title = linked.map(function (l) {
-      return l.evaluation + " → " + l.rubricName;
-    }).join("\n");
-    row.appendChild(where);
-
-    if (!att || !att.assessed) {
-      row.appendChild(el("span", "badge warn", "nog niet beoordeeld"));
-      host.appendChild(row);
-      return;
-    }
-
-    var bar = el("div", "goal-bar");
-    var fill = el("span");
-    fill.style.width = att.pct + "%";
-    fill.style.background = scoreColor(att.pct);
-    bar.appendChild(fill);
-    bar.title = att.reached + " van de " + att.assessed +
-      " leerlingen haalt de drempel van " + att.threshold + "% voor " + g.bloom;
-    row.appendChild(bar);
-
-    var score = el("span", "goal-score", att.reached + "/" + att.assessed);
-    score.style.color = scoreColor(att.pct);
-    row.appendChild(score);
-
-    if (att.notReached.length && att.notReached.length <= 6) {
-      var who = el("span", "badge warn", att.notReached.join(", "));
-      who.title = "Halen de drempel van " + att.threshold + "% niet";
-      row.appendChild(who);
-    }
-
+    var status = el("div", "goal-status");
+    status.appendChild(el("span", "badge goal-badge-" + x.status, labels[x.status]));
+    var shown = x.status === "beoordeeld" ? x.assessedIn : x.evaluations;
+    if (shown.length) status.appendChild(el("span", "goal-evals", shown.join(", ")));
+    row.appendChild(status);
     host.appendChild(row);
   });
 
   var btns = el("div", "btn-row");
+  btns.style.marginTop = "14px";
   var print = el("button", "btn-ghost btn-small", "Overzicht afdrukken");
   print.type = "button";
-  print.addEventListener("click", function () { printGoalOverview(usage, attainment); });
+  print.addEventListener("click", function () { printGoalOverview(st.usage, st.attainment); });
   btns.appendChild(print);
   host.appendChild(btns);
 }
@@ -11856,45 +11069,6 @@ function goalInfo(goal) {
 
 
 
-/* --- drempels per beheersingsniveau --- */
-
-function renderThresholds() {
-  var box = el("div");
-  box.appendChild(el("p", "hint",
-    "Een doel telt als behaald wanneer een leerling op de gekoppelde criteria minstens de drempel " +
-    "voor dat beheersingsniveau haalt. Die drempels zijn een keuze van je vakgroep, geen norm van de tool."));
-
-  var row = el("div", "threshold-row");
-  BLOOM_ORDER.forEach(function (bloom) {
-    var group = el("div", "form-group");
-    var label = el("label", null, bloom);
-    label.setAttribute("for", "thr-" + slugify(bloom));
-    group.appendChild(label);
-
-    var input = document.createElement("input");
-    input.type = "number";
-    input.id = "thr-" + slugify(bloom);
-    input.min = "0";
-    input.max = "100";
-    input.value = thresholdFor(db, bloom);
-    input.addEventListener("change", function () {
-      var v = Math.max(0, Math.min(100, Number(this.value) || 0));
-      this.value = v;
-      if (!db.settings) db.settings = emptySettings();
-      if (!db.settings.thresholds) db.settings.thresholds = {};
-      db.settings.thresholds[bloom] = v;
-      db.settings.updatedAt = Date.now();
-      persist();
-      renderGoalOverview();
-    });
-    group.appendChild(input);
-    row.appendChild(group);
-  });
-
-  box.appendChild(row);
-  return box;
-}
-
 /* ---- overgenomen uit growth.js ---- */
 
 /* ------------------------------------------------------------------
@@ -11904,6 +11078,12 @@ function renderThresholds() {
    ziet of een leerling — of de klas — vooruitgaat.
    ------------------------------------------------------------------ */
 
+/* Sinds 1.22.0 staat het groeiblok niet meer op het scherm (het tabblad
+   Resultaten werd Controle). renderGrowthPanel(), renderGrowthWorkpoints(),
+   renderGrowthChart(), goalTrendSeries() en goalTrendComparison() blijven
+   bewust staan om ze later elders terug te zetten. Ze verwachten de
+   elementen #growthBody en #growthWorkpoints en lezen #resYear/#resEval/
+   #resKlas; die moeten dan opnieuw voorzien worden. */
 function renderGrowthPanel() {
   renderGrowthWorkpoints();
 
@@ -13189,7 +12369,7 @@ function renderSkore() {
   ));
 
   host.appendChild(buildSkoreEvalList(data, year, klas, range, scale));
-  host.appendChild(buildSkoreTable(data, scale));
+  host.appendChild(buildSkoreTable(data, year, klas, scale));
 
   if (data.notInRoster.length) {
     host.appendChild(el(
@@ -13228,7 +12408,13 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
     var first = e.dates[0], last = e.dates[e.dates.length - 1];
     tr.appendChild(el("td", null, first === last ? formatShortDate(first) : formatShortDate(first) + " – " + formatShortDate(last)));
     var n = Object.keys(e.byStudent).filter(function (s) { return data.students.indexOf(s) !== -1; }).length;
-    tr.appendChild(el("td", "num" + (n < total ? " skore-incomplete" : ""), n + "/" + total));
+    var vrij = data.students.filter(function (s) {
+      return !e.byStudent[s] && getExemption(year, e.name, klas, s);
+    }).length;
+    tr.appendChild(el(
+      "td", "num" + (n + vrij < total ? " skore-incomplete" : ""),
+      n + "/" + total + (vrij ? ", " + vrij + " vrijgesteld" : ""),
+    ));
     tr.appendChild(el("td", "num", scale ? scale + " (van " + e.max + ")" : e.max));
 
     var doneTd = el("td");
@@ -13253,7 +12439,7 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
   return wrap;
 }
 
-function buildSkoreTable(data, scale) {
+function buildSkoreTable(data, year, klas, scale) {
   var wrap = el("div", "table-wrap");
   var table = el("table", "skore-table");
   var thead = document.createElement("thead");
@@ -13284,6 +12470,12 @@ function buildSkoreTable(data, scale) {
           td.classList.add("skore-dup");
           td.title = "Deze leerling is meer dan eens beoordeeld; de recentste beoordeling telt.";
         }
+      } else if (data.notInRoster.indexOf(s) === -1 && getExemption(year, e.name, klas, s)) {
+        // Vrijgesteld op het Controle-tabblad: geen punt in Skore nodig.
+        var ex = getExemption(year, e.name, klas, s);
+        td.textContent = "vrijgesteld";
+        td.classList.add("skore-exempt");
+        td.title = "Niet te beoordelen" + (ex.reason ? ": " + ex.reason : "");
       } else {
         td.textContent = "–";
         td.classList.add("skore-missing");
@@ -13332,6 +12524,7 @@ function renderPeriodEditor() {
     start.className = "period-start";
     start.setAttribute("aria-label", "Startdatum " + (p.name || "periode " + (i + 1)));
     start.disabled = readOnly;
+    start.addEventListener("input", function () { p.start = start.value; });
     start.addEventListener("change", function () { p.start = start.value; });
     row.appendChild(name);
     row.appendChild(el("span", "period-label", "vanaf"));
@@ -13355,6 +12548,7 @@ function renderPeriodEditor() {
   end.value = periodDraft.end;
   end.className = "period-end";
   end.disabled = readOnly;
+  end.addEventListener("input", function () { periodDraft.end = end.value; });
   end.addEventListener("change", function () { periodDraft.end = end.value; });
   endRow.appendChild(end);
   host.appendChild(endRow);
@@ -13406,9 +12600,662 @@ function initSkore() {
   $("skorePrev").addEventListener("click", function () { stepSkorePeriod(-1); });
   $("skoreNext").addEventListener("click", function () { stepSkorePeriod(1); });
   $("skorePeriodsWrap").addEventListener("toggle", function () {
-    // Bij openen altijd vertrekken van wat er echt bewaard is.
-    if (this.open) { periodDraft = null; renderPeriodEditor(); }
+    // Niet-bewaarde wijzigingen vervallen bij het DICHTklappen, zodat je
+    // bij het openen vertrekt van wat er echt bewaard is. Bewust niet bij
+    // het openklappen: het toggle-event komt een fractie later, en op een
+    // trage computer zou het dan een net ingevulde datum wissen.
+    if (!this.open) { periodDraft = null; renderPeriodEditor(); }
   });
+}
+
+
+/* ------------------------------------------------------------------
+   CONTROLE (sinds 1.22.0, was het tabblad Resultaten)
+   Beantwoordt één vraag: wat ontbreekt er nog of klopt er niet? Toont
+   enkel wat aandacht vraagt, zonder punten, gemiddelden of grafieken.
+
+   De interne namen van het oude tabblad blijven (btnResults,
+   resultsCard2, view "results", #resYear, #resKlas): hernoemen levert
+   niets op voor de gebruiker en die namen zitten in app.js, storage.js,
+   goals.js en reports.js.
+   ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------
+   VRIJSTELLINGEN ("niet te beoordelen")
+   Per schooljaar, gedeeld met het team:
+     db.schoolYears[schooljaar].exemptions["leerjaar||evaluatie||klas||leerling"]
+       = { reason: "langdurig ziek", by: "AB", updatedAt }
+   Ongedaan maken volgt het tombstone-patroon:
+     db.tombstones.exemptions["schooljaar||leerjaar||evaluatie||klas||leerling"] = tijdstip
+   Een vrijstelling geldt zolang isTombstoned() "nee" zegt; opnieuw
+   vrijstellen schrijft een nieuwere updatedAt en wint dus weer.
+   Samenvoegen: per sleutel wint de nieuwste, er gaat nooit iets weg.
+   De klas zit in de sleutel, zodat gelijknamige leerlingen uit andere
+   klassen elkaar niet raken (zoals evaluatedMap() dat ook bewaakt).
+   ------------------------------------------------------------------ */
+
+function exemptionKey(year, evaluation, klas, student) {
+  return [year, evaluation, klas, student].join("||");
+}
+
+function exemptionTombKey(key) {
+  return db.currentSchoolYear + "||" + key;
+}
+
+function exemptionBucket() {
+  var bucket = db.schoolYears[db.currentSchoolYear];
+  if (!bucket.exemptions) bucket.exemptions = {};
+  return bucket.exemptions;
+}
+
+function getExemption(year, evaluation, klas, student) {
+  var bucket = db.schoolYears[db.currentSchoolYear] || {};
+  var key = exemptionKey(year, evaluation, klas, student);
+  var rec = bucket.exemptions && bucket.exemptions[key];
+  if (!rec) return null;
+  if (isTombstoned("exemptions", exemptionTombKey(key), rec.updatedAt)) return null;
+  return rec;
+}
+
+function setExemption(year, evaluation, klas, student, reason) {
+  var key = exemptionKey(year, evaluation, klas, student);
+  // Altijd nieuwer dan een eventuele tombstone, ook binnen dezelfde milliseconde.
+  var tomb = (db.tombstones.exemptions && db.tombstones.exemptions[exemptionTombKey(key)]) || 0;
+  exemptionBucket()[key] = {
+    reason: String(reason || "").trim().slice(0, 120),
+    by: cleanAssessor(db.assessor),
+    updatedAt: Math.max(Date.now(), tomb + 1),
+  };
+}
+
+function clearExemption(year, evaluation, klas, student) {
+  var key = exemptionKey(year, evaluation, klas, student);
+  var rec = exemptionBucket()[key];
+  if (!db.tombstones.exemptions) db.tombstones.exemptions = {};
+  db.tombstones.exemptions[exemptionTombKey(key)] = Math.max(Date.now(), rec ? rec.updatedAt : 0);
+}
+
+/* Per sleutel wint de nieuwste; nooit iets verwijderen. */
+function mergeExemptions(bucket, incoming) {
+  if (!incoming || typeof incoming !== "object") return;
+  if (!bucket.exemptions) bucket.exemptions = {};
+  Object.keys(incoming).forEach(function (key) {
+    var inc = incoming[key];
+    if (!inc) return;
+    var cur = bucket.exemptions[key];
+    if (!cur || (inc.updatedAt || 0) > (cur.updatedAt || 0)) {
+      bucket.exemptions[key] = JSON.parse(JSON.stringify(inc));
+    }
+  });
+}
+
+/* Leerling van klas veranderd (migrateStudentEvaluations): de geldende
+   vrijstellingen van de oude klas verhuizen mee naar de nieuwe. */
+function migrateExemptions(year, student, fromKlas, toKlas) {
+  var bucket = db.schoolYears[db.currentSchoolYear] || {};
+  Object.keys(bucket.exemptions || {}).forEach(function (key) {
+    var p = key.split("||");
+    if (p[0] !== year || p[2] !== fromKlas || p[3] !== student) return;
+    var rec = getExemption(year, p[1], fromKlas, student);
+    if (!rec) return;
+    clearExemption(year, p[1], fromKlas, student);
+    setExemption(year, p[1], toKlas, student, rec.reason);
+    exemptionBucket()[exemptionKey(year, p[1], toKlas, student)].by = rec.by;
+  });
+}
+
+/* ------------------------------------------------------------------
+   CONTROLES
+   ------------------------------------------------------------------ */
+
+var CONTROLE_ISSUES = [
+  { kind: "ontbreekt", label: "Nog niet beoordeeld" },
+  { kind: "onvolledig", label: "Onvolledig, niet elk criterium gescoord" },
+  { kind: "tussentijds", label: "Enkel een tussentijdse check" },
+  { kind: "dubbel", label: "Dubbel beoordeeld" },
+  { kind: "nietInLijst", label: "Niet (meer) in de klaslijst" },
+  { kind: "vrijgesteldToch", label: "Vrijgesteld, maar toch beoordeeld" },
+];
+
+var CONTROLE_STATUS = {
+  ok: "In orde",
+  onvolledig: "Onvolledig",
+  tussentijds: "Enkel tussentijds",
+  ontbreekt: "Ontbreekt",
+  dubbel: "Dubbel",
+  vrijgesteld: "Niet te beoordelen",
+  nietInLijst: "Niet in de klaslijst",
+};
+
+/* Eén keer over alle sessies van dit leerjaar. Per evaluatie en per
+   echte klas van de leerling (row.studentKlas, anders de klas van de
+   sessie): welke rijen horen bij welke leerling, en op welke datums. */
+function controleScan(year) {
+  var out = {};
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year !== year) return;
+    (db.sessions[key] || []).forEach(function (row) {
+      var date = rowDateIso(row);
+      (row.students || []).forEach(function (s) {
+        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var k = p.evaluation + "||" + klas;
+        if (!out[k]) out[k] = { students: {}, dates: [], rowDates: {} };
+        var cell = out[k];
+        if (!cell.students[s]) cell.students[s] = { finals: [], formatives: [] };
+        (row.formative ? cell.students[s].formatives : cell.students[s].finals).push(row);
+        if (cell.dates.indexOf(date) === -1) cell.dates.push(date);
+        cell.rowDates[row.id] = date;
+      });
+    });
+  });
+  return out;
+}
+
+/* Alle controlepunten voor één evaluatie in één klas. */
+function controleCheck(year, evaluation, klas, cell) {
+  var liveVersion = evaluationVersion(db, year, evaluation);
+  var roster = studentsFor(db, year, klas).slice().sort(function (a, b) { return a.localeCompare(b, "nl"); });
+  var perStudent = (cell && cell.students) || {};
+  var issues = {};
+  CONTROLE_ISSUES.forEach(function (i) { issues[i.kind] = []; });
+  var oldVersion = [];
+  var students = [];
+  var exempt = 0;
+
+  function classify(name, inRoster) {
+    var s = perStudent[name] || { finals: [], formatives: [] };
+    var ex = inRoster ? getExemption(year, evaluation, klas, name) : null;
+    var status;
+    if (!inRoster) status = "nietInLijst";
+    else if (s.finals.length > 1) status = "dubbel";
+    else if (s.finals.length === 1) {
+      var row = s.finals[0];
+      // Volledig ten opzichte van de rubric zoals die gold bij het beoordelen.
+      status = rowIsComplete(row, rubricsForVersion(db, year, evaluation, row.rubricVersion)) ? "ok" : "onvolledig";
+    }
+    else if (ex) status = "vrijgesteld";
+    else if (s.formatives.length) status = "tussentijds";
+    else status = "ontbreekt";
+
+    var exemptButEvaluated = !!(ex && s.finals.length);
+    if (s.finals.some(function (r) { return r.rubricVersion && r.rubricVersion < liveVersion; })) {
+      oldVersion.push(name);
+    }
+    if (status === "dubbel" || status === "onvolledig" || status === "tussentijds" ||
+        status === "ontbreekt" || status === "nietInLijst") issues[status].push(name);
+    if (exemptButEvaluated) issues.vrijgesteldToch.push(name);
+    if (status === "vrijgesteld") exempt++;
+
+    students.push({
+      name: name,
+      status: status,
+      exemption: ex,
+      exemptButEvaluated: exemptButEvaluated,
+      hasRows: !!(s.finals.length || s.formatives.length),
+    });
+  }
+
+  roster.forEach(function (n) { classify(n, true); });
+  Object.keys(perStudent).sort(function (a, b) { return a.localeCompare(b, "nl"); }).forEach(function (n) {
+    if (roster.indexOf(n) === -1) classify(n, false);
+  });
+
+  var issueList = CONTROLE_ISSUES
+    .filter(function (i) { return issues[i.kind].length; })
+    .map(function (i) { return { kind: i.kind, label: i.label, names: issues[i.kind] }; });
+
+  return {
+    evaluation: evaluation,
+    klas: klas,
+    started: !!(cell && Object.keys(cell.students).length),
+    students: students,
+    issues: issueList,
+    oldVersion: oldVersion,
+    counts: {
+      evaluated: roster.filter(function (n) { return perStudent[n] && perStudent[n].finals.length; }).length,
+      total: roster.length,
+      exempt: exempt,
+    },
+  };
+}
+
+function countsText(c) {
+  return c.evaluated + "/" + c.total + " beoordeeld" + (c.exempt ? ", " + c.exempt + " vrijgesteld" : "");
+}
+
+/* Opmerkingen die over een hele evaluatie gaan, niet over één klas:
+   criteria zonder leerplandoel, en een opvallend verschil tussen
+   beoordelaars (de bestaande grens van 15 procentpunt). */
+function controleEvalNotes(year, evaluation, klasFilter, rowInScope) {
+  var notes = [];
+  var rubrics = rubricsFor(db, year, evaluation);
+  if (yearHasGoals(year)) {
+    var zonder = rubrics.filter(function (r) { return !(r.goals || []).length; });
+    if (zonder.length) {
+      notes.push({
+        kind: "doelen",
+        text: zonder.length + (zonder.length === 1 ? " criterium" : " criteria") + " zonder leerplandoel: " +
+          zonder.map(function (r) { return r.name || "(zonder naam)"; }).join(", ") + ".",
+      });
+    }
+  }
+
+  var data = collectResults(db, year, evaluation, klasFilter);
+  var entries = data.entries.filter(function (e) { return !e.formative && rowInScope(e.rowId); });
+  var cal = calibration(entries, data.rubrics);
+  if (cal.comparable && cal.spread >= 15) {
+    notes.push({
+      kind: "kalibratie",
+      text: memberName(db, cal.mildest.assessor) + " geeft gemiddeld " + cal.mildest.avgPct + "%, " +
+        memberName(db, cal.strictest.assessor) + " " + cal.strictest.avgPct + "% (" + cal.spread +
+        " procentpunt verschil). Bespreek samen hoe jullie scoren.",
+    });
+  }
+  return notes;
+}
+
+/* Alles wat het scherm toont, per map in de volgorde van
+   evaluationGroups(). filters: { klas, map, period } met klas "*" voor
+   alle klassen, map "*" voor alle mappen en period -1 voor het hele
+   schooljaar. */
+function collectControle(year, filters) {
+  var scan = controleScan(year);
+  var klassen = classesFor(db, year).filter(function (k) { return filters.klas === "*" || k === filters.klas; });
+  var range = null;
+  if (filters.period >= 0) range = periodRanges(periodsFor(db, db.currentSchoolYear))[filters.period] || null;
+
+  function inPeriod(cell) {
+    if (!range) return true;
+    return cell.dates.some(function (d) { return d >= range.start && d <= range.end; });
+  }
+
+  var groups = [];
+  var totals = { open: 0, ok: 0, notStarted: 0, notes: 0 };
+
+  evaluationGroups(year).forEach(function (g) {
+    var label = g.label || "Zonder map";
+    if (filters.map !== "*" && g.label !== filters.map) return;
+    var group = { label: label, open: [], ok: [], notStarted: [], notes: [] };
+
+    g.names.forEach(function (evaluation) {
+      var shownForEval = false;
+      var notStartedKlassen = [];
+      var rowIds = {};
+
+      klassen.forEach(function (klas) {
+        var cell = scan[evaluation + "||" + klas];
+        if (!cell || !Object.keys(cell.students).length) {
+          notStartedKlassen.push(klas);
+          return;
+        }
+        if (!inPeriod(cell)) return;
+        Object.keys(cell.rowDates).forEach(function (id) { rowIds[id] = cell.rowDates[id]; });
+        var check = controleCheck(year, evaluation, klas, cell);
+        (check.issues.length ? group.open : group.ok).push(check);
+        shownForEval = true;
+      });
+
+      if (notStartedKlassen.length) group.notStarted.push({ evaluation: evaluation, klassen: notStartedKlassen });
+
+      if (shownForEval) {
+        var notes = controleEvalNotes(year, evaluation, filters.klas, function (id) {
+          var d = rowIds[id];
+          return !!d && (!range || (d >= range.start && d <= range.end));
+        });
+        if (notes.length) group.notes.push({ evaluation: evaluation, notes: notes });
+      }
+    });
+
+    totals.open += group.open.length;
+    totals.ok += group.ok.length;
+    totals.notStarted += group.notStarted.length;
+    totals.notes += group.notes.length;
+    groups.push(group);
+  });
+
+  return { groups: groups, totals: totals, range: range };
+}
+
+/* ------------------------------------------------------------------
+   SCHERM
+   ------------------------------------------------------------------ */
+
+var controleOpenDetail = {};   // "evaluatie||klas" → detail staat open
+var controleOpenNames = {};    // "evaluatie||klas||soort" → alle namen tonen
+var CONTROLE_NAMES_SHOWN = 4;
+
+function openResults() {
+  if (!$("resYear").options.length) {
+    Object.keys(CONFIG).forEach(function (y) { $("resYear").appendChild(new Option(y, y)); });
+    var chosen = $("yearSelect").value;
+    if (chosen) $("resYear").value = chosen;
+  }
+  fillResultSelectors();
+  renderResults();
+  showView("results");
+}
+
+function fillResultSelectors() {
+  var year = $("resYear").value;
+
+  var prevKlas = $("resKlas").value;
+  $("resKlas").innerHTML = "";
+  $("resKlas").appendChild(new Option("Alle klassen", "*"));
+  classesFor(db, year).forEach(function (k) { $("resKlas").appendChild(new Option(k, k)); });
+  if (prevKlas && classesFor(db, year).indexOf(prevKlas) !== -1) $("resKlas").value = prevKlas;
+
+  var prevMap = $("resMap").value;
+  $("resMap").innerHTML = "";
+  $("resMap").appendChild(new Option("Alle mappen", "*"));
+  evaluationGroups(year).forEach(function (g) {
+    if (g.label) $("resMap").appendChild(new Option(g.label, g.label));
+  });
+  if (prevMap && $("resMap").querySelector('option[value="' + cssEscape(prevMap) + '"]')) $("resMap").value = prevMap;
+
+  var prevPeriod = $("resPeriod").value;
+  $("resPeriod").innerHTML = "";
+  $("resPeriod").appendChild(new Option("Hele schooljaar", "-1"));
+  periodRanges(periodsFor(db, db.currentSchoolYear)).forEach(function (r, i) {
+    $("resPeriod").appendChild(new Option(
+      r.name + " (" + formatShortDate(r.start) + " t/m " + formatShortDate(r.end) + ")", String(i),
+    ));
+  });
+  if (prevPeriod && $("resPeriod").querySelector('option[value="' + prevPeriod + '"]')) $("resPeriod").value = prevPeriod;
+}
+
+function controleFilters() {
+  return {
+    klas: $("resKlas").value || "*",
+    map: $("resMap").value || "*",
+    period: Number($("resPeriod").value || -1),
+  };
+}
+
+function renderResults() {
+  var host = $("controleBody");
+  host.innerHTML = "";
+  var year = $("resYear").value;
+  var f = controleFilters();
+  if ($("goalsWrap").open) renderGoalOverview();
+
+  if (!evaluationNames(db, year).length) {
+    host.appendChild(el("div", "empty", "Er zijn nog geen evaluaties in " + year + "."));
+    return;
+  }
+
+  var res = collectControle(year, f);
+  var scope = (f.klas === "*" ? "alle klassen" : f.klas) + " in " +
+    (res.range ? res.range.name : "het hele schooljaar") + (f.map === "*" ? "" : " (map " + f.map + ")");
+  var attention = res.totals.open + res.totals.notes;
+
+  var summary = el("div", "notice controle-summary " + (attention ? "warn" : "good"));
+  if (attention) {
+    summary.appendChild(el("strong", null, attention === 1 ? "1 punt vraagt aandacht" : attention + " punten vragen aandacht"));
+    summary.appendChild(document.createTextNode("Voor " + scope + "."));
+  } else if (!res.totals.ok) {
+    summary.appendChild(el("strong", null, "Nog geen beoordelingen voor " + scope + "."));
+  } else {
+    summary.appendChild(el("strong", null, "Alles in orde voor " + scope + "."));
+  }
+  host.appendChild(summary);
+
+  if (attention) {
+    host.appendChild(el("h3", "controle-heading", "Openstaand"));
+    res.groups.forEach(function (g) {
+      if (!g.open.length && !g.notes.length) return;
+      var box = el("div", "controle-group");
+      box.appendChild(el("div", "controle-group-title", g.label));
+      g.open.forEach(function (check) { box.appendChild(renderControleItem(year, check, true)); });
+      g.notes.forEach(function (n) { box.appendChild(renderControleNote(year, n)); });
+      host.appendChild(box);
+    });
+  }
+
+  if (res.totals.ok) {
+    var okWrap = el("details", "controle-fold");
+    var okSum = document.createElement("summary");
+    okSum.className = "section-toggle";
+    okSum.textContent = "In orde (" + res.totals.ok + ")";
+    okWrap.appendChild(okSum);
+    okWrap.open = Object.keys(controleOpenDetail).some(function (k) {
+      return controleOpenDetail[k] && res.groups.some(function (g) {
+        return g.ok.some(function (c) { return c.evaluation + "||" + c.klas === k; });
+      });
+    });
+    res.groups.forEach(function (g) {
+      if (!g.ok.length) return;
+      var box = el("div", "controle-group");
+      box.appendChild(el("div", "controle-group-title", g.label));
+      g.ok.forEach(function (check) { box.appendChild(renderControleItem(year, check, false)); });
+      okWrap.appendChild(box);
+    });
+    host.appendChild(okWrap);
+  }
+
+  if (res.totals.notStarted) {
+    var nsWrap = el("details", "controle-fold");
+    nsWrap.id = "controleNotStarted";
+    var nsSum = document.createElement("summary");
+    nsSum.className = "section-toggle";
+    nsSum.textContent = "Nog niet gestart (" + res.totals.notStarted + ")";
+    nsWrap.appendChild(nsSum);
+    if (res.range) {
+      nsWrap.appendChild(el("p", "hint", "Zonder beoordelingen is er geen datum, dus deze lijst staat los van de gekozen periode."));
+    }
+    res.groups.forEach(function (g) {
+      if (!g.notStarted.length) return;
+      var box = el("div", "controle-group");
+      box.appendChild(el("div", "controle-group-title", g.label));
+      g.notStarted.forEach(function (ns) {
+        var row = el("div", "controle-item controle-notstarted");
+        row.appendChild(el("div", "controle-title", ns.evaluation));
+        var klassen = el("div", "controle-klassen");
+        ns.klassen.forEach(function (klas) {
+          var b = el("button", "btn-ghost btn-small", klas);
+          b.type = "button";
+          b.title = ns.evaluation + " beoordelen in " + klas;
+          b.addEventListener("click", function () { openEvaluationFor(year, klas, ns.evaluation); });
+          klassen.appendChild(b);
+        });
+        row.appendChild(klassen);
+        box.appendChild(row);
+      });
+      nsWrap.appendChild(box);
+    });
+    host.appendChild(nsWrap);
+  }
+}
+
+function renderControleItem(year, check, isOpen) {
+  var id = check.evaluation + "||" + check.klas;
+  var item = el("div", "controle-item" + (isOpen ? " controle-open" : ""));
+  item.dataset.evaluation = check.evaluation;
+  item.dataset.klas = check.klas;
+
+  var head = el("div", "controle-head");
+  var title = el("div", "controle-title");
+  title.appendChild(document.createTextNode(check.evaluation));
+  title.appendChild(el("span", "controle-klas", check.klas));
+  head.appendChild(title);
+  head.appendChild(el("span", "controle-count", countsText(check.counts)));
+
+  var btns = el("div", "btn-row controle-actions");
+  var detailBtn = el("button", "btn-ghost btn-small controle-detail-btn", controleOpenDetail[id] ? "Details verbergen" : "Details");
+  detailBtn.type = "button";
+  detailBtn.addEventListener("click", function () {
+    controleOpenDetail[id] = !controleOpenDetail[id];
+    renderResults();
+  });
+  btns.appendChild(detailBtn);
+  var go = el("button", (isOpen ? "btn-primary" : "btn-ghost") + " btn-small controle-go", "Nu beoordelen");
+  go.type = "button";
+  go.addEventListener("click", function () { openEvaluationFor(year, check.klas, check.evaluation); });
+  btns.appendChild(go);
+  head.appendChild(btns);
+  item.appendChild(head);
+
+  if (check.issues.length || check.oldVersion.length) {
+    var ul = el("ul", "controle-issues");
+    check.issues.forEach(function (issue) {
+      ul.appendChild(renderIssueLine(id, issue.kind, issue.label, issue.names, false));
+    });
+    if (check.oldVersion.length) {
+      ul.appendChild(renderIssueLine(id, "oudeVersie",
+        "Beoordeeld met een oudere versie van de rubric (ter info)", check.oldVersion, true));
+    }
+    item.appendChild(ul);
+  }
+
+  if (controleOpenDetail[id]) item.appendChild(renderControleDetail(year, check));
+  return item;
+}
+
+function renderIssueLine(id, kind, label, names, info) {
+  var li = el("li", "controle-issue controle-issue-" + kind + (info ? " controle-info" : ""));
+  li.appendChild(el("strong", null, label + ": "));
+  var key = id + "||" + kind;
+  var all = !!controleOpenNames[key];
+  var shown = all ? names : names.slice(0, CONTROLE_NAMES_SHOWN);
+  li.appendChild(document.createTextNode(shown.join(", ")));
+  if (names.length > CONTROLE_NAMES_SHOWN) {
+    var more = el("button", "link-btn controle-more", all ? "minder tonen" : "+ " + (names.length - CONTROLE_NAMES_SHOWN) + " meer");
+    more.type = "button";
+    more.addEventListener("click", function () {
+      controleOpenNames[key] = !all;
+      renderResults();
+    });
+    li.appendChild(document.createTextNode(" "));
+    li.appendChild(more);
+  }
+  return li;
+}
+
+function renderControleNote(year, n) {
+  var item = el("div", "controle-item controle-note");
+  var head = el("div", "controle-head");
+  head.appendChild(el("div", "controle-title", n.evaluation));
+  var needsEditor = n.notes.some(function (x) { return x.kind === "doelen"; });
+  if (needsEditor) {
+    var btns = el("div", "btn-row controle-actions");
+    var edit = el("button", "btn-ghost btn-small", "Naar Rubrics");
+    edit.type = "button";
+    edit.addEventListener("click", function () {
+      openEvals();
+      editEvaluation(year, n.evaluation);
+    });
+    btns.appendChild(edit);
+    head.appendChild(btns);
+  }
+  item.appendChild(head);
+  var ul = el("ul", "controle-issues");
+  n.notes.forEach(function (x) {
+    var li = el("li", "controle-issue controle-issue-" + x.kind);
+    li.textContent = x.text;
+    ul.appendChild(li);
+  });
+  item.appendChild(ul);
+  return item;
+}
+
+function renderControleDetail(year, check) {
+  var box = el("div", "controle-detail");
+  var readOnly = isArchivedSchoolYear(db);
+  var data = collectResults(db, year, check.evaluation, check.klas);
+
+  var wrap = el("div", "table-wrap");
+  var table = el("table", "controle-table");
+  var thead = document.createElement("thead");
+  var hr = document.createElement("tr");
+  ["Leerling", "Status", "Opmerking", ""].forEach(function (h) { hr.appendChild(el("th", null, h)); });
+  thead.appendChild(hr);
+  table.appendChild(thead);
+
+  var tbody = document.createElement("tbody");
+  check.students.forEach(function (s, i) {
+    var tr = document.createElement("tr");
+    tr.dataset.student = s.name;
+    tr.appendChild(el("td", null, (i + 1) + ". " + s.name));
+    var st = el("td");
+    st.appendChild(el("span", "status-badge status-" + s.status, CONTROLE_STATUS[s.status]));
+    tr.appendChild(st);
+
+    var note = el("td", "controle-remark");
+    if (s.exemption) {
+      var why = s.exemption.reason ? "Reden: " + s.exemption.reason : "Geen reden opgegeven";
+      note.textContent = why + (s.exemption.by ? " (" + s.exemption.by + ")" : "");
+    }
+    if (s.exemptButEvaluated) {
+      note.textContent = "Vrijgesteld, maar toch beoordeeld. De beoordeling telt. " + note.textContent;
+      note.classList.add("controle-warn");
+    }
+    tr.appendChild(note);
+
+    var act = el("td", "controle-row-actions");
+    if (s.hasRows) {
+      var rep = el("button", "btn-ghost btn-small", "Rapport");
+      rep.type = "button";
+      rep.addEventListener("click", function () {
+        printReports(data, data.entries.filter(function (e) { return e.name === s.name; }), true);
+      });
+      act.appendChild(rep);
+    }
+    if (!readOnly && (s.status === "ontbreekt" || s.status === "tussentijds")) {
+      var ex = el("button", "btn-ghost btn-small controle-exempt", "Niet te beoordelen");
+      ex.type = "button";
+      ex.addEventListener("click", function () { askExemption(year, check.evaluation, check.klas, s.name); });
+      act.appendChild(ex);
+    }
+    if (!readOnly && s.exemption) {
+      var undo = el("button", "btn-ghost btn-small controle-unexempt",
+        s.exemptButEvaluated ? "Vrijstelling opheffen" : "Ongedaan maken");
+      undo.type = "button";
+      undo.addEventListener("click", function () {
+        clearExemption(year, check.evaluation, check.klas, s.name);
+        persist();
+        renderResults();
+      });
+      act.appendChild(undo);
+    }
+    tr.appendChild(act);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  wrap.appendChild(table);
+  box.appendChild(wrap);
+
+  if (data.entries.length) {
+    var btns = el("div", "btn-row");
+    btns.style.marginTop = "10px";
+    var printAll = el("button", "btn-ghost btn-small", "Rapporten afdrukken (" + data.entries.length + ")");
+    printAll.type = "button";
+    printAll.id = "btnPrintAll";
+    printAll.addEventListener("click", function () { printReports(data, data.entries, false); });
+    btns.appendChild(printAll);
+    box.appendChild(btns);
+  }
+  return box;
+}
+
+function askExemption(year, evaluation, klas, student) {
+  var reason = window.prompt(
+    student + " niet laten beoordelen voor " + evaluation + " (" + klas + ")?\n\n" +
+      "Dit geldt ook voor je collega's en is altijd ongedaan te maken.\n" +
+      "Reden (niet verplicht), bijvoorbeeld: langdurig ziek",
+    "",
+  );
+  if (reason === null) return; // geannuleerd
+  setExemption(year, evaluation, klas, student, reason);
+  persist();
+  renderResults();
+}
+
+function initControle() {
+  $("resYear").addEventListener("change", function () { fillResultSelectors(); renderResults(); });
+  $("resKlas").addEventListener("change", renderResults);
+  $("resMap").addEventListener("change", renderResults);
+  $("resPeriod").addEventListener("change", renderResults);
+  $("goalsWrap").addEventListener("toggle", function () { if (this.open) renderGoalOverview(); });
 }
 
 
@@ -13473,19 +13320,6 @@ function init() {
   $("btnResults").addEventListener("click", openResults);
   $("btnSkore").addEventListener("click", openSkore);
   $("btnCloseResults").addEventListener("click", goHome);
-  $("resYear").addEventListener("change", function () {
-    resEvalCombo.close(); // ander leerjaar = andere lijst, oud zoekwoord slaat nergens meer op
-    fillResultSelectors();
-    renderResults();
-  });
-  $("resEval").addEventListener("change", function () { fillResultSelectors(); renderResults(); });
-  $("resKlas").addEventListener("change", renderResults);
-  $("goalsWrap").addEventListener("toggle", function () {
-    if (this.open) renderGoalOverview();
-  });
-  $("growthWrap").addEventListener("toggle", function () {
-    if (this.open) renderGrowthPanel();
-  });
   $("btnCloseTeam").addEventListener("click", goHome);
   $("btnAddMember").addEventListener("click", addMember);
   $("teamYear").addEventListener("change", renderTeamClasses);
@@ -13561,7 +13395,7 @@ function init() {
   initAiRubricHelper();
   initScoringShortcuts();
   initEvalCombo();
-  resEvalCombo.init();
+  initControle();
   initSkore();
   initKlasMulti();
   initMoveStudent();
@@ -13741,7 +13575,7 @@ function renderArchivedYearBar() {
   var txt = el("div", "txt");
   txt.appendChild(el("strong", null, "Je bekijkt een archiefschooljaar: " + db.currentSchoolYear));
   txt.appendChild(document.createTextNode(
-    "Klaslijsten en evaluaties hierin zijn niet meer te wijzigen. Resultaten bekijken kan gewoon. " +
+    "Klaslijsten en evaluaties hierin zijn niet meer te wijzigen. Bekijken en controleren kan gewoon. " +
       "Nieuw werk gaat naar het actieve schooljaar, " + db.activeSchoolYear + ".",
   ));
   bar.appendChild(txt);

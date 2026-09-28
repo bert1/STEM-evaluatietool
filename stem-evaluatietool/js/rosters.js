@@ -123,8 +123,12 @@ function updateMoveButton() {
      of hem vanaf nu bij de nieuwe klas tellen.
    Rijen zonder row.studentKlas (van vóór 1.14.0) hadden altijd precies
    één echte klas per sessie — die klas wordt dan alsnog voor iedereen in
-   de rij vastgelegd, vóór de klas van deze ene leerling verandert. */
-function migrateStudentEvaluations(year, student, toKlas) {
+   de rij vastgelegd, vóór de klas van deze ene leerling verandert.
+   Sinds 1.22.0 verhuizen ook de vrijstellingen ("niet te beoordelen")
+   van fromKlas mee, zie migrateExemptions() in js/controle.js. */
+function migrateStudentEvaluations(year, student, toKlas, fromKlas) {
+  if (fromKlas) migrateExemptions(year, student, fromKlas, toKlas);
+
   var now = Date.now();
   var movedRows = 0;
   var relabeledOnly = 0;
@@ -224,7 +228,7 @@ function moveStudentToClass() {
   }
   db.roster[year][toKlas].updatedAt = now;
 
-  var migrated = migrateStudentEvaluations(year, student, toKlas);
+  var migrated = migrateStudentEvaluations(year, student, toKlas, fromKlas);
 
   persist();
   refreshAll();

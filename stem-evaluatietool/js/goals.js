@@ -263,6 +263,41 @@ function goalTrendComparison(db, year, goalKey, klas, student) {
    LEERPLANDOELEN OP HET RESULTATENSCHERM
    ------------------------------------------------------------------ */
 
+/* Blok "Leerplandoelen" op het Controle-tabblad (sinds 1.22.0): per
+   rubriek elk doel met één van drie toestanden. Geen percentages meer;
+   "Overzicht afdrukken" en de drempels daarachter blijven wel werken. */
+function goalStatusList(dbObj, year, klas) {
+  var perEvaluation = {};
+  evaluationNames(dbObj, year).forEach(function (name) {
+    var data = collectResults(dbObj, year, name, klas);
+    var finals = data.entries.filter(function (e) { return !e.formative; });
+    if (!finals.length) return;
+    perEvaluation[name] = { rubrics: data.rubrics, entries: finals };
+  });
+
+  var usage = goalUsage(dbObj, year);
+  var attainment = goalAttainment(dbObj, year, Object.keys(usage), perEvaluation);
+
+  var list = goalsForYear(year).map(function (g) {
+    var linked = usage[g.id] || [];
+    var evs = linked.map(function (l) { return l.evaluation; })
+      .filter(function (v, i, a) { return a.indexOf(v) === i; });
+    var assessedIn = evs.filter(function (ev) {
+      var pack = perEvaluation[ev];
+      if (!pack) return false;
+      return pack.rubrics.some(function (r) {
+        return (r.goals || []).indexOf(g.id) !== -1 && pack.entries.some(function (e) {
+          return typeof e.scores[r.id] === "number";
+        });
+      });
+    });
+    var status = !linked.length ? "niet" : assessedIn.length ? "beoordeeld" : "gekoppeld";
+    return { goal: g, status: status, evaluations: evs, assessedIn: assessedIn };
+  });
+
+  return { list: list, usage: usage, attainment: attainment };
+}
+
 function renderGoalOverview() {
   var host = $("goalsBody");
   host.innerHTML = "";
@@ -272,118 +307,52 @@ function renderGoalOverview() {
 
   if (!yearHasGoals(year)) {
     host.appendChild(el("div", "empty",
-      "Voor " + year + " zijn er nog geen leerplandoelen in de tool geladen."));
+      "Voor " + year + " zijn er geen leerplandoelen in de tool geladen."));
     return;
   }
 
-  host.appendChild(renderThresholds());
+  var st = goalStatusList(db, year, klas);
+  var count = { niet: 0, gekoppeld: 0, beoordeeld: 0 };
+  st.list.forEach(function (x) { count[x.status]++; });
+  host.appendChild(el("p", "goal-status-summary",
+    count.beoordeeld + " beoordeeld, " + count.gekoppeld + " gekoppeld maar nog niet beoordeeld, " +
+      count.niet + " niet gekoppeld" + (klas === "*" ? "." : " (klas " + klas + ").")));
 
-  // Alle beoordelingen van dit leerjaar, per evaluatie gebundeld.
-  var perEvaluation = {};
-  evaluationNames(db, year).forEach(function (name) {
-    var data = collectResults(db, year, name, klas);
-    if (!data.entries.length) return;
-    perEvaluation[name] = { rubrics: data.rubrics, entries: data.entries };
-  });
-
-  var usage = goalUsage(db, year);
-  var usedKeys = Object.keys(usage);
-  var attainment = goalAttainment(db, year, usedKeys, perEvaluation);
-
-  var list = goalsForYear(year);
-  var totalGoals = list.length;
-
-  var summary = el("div", "stat-grid");
-  function stat(v, l) {
-    var c = el("div", "stat");
-    c.appendChild(el("div", "value", v));
-    c.appendChild(el("div", "label", l));
-    return c;
-  }
-  var assessed = usedKeys.filter(function (k) {
-    return attainment[k] && attainment[k].assessed > 0;
-  });
-  summary.appendChild(stat(usedKeys.length + " / " + totalGoals, "doelen gekoppeld aan een criterium"));
-  summary.appendChild(stat(String(assessed.length), "daarvan effectief beoordeeld"));
-  var weak = assessed.filter(function (k) { return attainment[k].pct !== null && attainment[k].pct < 70; });
-  summary.appendChild(stat(String(weak.length), "doelen onder 70% behaald"));
-  host.appendChild(summary);
-
-  var note = el("p", "hint");
-  note.textContent = "Zestien doelen staan woordelijk in beide leerplannen en zijn hier samengevoegd; " +
-    "die dragen beide codes en gelden dus voor techniek wetenschappen én moderne talen en wetenschappen.";
-  host.appendChild(note);
+  var labels = {
+    niet: "Niet gekoppeld",
+    gekoppeld: "Nog niet beoordeeld",
+    beoordeeld: "Beoordeeld",
+  };
 
   var lastRubriek = null;
-  list.forEach(function (g) {
-    var linked = usage[g.id];
-    var att = attainment[g.id];
-
+  st.list.forEach(function (x) {
+    var g = x.goal;
     if (g.rubriek !== lastRubriek) {
-      var h = el("div", "goal-rubriek", g.rubriek);
-      h.style.marginTop = "16px";
-      host.appendChild(h);
+      host.appendChild(el("div", "goal-rubriek", g.rubriek));
       lastRubriek = g.rubriek;
     }
-
-    var row = el("div", "goal-row" + (linked ? "" : " untouched"));
-
+    var row = el("div", "goal-row goal-status-" + x.status);
     var main = el("div", "goal-main");
     main.appendChild(el("span", "goal-code", goalCodeLabel(g)));
     main.appendChild(planBadge(g));
     main.appendChild(bloomBadge(g.bloom));
     main.appendChild(goalInfo(g));
     row.appendChild(main);
-
     row.appendChild(el("div", "goal-title", g.text));
 
-    if (!linked) {
-      row.appendChild(el("span", "badge", "niet gekoppeld"));
-      host.appendChild(row);
-      return;
-    }
-
-    var where = el("span", "badge");
-    var evs = linked.map(function (l) { return l.evaluation; })
-      .filter(function (v, i, a) { return a.indexOf(v) === i; });
-    where.textContent = evs.length === 1 ? evs[0] : evs.length + " evaluaties";
-    where.title = linked.map(function (l) {
-      return l.evaluation + " → " + l.rubricName;
-    }).join("\n");
-    row.appendChild(where);
-
-    if (!att || !att.assessed) {
-      row.appendChild(el("span", "badge warn", "nog niet beoordeeld"));
-      host.appendChild(row);
-      return;
-    }
-
-    var bar = el("div", "goal-bar");
-    var fill = el("span");
-    fill.style.width = att.pct + "%";
-    fill.style.background = scoreColor(att.pct);
-    bar.appendChild(fill);
-    bar.title = att.reached + " van de " + att.assessed +
-      " leerlingen haalt de drempel van " + att.threshold + "% voor " + g.bloom;
-    row.appendChild(bar);
-
-    var score = el("span", "goal-score", att.reached + "/" + att.assessed);
-    score.style.color = scoreColor(att.pct);
-    row.appendChild(score);
-
-    if (att.notReached.length && att.notReached.length <= 6) {
-      var who = el("span", "badge warn", att.notReached.join(", "));
-      who.title = "Halen de drempel van " + att.threshold + "% niet";
-      row.appendChild(who);
-    }
-
+    var status = el("div", "goal-status");
+    status.appendChild(el("span", "badge goal-badge-" + x.status, labels[x.status]));
+    var shown = x.status === "beoordeeld" ? x.assessedIn : x.evaluations;
+    if (shown.length) status.appendChild(el("span", "goal-evals", shown.join(", ")));
+    row.appendChild(status);
     host.appendChild(row);
   });
 
   var btns = el("div", "btn-row");
+  btns.style.marginTop = "14px";
   var print = el("button", "btn-ghost btn-small", "Overzicht afdrukken");
   print.type = "button";
-  print.addEventListener("click", function () { printGoalOverview(usage, attainment); });
+  print.addEventListener("click", function () { printGoalOverview(st.usage, st.attainment); });
   btns.appendChild(print);
   host.appendChild(btns);
 }
@@ -397,45 +366,6 @@ function goalInfo(goal) {
 
 
 
-/* --- drempels per beheersingsniveau --- */
-
-function renderThresholds() {
-  var box = el("div");
-  box.appendChild(el("p", "hint",
-    "Een doel telt als behaald wanneer een leerling op de gekoppelde criteria minstens de drempel " +
-    "voor dat beheersingsniveau haalt. Die drempels zijn een keuze van je vakgroep, geen norm van de tool."));
-
-  var row = el("div", "threshold-row");
-  BLOOM_ORDER.forEach(function (bloom) {
-    var group = el("div", "form-group");
-    var label = el("label", null, bloom);
-    label.setAttribute("for", "thr-" + slugify(bloom));
-    group.appendChild(label);
-
-    var input = document.createElement("input");
-    input.type = "number";
-    input.id = "thr-" + slugify(bloom);
-    input.min = "0";
-    input.max = "100";
-    input.value = thresholdFor(db, bloom);
-    input.addEventListener("change", function () {
-      var v = Math.max(0, Math.min(100, Number(this.value) || 0));
-      this.value = v;
-      if (!db.settings) db.settings = emptySettings();
-      if (!db.settings.thresholds) db.settings.thresholds = {};
-      db.settings.thresholds[bloom] = v;
-      db.settings.updatedAt = Date.now();
-      persist();
-      renderGoalOverview();
-    });
-    group.appendChild(input);
-    row.appendChild(group);
-  });
-
-  box.appendChild(row);
-  return box;
-}
-
 /* ---- overgenomen uit growth.js ---- */
 
 /* ------------------------------------------------------------------
@@ -445,6 +375,12 @@ function renderThresholds() {
    ziet of een leerling — of de klas — vooruitgaat.
    ------------------------------------------------------------------ */
 
+/* Sinds 1.22.0 staat het groeiblok niet meer op het scherm (het tabblad
+   Resultaten werd Controle). renderGrowthPanel(), renderGrowthWorkpoints(),
+   renderGrowthChart(), goalTrendSeries() en goalTrendComparison() blijven
+   bewust staan om ze later elders terug te zetten. Ze verwachten de
+   elementen #growthBody en #growthWorkpoints en lezen #resYear/#resEval/
+   #resKlas; die moeten dan opnieuw voorzien worden. */
 function renderGrowthPanel() {
   renderGrowthWorkpoints();
 

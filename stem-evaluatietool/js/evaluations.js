@@ -225,6 +225,23 @@ function onYearChange() {
   syncKlasMultiDisplay();
 }
 
+/* Opent het Evalueren-scherm met dit leerjaar, deze klas en deze
+   evaluatie al gekozen (knop "Nu beoordelen" op het Controle-tabblad).
+   Doet exact wat een leerkracht met de hand doet: leerjaar kiezen, klas
+   aanvinken, evaluatie kiezen, zodat dezelfde functies het werk doen. */
+function openEvaluationFor(year, klas, evaluation) {
+  $("yearSelect").value = year;
+  onYearChange();
+  Array.prototype.forEach.call($("classSelect").options, function (o) { o.selected = o.value === klas; });
+  $("evalSelect").value = evaluation;
+  syncKlasMultiDisplay();
+  syncEvalComboDisplay();
+  onSelectionChange();
+  showView("main");
+  var form = $("formCard");
+  if (form && !form.classList.contains("hidden")) form.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
 function onSelectionChange() {
   var year = $("yearSelect").value,
     klassen = selectedKlassen(),

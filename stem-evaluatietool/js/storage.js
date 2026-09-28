@@ -446,7 +446,6 @@ function refreshAll() {
   if (currentView === "results") {
     fillResultSelectors();
     renderResults();
-    if ($("growthWrap").open) renderGrowthPanel();
   }
 
   // Is een van de klassen verdwenen uit de klaslijsten, dan sluiten we de

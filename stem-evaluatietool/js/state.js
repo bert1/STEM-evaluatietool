@@ -123,7 +123,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.21.0";
+var APP_VERSION = "1.22.0";
 
 var DB_VERSION = 4;
 
@@ -214,8 +214,13 @@ function emptyDb() {
    localTombstones (enkel bij mezelf): wordt nooit meegestuurd, maar
    telt intern wél mee — zo blijft "voor mezelf" verwijderd ook al heeft
    een collega het item nog. */
+/* "exemptions" (sinds 1.22.0): een opgeheven vrijstelling, zie
+   js/controle.js. Oudere bestanden hebben die soort niet; dat is gewoon
+   "nog nooit iets opgeheven". */
+var TOMBSTONE_KINDS = ["roster", "evaluations", "folders", "exemptions"];
+
 function emptyTombstones() {
-  return { roster: {}, evaluations: {}, folders: {} };
+  return { roster: {}, evaluations: {}, folders: {}, exemptions: {} };
 }
 
 /* Later moment van beide lagen samen — het maakt voor de vraag "moet
@@ -426,7 +431,8 @@ function mergeSessionsInto(targetSessions, incomingSessions) {
 function mergeTombstonesInto(target, incomingTombstones) {
   if (!incomingTombstones) return;
   if (!target.tombstones) target.tombstones = emptyTombstones();
-  ["roster", "evaluations", "folders"].forEach(function (kind) {
+  TOMBSTONE_KINDS.forEach(function (kind) {
+    if (!target.tombstones[kind]) target.tombstones[kind] = {};
     Object.keys(incomingTombstones[kind] || {}).forEach(function (key) {
       var t = Number(incomingTombstones[kind][key]) || 0;
       if (t > (target.tombstones[kind][key] || 0)) target.tombstones[kind][key] = t;
@@ -465,6 +471,7 @@ function mergeDb(target, incoming) {
 
     mergePeriods(bucket, incBucket.periods);
     mergeSkoreDone(bucket, incBucket.skoreDone);
+    mergeExemptions(bucket, incBucket.exemptions);
 
     var sessResult = mergeSessionsInto(bucket.sessions, incBucket.sessions);
     stats.added += sessResult.added;
@@ -628,6 +635,9 @@ function normaliseDb(db) {
     if (src.skoreDone && typeof src.skoreDone === "object") {
       bucket.skoreDone = JSON.parse(JSON.stringify(src.skoreDone));
     }
+    if (src.exemptions && typeof src.exemptions === "object") {
+      bucket.exemptions = JSON.parse(JSON.stringify(src.exemptions));
+    }
     out.schoolYears[yearLabel] = bucket;
   });
 
@@ -695,7 +705,7 @@ function normaliseDb(db) {
 
   function copyTombstones(src) {
     var t = emptyTombstones();
-    ["roster", "evaluations", "folders"].forEach(function (kind) {
+    TOMBSTONE_KINDS.forEach(function (kind) {
       Object.keys((src && src[kind]) || {}).forEach(function (key) {
         var v = Number(src[kind][key]);
         if (v) t[kind][key] = v;

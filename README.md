@@ -1,11 +1,11 @@
 # STEM-evaluatietool
 
 Een evaluatietool voor de STEM-lessen. Je beoordeelt leerlingen met rubrics,
-bekijkt de resultaten van je klas en ziet per rapportperiode welke punten je
+controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.21.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.22.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -18,7 +18,7 @@ op je eigen computer en in je eigen OneDrive.
 3. [Evalueren](#3-evalueren)
 4. [Klaslijsten](#4-klaslijsten)
 5. [Rubrics](#5-rubrics)
-6. [Resultaten](#6-resultaten)
+6. [Controle](#6-controle)
 7. [Skore](#7-skore)
 8. [Team en OneDrive](#8-team-en-onedrive)
 9. [Een nieuw schooljaar](#9-een-nieuw-schooljaar)
@@ -54,7 +54,7 @@ Bovenaan zie je zes tabbladen:
 | **Evalueren** | Leerlingen beoordelen tijdens of na de les |
 | **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Rubrics** | Evaluaties en hun criteria maken en ordenen in mappen |
-| **Resultaten** | Hoe scoort de klas, per leerling en per criterium |
+| **Controle** | Wat ontbreekt er nog of klopt er niet? |
 | **Skore** | Welke punten je per periode (GE1 tot GE4) in Skore zet |
 | **Team** | Wie geeft welke klas, en de gedeelde map in OneDrive |
 
@@ -110,7 +110,7 @@ Rechtsboven zie je altijd of je werk veilig staat:
   leerling.
 - **Tussentijdse check:** vink dit aan als het geen eindbeoordeling is. Dan
   hoeven niet alle criteria ingevuld te zijn, en telt het niet mee in de
-  resultaten en in Skore.
+  controle en in Skore.
 - **Bewerken of verwijderen:** onderaan staat een tabel met alle
   beoordelingen van deze klas. Gebruik **Bewerk** of **Verwijder**.
 - **Kopieer tabel** en **Exporteren naar Excel** zetten die tabel over naar
@@ -169,21 +169,69 @@ klas, evaluatie of map vraagt de tool wat je bedoelt:
 
 ---
 
-## 6. Resultaten
+## 6. Controle
 
-1. Kies het **leerjaar**, de **evaluatie** (met zoeken, zoals bij
-   Evalueren) en eventueel een **klas**.
-2. Je ziet de kerncijfers, een tabel **per leerling** en grafieken per
-   criterium.
-3. **Rapport** bij een leerling, of **Rapporten afdrukken** voor de hele
-   klas, maakt een PDF per leerling met score en feedback.
+Dit tabblad beantwoordt één vraag: **wat moet ik nog doen?** Je ziet enkel
+wat aandacht vraagt. Staat alles goed, dan staat er één groene zin, zoals
+"Alles in orde voor 1WM in GE1."
 
-Onderaan staan nog drie delen die je kan openklappen:
+**Filters bovenaan:** leerjaar, klas (standaard alle klassen), map en
+periode (GE1 tot GE4, of het hele schooljaar).
 
-- **Dekking over het schooljaar:** welke klas welke evaluatie al gedaan
-  heeft. Klik op een vakje om die resultaten te openen.
-- **Groei over het jaar:** hoe een leerling evolueert.
-- **Leerplandoelen:** welke doelen je al geëvalueerd hebt (2de jaar).
+**Openstaand** (het belangrijkste blok), per map. Elke regel is één
+evaluatie voor één klas die al gestart is, met wat er nog mis is:
+
+| Melding | Wat doe je? |
+|---|---|
+| Nog niet beoordeeld | Beoordeel deze leerlingen nog, of stel ze vrij (zie hieronder). |
+| Onvolledig, niet elk criterium gescoord | Open de beoordeling en vul de ontbrekende criteria in. |
+| Enkel een tussentijdse check | Maak nog een eindbeoordeling. |
+| Dubbel beoordeeld | Verwijder een van de twee beoordelingen bij Evalueren. |
+| Niet (meer) in de klaslijst | Controleer de klaslijst, of de leerling van klas veranderd is. |
+| Vrijgesteld, maar toch beoordeeld | De beoordeling telt. Hef de vrijstelling op in de details. |
+
+Grijze meldingen zijn enkel ter info, bijvoorbeeld een beoordeling met een
+oudere versie van de rubric.
+
+- Klik op **Nu beoordelen**: het Evalueren-scherm opent met dat leerjaar,
+  die klas en die evaluatie al gekozen.
+- Klik op **Details**: je ziet de klaslijst met per leerling een status
+  (In orde, Onvolledig, Enkel tussentijds, Ontbreekt, Dubbel of Niet te
+  beoordelen). Hier staan ook **Rapport** per leerling en **Rapporten
+  afdrukken** voor de hele klas.
+- Staan er meer dan vier namen, klik dan op **+ X meer** om ze allemaal te
+  zien.
+
+Sommige meldingen gaan over een hele evaluatie, niet over één klas:
+
+- **Criteria zonder leerplandoel** (enkel in leerjaren met leerplandoelen).
+  Met **Naar Rubrics** open je de evaluatie om ze te koppelen.
+- **Verschil tussen beoordelaars:** geeft de ene collega gemiddeld veel
+  hogere punten dan de andere (15 procentpunt of meer), bespreek dan samen
+  hoe jullie scoren.
+
+**Een leerling niet laten beoordelen.** Soms moet een leerling een
+evaluatie niet krijgen, bijvoorbeeld bij langdurige ziekte.
+
+1. Open de **Details** van de evaluatie.
+2. Klik bij de leerling op **Niet te beoordelen**.
+3. Bevestig, en geef eventueel een korte reden in.
+
+De leerling telt dan als in orde, maar de tool toont altijd hoeveel
+leerlingen vrijgesteld zijn (bijvoorbeeld "22/24 beoordeeld, 2
+vrijgesteld"). Met **Ongedaan maken** zet je het terug. Je collega's zien
+dezelfde vrijstelling, en verandert de leerling van klas, dan verhuist ze
+mee.
+
+**Onderaan, ingeklapt:**
+
+- **In orde:** evaluaties die volledig in orde zijn. Via **Details** druk
+  je hier de rapporten af.
+- **Nog niet gestart:** evaluaties waarvoor een klas nog geen enkele
+  beoordeling heeft. Klik op een klas om meteen te beginnen.
+- **Leerplandoelen** (2de jaar): per doel of het niet gekoppeld is,
+  gekoppeld maar nog niet beoordeeld, of beoordeeld (met de evaluaties
+  erbij). Met **Overzicht afdrukken** maak je er een PDF van.
 
 ---
 
@@ -205,7 +253,9 @@ Je krijgt twee overzichten:
   allemaal zijn) en het maximum.
 - **Een tabel met de punten**: de leerlingen staan alfabetisch en
   genummerd, net als in Skore. Een "–" betekent: niet beoordeeld in deze
-  periode.
+  periode. "vrijgesteld" betekent dat de leerling deze evaluatie niet moet
+  krijgen (ingesteld op het tabblad Controle); daar hoeft geen punt in
+  Skore.
 
 Typ de punten kolom per kolom over in Skore. Vink daarna **Overgezet naar
 Skore** aan, dan weet je (en je collega's) wat al gebeurd is. Plakken in
@@ -272,6 +322,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 | Rode balk "Automatisch opslaan is mislukt" | Staat het bestand ergens anders open, of is OneDrive aan het synchroniseren? Klik op "Opnieuw proberen", of kies "Opslaan als…". |
 | Rode balk "Je werk in deze browser kon niet gelezen worden" | Klik op "Werkbestand openen…" en kies je laatste werkbestand uit OneDrive. Download eerst de reservekopie. |
 | Oranje balk "Gedeelde map niet verbonden" | Klik op "Verbinden met …". De browser vraagt na een herstart opnieuw toestemming. |
+| Een leerling moet een evaluatie niet krijgen | Controle, Details, "Niet te beoordelen". |
 | Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes onderaan het tabblad Skore. |
 | Ik zie de evaluaties van een collega niet | Klik op "Team bijwerken", of voeg hun bestand toe met "Werk van collega toevoegen". |
 | Er staat een nieuwe versie van de tool klaar | Download het nieuwe bestand en open het. Je werkbestand blijft gewoon werken. |

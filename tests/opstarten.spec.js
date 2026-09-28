@@ -48,7 +48,7 @@ test("alle tabbladen openen zonder fouten", async ({ page }) => {
   for (const [knop, tekst] of [
     ["#btnRoster", "Klaslijsten"],
     ["#btnEvals", "Rubrics"],
-    ["#btnResults", "Resultaten"],
+    ["#btnResults", "Controle"],
     ["#btnTeam", "Team"],
     ["#btnHome", "Evalueren"],
   ]) {

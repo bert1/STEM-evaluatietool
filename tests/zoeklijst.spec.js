@@ -5,70 +5,75 @@ const opties = (page, panel) => page.locator(panel + " .eval-combo-option").allI
 const koppen = (page, panel) => page.locator(panel + " .eval-combo-group").allInnerTexts();
 const zonderVinkje = (list) => list.map((t) => t.replace(/\s*✓$/, ""));
 
-test.describe("zoeklijst bij Resultaten", () => {
+/* Sinds 1.22.0 heeft enkel het Evalueren-scherm nog een zoeklijst (het
+   tabblad Resultaten werd Controle). Het is dezelfde makeSearchCombo(),
+   dus deze testen dekken de zoeklijst volledig. */
+test.describe("zoeklijst bij Evalueren", () => {
   test.beforeEach(async ({ page }) => {
     await openTool(page);
     await seedFolders(page);
-    await page.click("#btnResults");
-    await page.selectOption("#resYear", "1ste jaar");
-    await page.click("#resEvalComboInput");
+    await page.selectOption("#yearSelect", "1ste jaar");
+    await page.click("#evalComboInput");
   });
 
   test("toont mappen als koppen, in volgorde", async ({ page }) => {
-    const k = await koppen(page, "#resEvalComboPanel");
+    const k = await koppen(page, "#evalComboPanel");
     expect(k.map((x) => x.toLowerCase())).toEqual(["september", "wetenschappelijk onderzoek", "geen map"]);
     page.expectNoErrors();
   });
 
   test("zoekt zonder accenten en hoofdletters", async ({ page }) => {
-    await page.fill("#resEvalComboInput", "CREME brulee");
-    expect(zonderVinkje(await opties(page, "#resEvalComboPanel"))).toEqual(["Crème brûlée proef"]);
+    await page.fill("#evalComboInput", "CREME brulee");
+    expect(zonderVinkje(await opties(page, "#evalComboPanel"))).toEqual(["Crème brûlée proef"]);
   });
 
   test("zoekt op mapnaam", async ({ page }) => {
-    await page.fill("#resEvalComboInput", "septemb");
-    expect((await koppen(page, "#resEvalComboPanel")).map((x) => x.toLowerCase())).toEqual(["september"]);
-    expect(await opties(page, "#resEvalComboPanel")).toHaveLength(1);
+    await page.fill("#evalComboInput", "septemb");
+    expect((await koppen(page, "#evalComboPanel")).map((x) => x.toLowerCase())).toEqual(["september"]);
+    expect(await opties(page, "#evalComboPanel")).toHaveLength(1);
   });
 
   test("Enter kiest meteen bij één resultaat", async ({ page }) => {
-    await page.fill("#resEvalComboInput", "brulee");
+    await page.fill("#evalComboInput", "brulee");
     await page.keyboard.press("Enter");
-    await expect(page.locator("#resEval")).toHaveValue("Crème brûlée proef");
-    await expect(page.locator("#resEvalComboPanel")).toBeHidden();
-    await expect(page.locator("#resEvalComboInput")).toHaveAttribute("aria-expanded", "false");
+    await expect(page.locator("#evalSelect")).toHaveValue("Crème brûlée proef");
+    await expect(page.locator("#evalComboPanel")).toBeHidden();
+    await expect(page.locator("#evalComboInput")).toHaveAttribute("aria-expanded", "false");
     page.expectNoErrors();
   });
 
   test("Enter bij meerdere resultaten kiest niets zonder pijltje", async ({ page }) => {
-    const voor = await page.inputValue("#resEval");
-    await page.fill("#resEvalComboInput", "e");
+    const voor = await page.inputValue("#evalSelect");
+    await page.fill("#evalComboInput", "e");
     await page.keyboard.press("Enter");
-    await expect(page.locator("#resEvalComboPanel")).toBeVisible();
-    await expect(page.locator("#resEval")).toHaveValue(voor);
+    await expect(page.locator("#evalComboPanel")).toBeVisible();
+    await expect(page.locator("#evalSelect")).toHaveValue(voor);
     await page.keyboard.press("ArrowDown");
-    await expect(page.locator("#resEvalComboInput")).toHaveAttribute("aria-activedescendant", "resEvalComboPanel-o0");
+    await expect(page.locator("#evalComboInput")).toHaveAttribute("aria-activedescendant", "evalComboPanel-o0");
   });
 
   test("heeft de ARIA-rollen van een combobox", async ({ page }) => {
-    await expect(page.locator("#resEvalComboInput")).toHaveAttribute("role", "combobox");
-    await expect(page.locator("#resEvalComboInput")).toHaveAttribute("aria-controls", "resEvalComboPanel");
-    await expect(page.locator("#resEvalComboPanel")).toHaveAttribute("role", "listbox");
-    await expect(page.locator("#resEvalComboPanel [role=option]").first()).toBeVisible();
+    await expect(page.locator("#evalComboInput")).toHaveAttribute("role", "combobox");
+    await expect(page.locator("#evalComboInput")).toHaveAttribute("aria-controls", "evalComboPanel");
+    await expect(page.locator("#evalComboPanel")).toHaveAttribute("role", "listbox");
+    await expect(page.locator("#evalComboPanel [role=option]").first()).toBeVisible();
   });
 
   test("de huidige keuze staat gemarkeerd", async ({ page }) => {
-    const huidige = await page.inputValue("#resEval");
-    await expect(page.locator("#resEvalComboPanel .current")).toHaveAttribute("data-value", huidige);
+    await page.locator("#evalComboPanel .eval-combo-option").first().click();
+    const huidige = await page.inputValue("#evalSelect");
+    await page.click("#klasMultiInput"); // focus weg, zodat het paneel opnieuw opent
+    await page.click("#evalComboInput");
+    await expect(page.locator("#evalComboPanel .current")).toHaveAttribute("data-value", huidige);
   });
 
   test("melding als er niets gevonden wordt", async ({ page }) => {
-    await page.fill("#resEvalComboInput", "xyzxyz");
-    await expect(page.locator("#resEvalComboPanel")).toContainText("Geen evaluaties of mappen gevonden");
+    await page.fill("#evalComboInput", "xyzxyz");
+    await expect(page.locator("#evalComboPanel")).toContainText("Geen evaluaties of mappen gevonden");
   });
 });
 
-test("zoeklijst bij Evalueren werkt op dezelfde manier", async ({ page }) => {
+test("zoeklijst bij Evalueren: onzichtbare keuzelijst met dezelfde mapindeling", async ({ page }) => {
   await openTool(page);
   const names = await seedFolders(page);
   await page.selectOption("#yearSelect", "1ste jaar");

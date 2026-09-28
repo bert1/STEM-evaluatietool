@@ -59,19 +59,6 @@ function init() {
   $("btnResults").addEventListener("click", openResults);
   $("btnSkore").addEventListener("click", openSkore);
   $("btnCloseResults").addEventListener("click", goHome);
-  $("resYear").addEventListener("change", function () {
-    resEvalCombo.close(); // ander leerjaar = andere lijst, oud zoekwoord slaat nergens meer op
-    fillResultSelectors();
-    renderResults();
-  });
-  $("resEval").addEventListener("change", function () { fillResultSelectors(); renderResults(); });
-  $("resKlas").addEventListener("change", renderResults);
-  $("goalsWrap").addEventListener("toggle", function () {
-    if (this.open) renderGoalOverview();
-  });
-  $("growthWrap").addEventListener("toggle", function () {
-    if (this.open) renderGrowthPanel();
-  });
   $("btnCloseTeam").addEventListener("click", goHome);
   $("btnAddMember").addEventListener("click", addMember);
   $("teamYear").addEventListener("change", renderTeamClasses);
@@ -147,7 +134,7 @@ function init() {
   initAiRubricHelper();
   initScoringShortcuts();
   initEvalCombo();
-  resEvalCombo.init();
+  initControle();
   initSkore();
   initKlasMulti();
   initMoveStudent();
@@ -327,7 +314,7 @@ function renderArchivedYearBar() {
   var txt = el("div", "txt");
   txt.appendChild(el("strong", null, "Je bekijkt een archiefschooljaar: " + db.currentSchoolYear));
   txt.appendChild(document.createTextNode(
-    "Klaslijsten en evaluaties hierin zijn niet meer te wijzigen. Resultaten bekijken kan gewoon. " +
+    "Klaslijsten en evaluaties hierin zijn niet meer te wijzigen. Bekijken en controleren kan gewoon. " +
       "Nieuw werk gaat naar het actieve schooljaar, " + db.activeSchoolYear + ".",
   ));
   bar.appendChild(txt);

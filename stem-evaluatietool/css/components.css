@@ -676,48 +676,10 @@ tr.conflict:hover { background: #fef3c7; }
   .member-row { grid-template-columns: 90px 1fr auto; }
 }
 
-/* ---------- Resultaten ---------- */
+/* ---------- Grafieken (groeigrafiek, nu niet op het scherm, zie js/goals.js) ---------- */
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.stat {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  background: #fbfcfe;
-}
-.stat .value {
-  font-size: 26px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-}
-.stat .label { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
-
-.workpoints { margin: 26px 0; }
-.workpoints h3, .chart-box h3 {
-  margin: 0 0 3px;
-  font-size: 16px;
-}
-.workpoints .hint, .chart-box .hint { margin: 0 0 12px; }
-
-.workpoint {
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--warning);
-  border-radius: 8px;
-  padding: 11px 14px;
-  margin-bottom: 8px;
-  background: #fff;
-}
-.wp-head { display: flex; align-items: baseline; gap: 10px; }
-.wp-name { font-weight: 700; font-size: 15px; }
-.wp-pct { margin-left: auto; font-weight: 700; font-size: 17px; }
-.wp-meta { font-size: 13px; color: var(--muted); margin-top: 2px; }
-
+.chart-box h3 { margin: 0 0 3px; font-size: 16px; }
+.chart-box .hint { margin: 0 0 12px; }
 .chart-box { margin: 26px 0; }
 .chart {
   width: 100%;
@@ -725,9 +687,6 @@ tr.conflict:hover { background: #fef3c7; }
   display: block;
   overflow: visible;
 }
-.chart .bar-label { font-size: 12.5px; fill: var(--text); }
-.chart .bar-value { font-size: 12px; fill: var(--muted); font-weight: 600; }
-.chart .seg-value { font-size: 11.5px; fill: #fff; font-weight: 700; }
 .chart .axis { font-size: 11px; fill: var(--muted); }
 
 .legend {
@@ -741,12 +700,8 @@ tr.conflict:hover { background: #fef3c7; }
 .legend-item { display: inline-flex; align-items: center; gap: 6px; }
 .legend .dot { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 
-th.sortable { cursor: pointer; user-select: none; }
-th.sortable:hover { color: var(--primary); }
 td.low { color: var(--danger); font-weight: 700; }
 
-@media (max-width: 620px) {
-  .stat .value { font-size: 22px; }
 }
 
 /* ---------- Waarschuwing: werk staat nergens vast ---------- */
@@ -836,29 +791,6 @@ td.low { color: var(--danger); font-weight: 700; }
   margin-bottom: 8px;
 }
 
-details.chart-group {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  margin: 18px 0;
-}
-details.chart-group > summary { margin-bottom: 0; }
-
-table.coverage th, table.coverage td { text-align: center; }
-table.coverage th:first-child, table.coverage td:first-child { text-align: left; }
-table.coverage td.cov-cell { padding: 5px 6px; }
-button.cov {
-  min-width: 62px;
-  padding: 5px 8px;
-  font-size: 13px;
-  font-weight: 700;
-  border-radius: 6px;
-  border: 1px solid transparent;
-}
-button.cov.full { background: var(--success-soft); color: var(--success); border-color: #a7f3d0; }
-button.cov.part { background: var(--warning-soft); color: var(--warning); border-color: #fde68a; }
-button.cov.none { background: #f1f5f9; color: var(--muted); border-color: var(--border); }
-button.cov:hover { filter: brightness(0.96); }
 
 /* ---------- Leerplandoelen ---------- */
 
@@ -1015,7 +947,7 @@ button.cov:hover { filter: brightness(0.96); }
 .goal-option .goal-text { flex: 1; }
 .goal-option .muted { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
 
-/* Overzicht bij de resultaten */
+/* Statuslijst op het Controle-tabblad */
 .goal-row {
   display: flex;
   align-items: center;
@@ -1029,28 +961,7 @@ button.cov:hover { filter: brightness(0.96); }
 }
 .goal-row .goal-main { display: flex; align-items: center; gap: 6px; min-width: 190px; }
 .goal-row .goal-title { font-size: 13.5px; color: var(--muted); flex: 1; min-width: 200px; }
-.goal-row .goal-score { font-weight: 700; font-size: 14px; white-space: nowrap; }
-.goal-row .goal-bar {
-  width: 110px;
-  height: 8px;
-  background: #f1f5f9;
-  border-radius: 999px;
-  overflow: hidden;
-  flex: none;
-}
-.goal-row .goal-bar span { display: block; height: 100%; border-radius: 999px; }
-.goal-row.untouched { background: #fafbfc; }
-.goal-row.untouched .goal-title { color: #94a3b8; }
 
-.threshold-row {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  margin: 10px 0 16px;
-}
-.threshold-row .form-group { margin: 0; }
-.threshold-row input { width: 78px; text-align: center; }
 
 .plan-badge {
   display: inline-block;
@@ -1191,6 +1102,7 @@ table.skore-table th .skore-th-max { display: block; margin-top: 3px; }
 table.skore-table td.skore-student { white-space: nowrap; }
 table.skore-table td.num { font-size: 15px; font-weight: 600; }
 table.skore-table td.skore-missing { color: #cbd5e1; font-weight: 400; }
+table.skore-table td.skore-exempt { color: var(--muted); font-size: 12.5px; font-weight: 500; font-style: italic; }
 table.skore-table td.skore-dup { background: var(--warning-soft); color: var(--warning); }
 table.skore-table tr.skore-extra td { color: var(--muted); font-style: italic; }
 
@@ -1209,3 +1121,93 @@ table.skore-table th:first-child { width: 1%; white-space: nowrap; }
   margin: 0;
 }
 .period-row input[type="date"] { width: auto; }
+
+/* ---------- Controle ---------- */
+
+.controle-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .controle-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .controle-grid { grid-template-columns: 1fr; } }
+
+.controle-summary { margin-bottom: 18px; }
+.controle-heading { margin: 4px 0 10px; font-size: 17px; }
+
+.controle-group { margin-bottom: 16px; }
+.controle-group-title {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #0f172a;
+  margin: 12px 0 6px;
+}
+
+.controle-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  background: #fff;
+}
+.controle-item.controle-open { border-left: 4px solid var(--warning); }
+.controle-item.controle-note { border-left: 4px solid #94a3b8; background: #fafbfc; }
+.controle-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.controle-title { font-weight: 700; font-size: 15px; }
+.controle-klas {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.controle-count { color: var(--muted); font-size: 13.5px; }
+.controle-actions { margin-left: auto; }
+
+.controle-issues { margin: 8px 0 0; padding-left: 20px; font-size: 14px; }
+.controle-issues li { margin: 3px 0; }
+.controle-issue.controle-info { color: var(--muted); }
+.controle-issue-vrijgesteldToch { color: var(--danger); }
+.link-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.controle-detail { margin-top: 12px; }
+.controle-table td { vertical-align: middle; }
+.controle-row-actions { white-space: nowrap; text-align: right; }
+.controle-row-actions button + button { margin-left: 6px; }
+.controle-remark { font-size: 13px; color: var(--muted); }
+.controle-remark.controle-warn { color: var(--danger); font-weight: 600; }
+
+.status-badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.status-ok { background: var(--success-soft); color: var(--success); }
+.status-onvolledig, .status-tussentijds { background: var(--warning-soft); color: var(--warning); }
+.status-ontbreekt, .status-dubbel { background: var(--danger-soft); color: var(--danger); }
+.status-vrijgesteld, .status-nietInLijst { background: #f1f5f9; color: #475569; }
+
+details.controle-fold { margin: 14px 0; }
+.controle-notstarted .controle-klassen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+.goal-status-summary { font-weight: 600; margin: 0 0 6px; }
+.goal-rubriek { margin-top: 16px; }
+.goal-row .goal-status { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.goal-row .goal-evals { font-size: 12.5px; color: var(--muted); }
+.goal-badge-niet { background: #f1f5f9; color: #475569; }
+.goal-badge-gekoppeld { background: var(--warning-soft); color: var(--warning); }
+.goal-badge-beoordeeld { background: var(--success-soft); color: var(--success); }
+.goal-row.goal-status-niet .goal-title { color: #94a3b8; }
