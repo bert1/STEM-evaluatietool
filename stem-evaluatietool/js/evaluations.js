@@ -68,17 +68,10 @@ function fillClassAndEvalOptions(year) {
   syncKlasMultiDisplay();
 }
 
-/* Zelfgetekende vervolgkeuzelijst voor het evaluatiemoment. De echte
-   <select id="evalSelect"> hierboven blijft volledig functioneel
-   (waarde lezen, "change"-event) maar is onzichtbaar — dit paneel is
-   wat een leerkracht ziet. Bewust niet met de kale <select> zelf
-   opgelost: de zoekbalk kon dan niet visueel ín de vervolgkeuzelijst
-   zitten, en een browser kiest zelf of die naar boven of onder opent —
-   hier ligt dat altijd vast op "onder", want ik teken het zelf. */
-var evalComboHighlight = -1;
-
-function evalComboGroups() {
-  var year = $("yearSelect").value;
+/* Evaluaties van een leerjaar, gegroepeerd per map in de volgorde van
+   het Rubrics-scherm. Gedeeld door de zoeklijst bij Evalueren en die bij
+   Resultaten. */
+function evaluationGroups(year) {
   if (!year || !CONFIG[year]) return [];
 
   var folders = evaluationFoldersFor(db, year);
@@ -102,105 +95,24 @@ function evalComboGroups() {
   return groups;
 }
 
-function syncEvalComboDisplay() {
-  var input = $("evalComboInput");
-  var hasYear = !!($("yearSelect").value && CONFIG[$("yearSelect").value]);
-  input.disabled = !hasYear;
-  input.placeholder = hasYear ? "Zoek een evaluatie…" : "Zoek eerst een jaar en klas…";
-  if (document.activeElement !== input) input.value = $("evalSelect").value || "";
-  if (!$("evalComboPanel").classList.contains("hidden")) renderEvalComboPanel();
-}
+/* Zelfgetekende zoek-vervolgkeuzelijst voor het evaluatiemoment, zie
+   makeSearchCombo() in js/ui.js. De echte <select id="evalSelect">
+   hierboven blijft volledig functioneel maar is onzichtbaar. */
+var evalCombo = makeSearchCombo({
+  inputId: "evalComboInput",
+  panelId: "evalComboPanel",
+  selectId: "evalSelect",
+  wrapId: "evalComboWrap",
+  groups: function () { return evaluationGroups($("yearSelect").value); },
+  isEnabled: function () { return !!($("yearSelect").value && CONFIG[$("yearSelect").value]); },
+  placeholder: "Zoek een evaluatie…",
+  disabledPlaceholder: "Zoek eerst een jaar en klas…",
+  emptyText: "Nog geen evaluaties voor dit leerjaar.",
+});
 
-function openEvalCombo() {
-  if ($("evalComboInput").disabled) return;
-  // Altijd met een schone lei beginnen om te zoeken — de huidige keuze
-  // blijft intussen gewoon geselecteerd, enkel de weergave wordt leeg.
-  $("evalComboInput").value = "";
-  evalComboHighlight = -1;
-  renderEvalComboPanel();
-  $("evalComboPanel").classList.remove("hidden");
-}
-
-function closeEvalCombo() {
-  $("evalComboPanel").classList.add("hidden");
-  evalComboHighlight = -1;
-  $("evalComboInput").value = $("evalSelect").value || "";
-}
-
-function renderEvalComboPanel() {
-  var panel = $("evalComboPanel");
-  panel.innerHTML = "";
-  var needle = $("evalComboInput").value.trim().toLowerCase();
-  var groups = evalComboGroups();
-  var flat = [];
-
-  groups.forEach(function (g) {
-    var matches = g.names.filter(function (n) { return !needle || n.toLowerCase().indexOf(needle) !== -1; });
-    if (!matches.length) return;
-    if (g.label) panel.appendChild(el("div", "eval-combo-group", g.label));
-    matches.forEach(function (name) {
-      var row = el("div", "eval-combo-option", name);
-      row.dataset.value = name;
-      row.addEventListener("mousedown", function (e) {
-        e.preventDefault(); // voorkomt dat het invoerveld al "blurt" vóór de klik telt
-        chooseEvalComboOption(name);
-      });
-      panel.appendChild(row);
-      flat.push(row);
-    });
-  });
-
-  if (!flat.length) {
-    panel.appendChild(el(
-      "div", "eval-combo-empty",
-      needle
-        ? "Geen evaluaties gevonden voor \"" + $("evalComboInput").value.trim() + "\"."
-        : "Nog geen evaluaties voor dit leerjaar.",
-    ));
-  }
-
-  if (evalComboHighlight >= flat.length) evalComboHighlight = flat.length - 1;
-  updateEvalComboHighlight(flat);
-}
-
-function updateEvalComboHighlight(flat) {
-  flat = flat || Array.prototype.slice.call($("evalComboPanel").querySelectorAll(".eval-combo-option"));
-  flat.forEach(function (row, i) {
-    row.classList.toggle("highlight", i === evalComboHighlight);
-  });
-  if (evalComboHighlight >= 0 && flat[evalComboHighlight]) {
-    flat[evalComboHighlight].scrollIntoView({ block: "nearest" });
-  }
-}
-
-function chooseEvalComboOption(name) {
-  $("evalSelect").value = name;
-  $("evalSelect").dispatchEvent(new Event("change", { bubbles: true }));
-  closeEvalCombo();
-}
-
-function onEvalComboKeydown(e) {
-  var panelOpen = !$("evalComboPanel").classList.contains("hidden");
-
-  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
-    e.preventDefault();
-    if (!panelOpen) { openEvalCombo(); return; }
-    var flat = Array.prototype.slice.call($("evalComboPanel").querySelectorAll(".eval-combo-option"));
-    if (!flat.length) return;
-    var step = e.key === "ArrowDown" ? 1 : -1;
-    evalComboHighlight = (evalComboHighlight + step + flat.length) % flat.length;
-    updateEvalComboHighlight(flat);
-  } else if (e.key === "Enter") {
-    if (!panelOpen) return;
-    e.preventDefault();
-    var flat = Array.prototype.slice.call($("evalComboPanel").querySelectorAll(".eval-combo-option"));
-    if (evalComboHighlight >= 0 && flat[evalComboHighlight]) {
-      chooseEvalComboOption(flat[evalComboHighlight].dataset.value);
-    }
-  } else if (e.key === "Escape") {
-    if (panelOpen) { e.preventDefault(); closeEvalCombo(); }
-  }
-}
+function syncEvalComboDisplay() { evalCombo.sync(); }
+function openEvalCombo() { evalCombo.open(); }
+function closeEvalCombo() { evalCombo.close(); }
 
 /* Klas: zelfgetekende keuzelijst met aanvinkvakjes, meerdere klassen
    tegelijk kiezen. Nodig omdat een stem-les leerlingen van verschillende
@@ -297,22 +209,7 @@ function initKlasMulti() {
 }
 
 function initEvalCombo() {
-  var input = $("evalComboInput");
-  input.addEventListener("focus", openEvalCombo);
-  input.addEventListener("click", openEvalCombo);
-  input.addEventListener("input", function () {
-    evalComboHighlight = -1;
-    renderEvalComboPanel();
-    $("evalComboPanel").classList.remove("hidden");
-  });
-  input.addEventListener("keydown", onEvalComboKeydown);
-
-  document.addEventListener("mousedown", function (e) {
-    var wrap = document.querySelector(".eval-combo-wrap");
-    if (wrap && !wrap.contains(e.target) && !$("evalComboPanel").classList.contains("hidden")) {
-      closeEvalCombo();
-    }
-  });
+  evalCombo.init();
 }
 
 function cssEscape(v) {

@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 17 september 2026, versie **1.17.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.18.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -84,7 +84,20 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.17.0)
+## Volledige featurelijst (huidige stand, 1.18.0)
+
+- **Resultaten: evaluatie zoeken, gegroepeerd per map** (1.18.0): het
+  veld "Evaluatie" op het Resultaten-scherm gebruikt dezelfde
+  zoek-vervolgkeuzelijst als het evaluatiemoment bij Evalueren. De
+  combo-logica zit nu één keer in `makeSearchCombo(cfg)` in `js/ui.js`
+  (moet daar staan: `results.js` en `evaluations.js` maken er bij het
+  laden al een instantie mee). Mapindeling komt uit
+  `evaluationGroups(year)` in `js/evaluations.js`. `openEvalCombo()`,
+  `closeEvalCombo()` en `syncEvalComboDisplay()` bestaan nog als dunne
+  omhulsels. De echte `<select id="resEval">` blijft werken maar is
+  onzichtbaar (`.eval-select-hidden`), dus `goals.js`/`reports.js` lezen
+  gewoon verder `$("resEval").value`. Mapkoppen zijn in beide lijsten
+  donkerder en vetgedrukt, met een scheidingslijn tussen mappen.
 
 - **Klaslijsten-scherm: klas aanklikken toont wie erin zit, "Leerling
   van klas veranderen" is klapbaar onderaan** (1.17.0): elke klas-chip

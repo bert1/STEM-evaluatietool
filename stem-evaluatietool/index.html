@@ -445,9 +445,17 @@
             <label for="resYear">Leerjaar</label>
             <select id="resYear"></select>
           </div>
-          <div class="form-group" style="margin: 0">
-            <label for="resEval">Evaluatie</label>
-            <select id="resEval"></select>
+          <div class="form-group eval-combo-wrap" id="resEvalComboWrap" style="margin: 0; position: relative">
+            <label for="resEvalComboInput">Evaluatie</label>
+            <input
+              type="text"
+              id="resEvalComboInput"
+              class="eval-combo-input"
+              placeholder="Zoek een evaluatie…"
+              autocomplete="off"
+            />
+            <div id="resEvalComboPanel" class="eval-combo-panel hidden"></div>
+            <select id="resEval" class="eval-select-hidden" tabindex="-1" aria-hidden="true"></select>
           </div>
           <div class="form-group" style="margin: 0">
             <label for="resKlas">Klas</label>
@@ -533,7 +541,7 @@
             <option value="">Kies eerst een jaar</option>
           </select>
         </div>
-        <div class="form-group eval-combo-wrap" style="margin: 0; position: relative">
+        <div class="form-group eval-combo-wrap" id="evalComboWrap" style="margin: 0; position: relative">
           <label for="evalComboInput">Evaluatiemoment</label>
           <input
             type="text"

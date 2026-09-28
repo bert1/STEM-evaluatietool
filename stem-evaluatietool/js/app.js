@@ -59,6 +59,7 @@ function init() {
   $("btnResults").addEventListener("click", openResults);
   $("btnCloseResults").addEventListener("click", goHome);
   $("resYear").addEventListener("change", function () {
+    resEvalCombo.close(); // ander leerjaar = andere lijst, oud zoekwoord slaat nergens meer op
     fillResultSelectors();
     renderResults();
   });
@@ -145,6 +146,7 @@ function init() {
   initAiRubricHelper();
   initScoringShortcuts();
   initEvalCombo();
+  resEvalCombo.init();
   initKlasMulti();
   initMoveStudent();
   startNetSync();

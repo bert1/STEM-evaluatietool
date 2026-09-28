@@ -13,6 +13,23 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.18.0 · 28 september 2026
+
+**Resultaten: zoeken in de evaluatiekeuze, met mappen.**
+
+- Het veld "Evaluatie" op het Resultaten-scherm is dezelfde zelfgetekende
+  zoek-vervolgkeuzelijst geworden als "Evaluatiemoment" bij Evalueren:
+  typen filtert op naam, pijltjes en Enter werken, en de evaluaties staan
+  gegroepeerd per map in dezelfde volgorde als op het Rubrics-scherm.
+- De code van die zoeklijst staat nu één keer in `makeSearchCombo()` in
+  `js/ui.js`, en wordt door beide schermen gebruikt. De mapindeling komt
+  uit het gedeelde `evaluationGroups(year)` in `js/evaluations.js`.
+  Zelfde patroon als voorheen: de echte `<select id="resEval">` blijft
+  werken (waarde, "change"-event, tests) maar is onzichtbaar.
+- Mapkoppen in beide zoeklijsten zijn duidelijker: donkerder,
+  vetgedrukt, met een scheidingslijn tussen mappen. Evaluaties in een map
+  springen licht in.
+
 ## 1.17.0 — 17 september 2026
 
 **Klaslijsten-scherm: klas aanklikken toont wie erin zit, "Leerling van

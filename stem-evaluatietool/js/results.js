@@ -570,9 +570,17 @@ function fillResultSelectors() {
   var prevEval = $("resEval").value;
   var prevKlas = $("resKlas").value;
 
+  // Zelfde mapindeling als bij Evalueren: <optgroup> per map in de echte
+  // (onzichtbare) <select>, en koppen in de zichtbare zoeklijst.
   $("resEval").innerHTML = "";
-  evaluationNames(db, year).forEach(function (name) {
-    $("resEval").appendChild(new Option(name, name));
+  evaluationGroups(year).forEach(function (g) {
+    var parent = $("resEval");
+    if (g.label) {
+      parent = document.createElement("optgroup");
+      parent.label = g.label;
+      $("resEval").appendChild(parent);
+    }
+    g.names.forEach(function (name) { parent.appendChild(new Option(name, name)); });
   });
   if (prevEval && evaluationNames(db, year).indexOf(prevEval) !== -1) {
     $("resEval").value = prevEval;
@@ -589,7 +597,23 @@ function fillResultSelectors() {
   if (prevKlas && $("resKlas").querySelector('option[value="' + cssEscape(prevKlas) + '"]')) {
     $("resKlas").value = prevKlas;
   }
+
+  resEvalCombo.sync();
 }
+
+/* Zoeklijst voor de evaluatie bij Resultaten, exact hetzelfde als het
+   evaluatiemoment bij Evalueren (zie makeSearchCombo() in js/ui.js). */
+var resEvalCombo = makeSearchCombo({
+  inputId: "resEvalComboInput",
+  panelId: "resEvalComboPanel",
+  selectId: "resEval",
+  wrapId: "resEvalComboWrap",
+  groups: function () { return evaluationGroups($("resYear").value); },
+  isEnabled: function () { return !!$("resYear").value; },
+  placeholder: "Zoek een evaluatie…",
+  disabledPlaceholder: "Kies eerst een leerjaar…",
+  emptyText: "Nog geen evaluaties voor dit leerjaar.",
+});
 
 function renderResults() {
   renderCoverage();
