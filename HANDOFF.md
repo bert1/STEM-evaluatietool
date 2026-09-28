@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.18.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.18.1**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -84,7 +84,16 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.18.0)
+## Volledige featurelijst (huidige stand, 1.18.1)
+
+- **Veiliger opslaan** (1.18.1): onleesbare browseropslag wordt bewaard
+  onder `STEM_EVAL_DB_V3_BESCHADIGD` (`STORAGE_RESCUE_KEY`) in plaats van
+  stil gewist, met een rode balk in `updateSafetyBar()`. `writeHandle()`
+  schrijft nooit twee keer tegelijk en zet de status enkel op opgeslagen
+  als `changeCount` (verhoogd in `markDirty()`) intussen niet veranderde.
+  Een mislukte opslag zet `saveError`: rode status en blijvende balk tot
+  een volgende opslag lukt. `writeHandle()` geeft nu altijd een Promise
+  terug.
 
 - **Resultaten: evaluatie zoeken, gegroepeerd per map** (1.18.0): het
   veld "Evaluatie" op het Resultaten-scherm gebruikt dezelfde

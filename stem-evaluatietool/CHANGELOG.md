@@ -13,6 +13,27 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.18.1 · 28 september 2026
+
+**Veiliger opslaan: geen stil verlies van werk meer.**
+
+- Kan de tool het werk in de browser niet meer lezen (beschadigde
+  browseropslag), dan wordt die inhoud niet langer stil gewist. Ze wordt
+  apart bewaard onder `STEM_EVAL_DB_V3_BESCHADIGD`, en een rode balk
+  bovenaan zegt wat er aan de hand is, met knoppen om het werkbestand te
+  openen of de onleesbare gegevens als reservekopie te downloaden. De balk
+  blijft staan, ook na herladen, tot je hem zelf verbergt.
+- "Opgeslagen" verschijnt pas als echt de laatste wijziging op schijf
+  staat. Voorheen kon een wijziging tijdens het schrijven als opgeslagen
+  getoond worden, en dan waarschuwde de browser niet bij het sluiten.
+  Daarnaast lopen er nooit meer twee schrijfacties tegelijk
+  (`writeHandle()` in `js/storage.js`, met `changeCount` uit
+  `js/state.js`).
+- Mislukt automatisch opslaan, dan blijft de status rood ("Niet
+  opgeslagen!") en staat er een blijvende rode balk met "Opnieuw
+  proberen" en "Opslaan als…", in plaats van één melding die snel uit
+  beeld verdwijnt.
+
 ## 1.18.0 · 28 september 2026
 
 **Resultaten: zoeken in de evaluatiekeuze, met mappen.**
