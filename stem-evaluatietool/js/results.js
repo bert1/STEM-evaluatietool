@@ -351,24 +351,36 @@ function coverageMatrix(db, year) {
   var klassen = classesFor(db, year);
   var evaluaties = evaluationNames(db, year);
 
+  // Eén keer over alle sessies van dit leerjaar: per leerling telt de
+  // echte klas (row.studentKlas), zoals in collectResults() en
+  // evaluatedMap(). Zo tellen combinatiesessies en leerlingen die van
+  // klas veranderden correct mee. Oudere rijen zonder dat veld hadden
+  // altijd precies één klas per sessie, dus daar is p.klas juist.
+  var doneBy = {};
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year !== year) return;
+    (db.sessions[key] || []).forEach(function (row) {
+      (row.students || []).forEach(function (s) {
+        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var cellKey = klas + "||" + p.evaluation;
+        if (!doneBy[cellKey]) doneBy[cellKey] = {};
+        doneBy[cellKey][s] = true;
+      });
+    });
+  });
+
   var cells = {};
   klassen.forEach(function (klas) {
     var students = studentsFor(db, year, klas);
     evaluaties.forEach(function (evaluation) {
-      var key = sessionKey(year, klas, evaluation);
-      var rows = (db.sessions || {})[key] || [];
-      var done = {};
-      rows.forEach(function (row) {
-        (row.students || []).forEach(function (s) {
-          if (students.indexOf(s) !== -1) done[s] = true;
-        });
-      });
-      var count = Object.keys(done).length;
+      var beoordeeld = doneBy[klas + "||" + evaluation] || {};
+      var count = students.filter(function (s) { return beoordeeld[s]; }).length;
       cells[klas + "||" + evaluation] = {
         done: count,
         total: students.length,
         pct: students.length ? Math.round((count / students.length) * 100) : 0,
-        started: rows.length > 0,
+        started: Object.keys(beoordeeld).length > 0,
       };
     });
   });
