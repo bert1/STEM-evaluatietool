@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.23.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.24.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -147,12 +147,57 @@ Doe dit **aan het begin van het schooljaar**, of als er een klas bijkomt.
 Hier maak je de evaluaties die je bij Evalueren kan kiezen.
 
 - **Nieuwe evaluatie:** geef een naam, voeg **criteria** toe en kies per
-  criterium 3, 4 of 5 niveaus. Voeg eventueel **open vragen** toe. Klik op
-  **Evaluatie opslaan**.
-- **AI-hulp:** beschrijf de opdracht, klik op **Prompt genereren** en
-  **Kopieer prompt**. Plak die in je eigen AI-gesprek (bijvoorbeeld Claude of
-  ChatGPT), plak het antwoord terug en klik op **Criteria toevoegen aan deze
-  evaluatie**. Controleer het resultaat altijd zelf.
+  criterium 3, 4 of 5 niveaus. Geef bij voorkeur alle criteria hetzelfde
+  aantal niveaus, anders weegt het ene criterium zwaarder dan het andere.
+  Voeg eventueel **open vragen** toe. Klik op **Evaluatie opslaan**.
+- **Per niveau** vul je in:
+  - **Wat je ziet:** wat je concreet ziet of leest in het werk.
+  - **doel:** vink aan welk niveau betekent dat de leerling het doel
+    behaalt. Standaard is dat **Voldoende**.
+  - **Volgende stap** (optioneel, niet bij het hoogste niveau): één zin
+    voor de leerling, bijvoorbeeld "Schrijf vooraf op wat je verwacht te
+    meten." Die zin komt later in de feedback die je vanuit Skore kopieert.
+- **Nakijken:** onder de criteria verschijnen tips, bijvoorbeeld "Criterium
+  3, niveau 2: bijna dezelfde tekst als niveau 3". Het zijn enkel tips: je
+  kan altijd opslaan.
+
+### AI-hulp bij rubrics
+
+Open **AI-hulp: rubric laten maken of nakijken** bovenaan de evaluatie.
+
+**Nieuwe criteria laten maken:**
+
+1. Kies het **aantal niveaus** (standaard 5). Je ziet meteen de namen en
+   welk niveau "doel behaald" is.
+2. **Beschrijf de opdracht.** Dat is het enige verplichte veld.
+3. Beantwoord de **vragen** die je kan beantwoorden. Alles is optioneel;
+   wat je openlaat, gaat niet mee. **Wat wil je evalueren?** helpt het meest.
+4. Klik op **Prompt maken** en daarna op **Kopieer prompt**.
+5. Plak de prompt in je eigen AI-gesprek (bijvoorbeeld Claude of ChatGPT).
+6. Plak het antwoord terug en klik op **Criteria toevoegen aan deze
+   evaluatie**.
+7. Onder de knop zie je:
+   - welke leerplandoelen bij elk criterium gekoppeld zijn;
+   - **Ook passend:** doelen die bij de opdracht passen maar nog bij geen
+     criterium staan. Kies een criterium en klik op **Koppelen**, of klik
+     op **Negeren**;
+   - **Zonder doel:** wat je wil evalueren maar bij geen enkel doel past;
+   - tips om na te kijken.
+8. Kijk alles na en klik op **Evaluatie opslaan**.
+
+**Een bestaande rubric laten nakijken:**
+
+1. Klik boven de criteria op **Laat AI deze rubric nakijken**.
+2. Klik op **Prompt maken**, kopieer en plak in je AI-gesprek.
+3. Plak het antwoord terug en klik op **Voorstel bekijken**.
+4. Je ziet per criterium wat er zou veranderen ("Was" en "Wordt"). Vink uit
+   wat je niet wil en klik op **Gekozen wijzigingen overnemen**.
+5. Klik op **Evaluatie opslaan**. Werd de rubric al gebruikt, dan bewaart
+   de tool de vorige tekst, zodat eerdere beoordelingen kloppen.
+
+De AI verandert bij het nakijken nooit het aantal criteria of niveaus.
+Controleer het resultaat altijd zelf.
+
 - **Mappen:** met **+ Nieuwe map** orden je evaluaties, bijvoorbeeld per
   thema of per maand. Met ↑ en ↓ zet je mappen in de juiste volgorde. Die
   volgorde zie je ook in de zoeklijsten.
@@ -282,8 +327,9 @@ Wat er in de tekst staat, in drie korte stukjes:
   meest aandacht nodig heeft, telkens met de beschrijving uit de rubric.
   Daarna jouw eigen **feedback**, als je die invulde bij het beoordelen.
 - **Wat is je volgende stap?** Jouw eigen **feedforward**. Vulde je die
-  niet in, dan staat hier wat de leerling moet doen om bij het werkpunt
-  een niveau hoger te komen.
+  niet in, dan de **volgende stap** uit de rubric bij het werkpunt. Staat
+  die er ook niet, dan wat de leerling moet doen om bij het werkpunt een
+  niveau hoger te komen.
 
 Goed om te weten:
 

@@ -83,14 +83,31 @@ function uniqueId(base, taken) {
 
 
 
-/* Standaardniveaus, zodat een nieuw criterium meteen de juiste vorm heeft. */
+/* Standaardniveaus (sinds 1.24.0), zodat een nieuw criterium meteen de
+   juiste vorm heeft. Dezelfde reeksen gelden voor de AI-rubriekhulp: de
+   labels komen altijd uit de tool, nooit uit het antwoord van de AI.
+   LEVEL_TARGETS is de score van het niveau "doel behaald": wat een
+   leerling toont die het leerplandoel haalt. Bestaande rubrics met
+   andere labels blijven gewoon werken. */
 var LEVEL_TEMPLATES = {
-  3: ["Onvoldoende", "Voldoende", "Goed"],
-  4: ["Onvoldoende", "Matig", "Goed", "Zeer Goed"],
-  5: ["Onvoldoende", "Matig", "Voldoende", "Goed", "Zeer Goed"],
+  3: ["Onvoldoende", "Voldoende", "Sterk"],
+  4: ["Onvoldoende", "Bijna", "Voldoende", "Sterk"],
+  5: ["Onvoldoende", "Bijna", "Voldoende", "Sterk", "Uitstekend"],
+};
+
+var LEVEL_TARGETS = { 3: 2, 4: 3, 5: 3 };
+
+var DEFAULT_LEVEL_COUNT = 5;
+
+/* Het niveau "doel behaald" van een criterium: het bewaarde, anders dat
+   van de standaardreeks bij dit aantal niveaus (enkel als hulp voor de
+   AI-prompt, niet om oude rubrics iets op te leggen). */
+function rubricTargetScore(rubric, useDefault) {
+  var scores = (rubric.options || []).map(function (o) { return Number(o.score); });
+  if (typeof rubric.targetScore === "number" && scores.indexOf(rubric.targetScore) !== -1) return rubric.targetScore;
+  if (useDefault && LEVEL_TARGETS[scores.length] && isSequentialScores(rubric.options)) return LEVEL_TARGETS[scores.length];
+  return null;
 }
-
-
 
 /* Staan de punten op 1, 2, 3 … zonder gaten? Dan wil de leerkracht bijna
    zeker dat het zo blijft wanneer er een niveau bijkomt of wegvalt. */
@@ -111,15 +128,90 @@ function renumberScores(options) {
 }
 
 function blankRubric(count, taken) {
-  var labels = LEVEL_TEMPLATES[count] || LEVEL_TEMPLATES[5];
+  if (!LEVEL_TEMPLATES[count]) count = DEFAULT_LEVEL_COUNT;
   return {
     id: uniqueId("nieuw-criterium", taken || []),
     name: "",
     description: "",
-    options: labels.map(function (label, i) {
-      return { score: i + 1, label: label, desc: "" };
+    targetScore: LEVEL_TARGETS[count],
+    options: LEVEL_TEMPLATES[count].map(function (label, i) {
+      return { score: i + 1, label: label, desc: "", next: "" };
     }),
   };
+}
+
+/* ------------------------------------------------------------------
+   KWALITEITSCONTROLE VAN EEN RUBRIC (sinds 1.24.0)
+   Waarschuwt, blokkeert nooit. Gebruikt na het inlezen van een AI-
+   antwoord en live in de rubric-editor. Korte, concrete meldingen met
+   het nummer van het criterium en het niveau.
+   ------------------------------------------------------------------ */
+
+var VAGUE_WORDS = ["goed", "voldoende", "correct", "mooi", "slecht", "zwak", "sterk", "prima", "ok", "oké", "matig", "onvoldoende", "uitstekend", "perfect", "netjes", "fout", "juist"];
+var FILLER_WORDS = ["zeer", "heel", "erg", "niet", "wel", "het", "de", "een", "is", "zijn", "was", "en", "of", "nog", "te", "wat", "vrij", "redelijk", "best", "echt", "helemaal", "gedaan", "uitgevoerd", "werk"];
+
+function textWords(text) {
+  return String(text || "").toLowerCase().replace(/[^a-z0-9à-ÿ\s]/g, " ").split(/\s+/).filter(Boolean);
+}
+
+function isVagueText(text) {
+  var words = textWords(text).filter(function (w) { return FILLER_WORDS.indexOf(w) === -1; });
+  return words.length > 0 && words.every(function (w) { return VAGUE_WORDS.indexOf(w) !== -1; });
+}
+
+/* Gelijkenis tussen 0 en 1 op basis van de bewerkingsafstand. */
+function textSimilarity(a, b) {
+  a = textWords(a).join(" ");
+  b = textWords(b).join(" ");
+  if (!a.length && !b.length) return 1;
+  var prev = [], cur = [];
+  for (var j = 0; j <= b.length; j++) prev[j] = j;
+  for (var i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (var k = 1; k <= b.length; k++) {
+      cur[k] = Math.min(prev[k] + 1, cur[k - 1] + 1, prev[k - 1] + (a[i - 1] === b[k - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return 1 - prev[b.length] / Math.max(a.length, b.length);
+}
+
+var DASH_PATTERN = /\u2014|\s\u2013\s/;
+
+/* chosenLevels: het aantal niveaus dat in de AI-hulp gekozen werd, of
+   0/undefined in de editor. Geeft een lijst met leesbare meldingen. */
+function rubricWarnings(rubrics, year, chosenLevels) {
+  var out = [];
+  var counts = rubrics.map(function (r) { return (r.options || []).length; });
+  var most = null, freq = {};
+  counts.forEach(function (c) { freq[c] = (freq[c] || 0) + 1; if (most === null || freq[c] > freq[most]) most = c; });
+
+  rubrics.forEach(function (r, ri) {
+    var nr = "Criterium " + (ri + 1);
+    var n = counts[ri];
+    if (chosenLevels && n !== chosenLevels) {
+      out.push(nr + ": " + n + " niveaus, je koos er " + chosenLevels + ".");
+    } else if (!chosenLevels && n !== most) {
+      out.push(nr + " heeft " + n + " niveaus, de andere " + most + ". Dan weegt het " + (n < most ? "minder" : "zwaarder") + " door.");
+    }
+    if (DASH_PATTERN.test(r.name || "") || DASH_PATTERN.test(r.description || "")) {
+      out.push(nr + ": de naam of uitleg bevat een gedachtestreep.");
+    }
+    (r.options || []).forEach(function (o, oi) {
+      var where = nr + ", niveau " + (oi + 1);
+      var desc = String(o.desc || "").trim();
+      if (!desc) out.push(where + ": nog geen omschrijving.");
+      else if (isVagueText(desc)) out.push(where + ": enkel \"" + desc.replace(/[.!]+$/, "").toLowerCase() + "\". Wat zie je concreet?");
+      else if (textWords(desc).length < 4) out.push(where + ": erg kort. Wat zie je concreet?");
+      if (DASH_PATTERN.test(desc) || DASH_PATTERN.test(o.next || "")) out.push(where + ": bevat een gedachtestreep.");
+      var nextOpt = r.options[oi + 1];
+      if (desc && nextOpt && String(nextOpt.desc || "").trim() && textSimilarity(desc, nextOpt.desc) >= 0.9) {
+        out.push(where + ": bijna dezelfde tekst als niveau " + (oi + 2) + ".");
+      }
+    });
+    if (yearHasGoals(year) && !(r.goals || []).length) out.push(nr + ": nog geen leerplandoel gekoppeld.");
+  });
+  return out;
 }
 
 function blankQuestion(taken) {

@@ -425,7 +425,7 @@ tr.conflict:hover { background: #fef3c7; }
 
 .level-row {
   display: grid;
-  grid-template-columns: 62px 150px 1fr auto;
+  grid-template-columns: 62px 150px 1fr 58px auto;
   gap: 8px;
   align-items: start;
   margin-bottom: 6px;
@@ -434,7 +434,7 @@ tr.conflict:hover { background: #fef3c7; }
 .level-row .score-in { text-align: center; font-weight: 700; }
 .level-head {
   display: grid;
-  grid-template-columns: 62px 150px 1fr auto;
+  grid-template-columns: 62px 150px 1fr 58px auto;
   gap: 8px;
   font-size: 10.5px;
   text-transform: uppercase;
@@ -514,8 +514,8 @@ tr.conflict:hover { background: #fef3c7; }
 @media (max-width: 760px) {
   /* Naam op een eigen regel, knoppen eronder — anders loopt de kop over. */
   .rubric-edit-head input[type="text"] { flex: 1 1 100%; order: -1; }
-  .level-row, .level-head { grid-template-columns: 54px 1fr auto; }
-  .level-head span:nth-child(3), .level-row .desc-in { grid-column: 1 / -1; }
+  .level-row, .level-head { grid-template-columns: 54px 1fr 58px auto; }
+  .level-head span:nth-child(3), .level-row .desc-in, .level-row .level-next { grid-column: 1 / -1; }
   .question-row { grid-template-columns: 1fr auto; }
 }
 
@@ -1295,6 +1295,45 @@ details.controle-fold { margin: 14px 0; }
 .goal-badge-gekoppeld { background: var(--warning-soft); color: var(--warning); }
 .goal-badge-beoordeeld { background: var(--success-soft); color: var(--success); }
 .goal-row.goal-status-niet .goal-title { color: #94a3b8; }
+
+/* ---------- Rubric-editor: doelniveau en volgende stap (1.24.0) ---------- */
+.level-target { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); padding-top: 8px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; margin: 0; }
+.level-target input { width: auto; margin: 0; }
+.level-row .level-next { grid-column: 3 / 4; font-size: 13px; padding: 5px 9px; color: var(--text); background: var(--bg); border-style: dashed; margin-top: -2px; }
+.criteria-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.rubric-warnings ul { margin: 4px 0 0; padding-left: 20px; }
+.rubric-warnings li { margin: 2px 0; }
+#draftChecks { margin-top: 10px; }
+
+/* ---------- AI-hulp (1.24.0) ---------- */
+.chip-toggle {
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13.5px;
+  cursor: pointer;
+}
+.chip-toggle[aria-pressed="true"] { background: var(--primary-soft); border-color: var(--primary); color: var(--primary-hover); font-weight: 600; }
+.chip-toggle:disabled { opacity: 0.5; cursor: not-allowed; }
+.ai-mode { margin: 4px 0 14px; }
+.ai-q-label { display: block; font-weight: 700; margin-bottom: 6px; color: var(--muted); font-size: 11px; letter-spacing: 0.07em; text-transform: uppercase; }
+.ai-recommended { font-size: 11px; font-weight: 700; color: var(--success); background: var(--success-soft); border-radius: 999px; padding: 1px 8px; margin-left: 6px; text-transform: none; letter-spacing: 0; }
+.ai-questions { border-left: 3px solid var(--border); padding-left: 12px; margin-bottom: 12px; }
+.ai-result { margin-top: 12px; }
+.ai-result h4 { margin: 14px 0 6px; font-size: 14px; }
+.ai-linked, .ai-without { margin: 0; padding-left: 20px; font-size: 13.5px; }
+.ai-also-row { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; margin-bottom: 6px; font-size: 13.5px; }
+.ai-also-text { flex: 1 1 320px; }
+.ai-also-row select { width: auto; max-width: 240px; }
+.ai-review-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; }
+.ai-review-head { margin-bottom: 6px; }
+.ai-change { font-size: 13.5px; margin: 6px 0 0; }
+.ai-change-what { font-weight: 600; }
+.ai-change-was { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(100, 116, 139, 0.5); }
+.ai-change-new { color: var(--text); }
+.ai-change-tag { font-weight: 600; text-decoration: none; display: inline-block; }
 </style>
     <style>
 /* ---------- Voortgang ---------- */
@@ -2001,21 +2040,93 @@ table.feedup-table td {
           </div>
 
           <details id="aiRubricHelper" style="margin-bottom: 18px">
-            <summary class="section-toggle">AI-hulp: rubric genereren op basis van een beschrijving</summary>
+            <summary class="section-toggle">AI-hulp: rubric laten maken of nakijken</summary>
             <div style="margin-top: 12px">
               <p class="hint">
                 Geen sleutel, geen account nodig: je gebruikt gewoon een AI-gesprek dat je toch al
-                hebt (Claude, ChatGPT, Copilot, …). Beschrijf hieronder de opdracht, laat een prompt
-                genereren, plak die in je AI-gesprek, en plak het antwoord terug hier.
+                hebt (Claude, ChatGPT, Copilot, …). Vul hieronder in wat je weet, laat een prompt
+                maken, plak die in je AI-gesprek en plak het antwoord terug hier.
+              </p>
+
+              <div class="ai-mode btn-row" role="group" aria-label="Wat wil je doen?">
+                <button type="button" class="chip-toggle" id="aiModeNew" aria-pressed="true">Nieuwe criteria laten maken</button>
+                <button type="button" class="chip-toggle" id="aiModeReview" aria-pressed="false">Deze rubric laten nakijken</button>
+              </div>
+
+              <div class="form-group ai-new-only">
+                <span class="ai-q-label">Aantal niveaus per criterium</span>
+                <div class="btn-row" id="aiLevels" role="group" aria-label="Aantal niveaus">
+                  <button type="button" class="chip-toggle" data-value="3" aria-pressed="false">3</button>
+                  <button type="button" class="chip-toggle" data-value="4" aria-pressed="false">4</button>
+                  <button type="button" class="chip-toggle" data-value="5" aria-pressed="true">5</button>
+                </div>
+                <p class="hint" id="aiLevelLabels"></p>
+              </div>
+              <p class="hint ai-review-only hidden" style="margin-top: 0">
+                De AI verbetert de huidige criteria volgens dezelfde regels en vult ontbrekende
+                volgende stappen aan. Het aantal criteria en niveaus blijft gelijk. Je ziet eerst wat
+                er verandert voor je iets overneemt.
               </p>
 
               <div class="form-group">
-                <label for="aiDescription">Beschrijf de opdracht of les die je wil evalueren</label>
+                <label for="aiDescription">Beschrijf de opdracht <span class="ai-new-only">(verplicht)</span><span class="ai-review-only hidden">(optioneel)</span></label>
                 <textarea id="aiDescription" rows="3" placeholder="Bijvoorbeeld: leerlingen bouwen in groepjes van drie een brug van houten staafjes en testen die op draagkracht, met een verslag van hun ontwerpproces."></textarea>
               </div>
 
+              <div class="ai-questions">
+                <p class="hint" style="margin: 0 0 10px">Alle vragen hieronder zijn optioneel. Wat je openlaat, gaat niet mee in de prompt.</p>
+
+                <div class="form-group">
+                  <label for="aiEvaluate">Wat wil je evalueren? <span class="ai-recommended">aanbevolen</span></label>
+                  <textarea id="aiEvaluate" rows="2" placeholder="Bijvoorbeeld: de hypothese, de nauwkeurigheid van de metingen, de conclusie"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <span class="ai-q-label">Wat leveren de leerlingen af? (meerdere mogelijk)</span>
+                  <div class="btn-row" id="aiDeliver" role="group" aria-label="Wat leveren de leerlingen af?">
+                    <button type="button" class="chip-toggle" data-value="een product of prototype" aria-pressed="false">Product of prototype</button>
+                    <button type="button" class="chip-toggle" data-value="een verslag of werkbundel" aria-pressed="false">Verslag of werkbundel</button>
+                    <button type="button" class="chip-toggle" data-value="een presentatie" aria-pressed="false">Presentatie</button>
+                    <button type="button" class="chip-toggle" data-value="hun werkwijze of proces" aria-pressed="false">Werkwijze of proces</button>
+                    <button type="button" class="chip-toggle" data-value="een toets" aria-pressed="false">Toets</button>
+                  </div>
+                  <input type="text" id="aiDeliverOther" placeholder="Iets anders (optioneel)" style="margin-top: 8px" />
+                </div>
+
+                <div class="form-group">
+                  <span class="ai-q-label">Werken ze individueel of in groep?</span>
+                  <div class="btn-row" id="aiWorkform" data-single="1" role="group" aria-label="Individueel of in groep">
+                    <button type="button" class="chip-toggle" data-value="individueel" aria-pressed="false">Individueel</button>
+                    <button type="button" class="chip-toggle" data-value="in groep" aria-pressed="false">In groep</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <span class="ai-q-label">Hoeveel lestijd krijgen ze?</span>
+                  <div class="btn-row" id="aiTime" data-single="1" role="group" aria-label="Lestijd">
+                    <button type="button" class="chip-toggle" data-value="1 lesuur" aria-pressed="false">1 lesuur</button>
+                    <button type="button" class="chip-toggle" data-value="2 tot 3 lesuren" aria-pressed="false">2 tot 3 lesuren</button>
+                    <button type="button" class="chip-toggle" data-value="4 tot 6 lesuren" aria-pressed="false">4 tot 6 lesuren</button>
+                    <button type="button" class="chip-toggle" data-value="meer dan 6 lesuren" aria-pressed="false">Meer dan 6 lesuren</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="aiPrior">Wat hebben ze vooraf al geleerd of geoefend?</label>
+                  <textarea id="aiPrior" rows="2" placeholder="Bijvoorbeeld: een hypothese opstellen, een meetlat en een weegschaal gebruiken"></textarea>
+                </div>
+
+                <div class="form-group ai-new-only">
+                  <span class="ai-q-label">Mag de AI ook criteria voorstellen die je niet noemde?</span>
+                  <div class="btn-row" id="aiExtra" data-single="1" data-required="1" role="group" aria-label="Ook andere criteria voorstellen">
+                    <button type="button" class="chip-toggle" data-value="ja" aria-pressed="true">Ja</button>
+                    <button type="button" class="chip-toggle" data-value="nee" aria-pressed="false">Nee</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="btn-row">
-                <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt genereren</button>
+                <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt maken</button>
               </div>
 
               <div id="aiPromptBlock" class="hidden" style="margin-top: 14px">
@@ -2034,11 +2145,16 @@ table.feedup-table td {
                 <button type="button" class="btn-primary" id="btnAiImport">Criteria toevoegen aan deze evaluatie</button>
               </div>
               <div id="aiImportState" style="margin-top: 10px"></div>
+              <div id="aiImportResult"></div>
             </div>
           </details>
 
-          <label>Criteria</label>
+          <div class="criteria-head">
+            <label style="margin: 0">Criteria</label>
+            <button type="button" class="btn-ghost btn-small" id="btnAiReview">Laat AI deze rubric nakijken</button>
+          </div>
           <div id="draftRubrics"></div>
+          <div id="draftChecks"></div>
           <div class="add-block" style="margin: 10px 0 24px">
             <span class="add-label">Criterium toevoegen met</span>
             <div class="btn-row">
@@ -2046,7 +2162,7 @@ table.feedup-table td {
               <button type="button" class="btn-ghost btn-small" id="btnAddRubric4">4 niveaus</button>
               <button type="button" class="btn-ghost btn-small" id="btnAddRubric3">3 niveaus</button>
             </div>
-            <span class="add-hint">Onvoldoende tot Zeer Goed staan al klaar</span>
+            <span class="add-hint">De niveaus Onvoldoende tot Sterk staan al klaar, met Voldoende als doel behaald</span>
           </div>
 
           <label>Open vragen</label>
@@ -4650,7 +4766,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.23.0";
+var APP_VERSION = "1.24.0";
 
 var DB_VERSION = 4;
 
@@ -7251,14 +7367,31 @@ function uniqueId(base, taken) {
 
 
 
-/* Standaardniveaus, zodat een nieuw criterium meteen de juiste vorm heeft. */
+/* Standaardniveaus (sinds 1.24.0), zodat een nieuw criterium meteen de
+   juiste vorm heeft. Dezelfde reeksen gelden voor de AI-rubriekhulp: de
+   labels komen altijd uit de tool, nooit uit het antwoord van de AI.
+   LEVEL_TARGETS is de score van het niveau "doel behaald": wat een
+   leerling toont die het leerplandoel haalt. Bestaande rubrics met
+   andere labels blijven gewoon werken. */
 var LEVEL_TEMPLATES = {
-  3: ["Onvoldoende", "Voldoende", "Goed"],
-  4: ["Onvoldoende", "Matig", "Goed", "Zeer Goed"],
-  5: ["Onvoldoende", "Matig", "Voldoende", "Goed", "Zeer Goed"],
+  3: ["Onvoldoende", "Voldoende", "Sterk"],
+  4: ["Onvoldoende", "Bijna", "Voldoende", "Sterk"],
+  5: ["Onvoldoende", "Bijna", "Voldoende", "Sterk", "Uitstekend"],
+};
+
+var LEVEL_TARGETS = { 3: 2, 4: 3, 5: 3 };
+
+var DEFAULT_LEVEL_COUNT = 5;
+
+/* Het niveau "doel behaald" van een criterium: het bewaarde, anders dat
+   van de standaardreeks bij dit aantal niveaus (enkel als hulp voor de
+   AI-prompt, niet om oude rubrics iets op te leggen). */
+function rubricTargetScore(rubric, useDefault) {
+  var scores = (rubric.options || []).map(function (o) { return Number(o.score); });
+  if (typeof rubric.targetScore === "number" && scores.indexOf(rubric.targetScore) !== -1) return rubric.targetScore;
+  if (useDefault && LEVEL_TARGETS[scores.length] && isSequentialScores(rubric.options)) return LEVEL_TARGETS[scores.length];
+  return null;
 }
-
-
 
 /* Staan de punten op 1, 2, 3 … zonder gaten? Dan wil de leerkracht bijna
    zeker dat het zo blijft wanneer er een niveau bijkomt of wegvalt. */
@@ -7279,15 +7412,90 @@ function renumberScores(options) {
 }
 
 function blankRubric(count, taken) {
-  var labels = LEVEL_TEMPLATES[count] || LEVEL_TEMPLATES[5];
+  if (!LEVEL_TEMPLATES[count]) count = DEFAULT_LEVEL_COUNT;
   return {
     id: uniqueId("nieuw-criterium", taken || []),
     name: "",
     description: "",
-    options: labels.map(function (label, i) {
-      return { score: i + 1, label: label, desc: "" };
+    targetScore: LEVEL_TARGETS[count],
+    options: LEVEL_TEMPLATES[count].map(function (label, i) {
+      return { score: i + 1, label: label, desc: "", next: "" };
     }),
   };
+}
+
+/* ------------------------------------------------------------------
+   KWALITEITSCONTROLE VAN EEN RUBRIC (sinds 1.24.0)
+   Waarschuwt, blokkeert nooit. Gebruikt na het inlezen van een AI-
+   antwoord en live in de rubric-editor. Korte, concrete meldingen met
+   het nummer van het criterium en het niveau.
+   ------------------------------------------------------------------ */
+
+var VAGUE_WORDS = ["goed", "voldoende", "correct", "mooi", "slecht", "zwak", "sterk", "prima", "ok", "oké", "matig", "onvoldoende", "uitstekend", "perfect", "netjes", "fout", "juist"];
+var FILLER_WORDS = ["zeer", "heel", "erg", "niet", "wel", "het", "de", "een", "is", "zijn", "was", "en", "of", "nog", "te", "wat", "vrij", "redelijk", "best", "echt", "helemaal", "gedaan", "uitgevoerd", "werk"];
+
+function textWords(text) {
+  return String(text || "").toLowerCase().replace(/[^a-z0-9à-ÿ\s]/g, " ").split(/\s+/).filter(Boolean);
+}
+
+function isVagueText(text) {
+  var words = textWords(text).filter(function (w) { return FILLER_WORDS.indexOf(w) === -1; });
+  return words.length > 0 && words.every(function (w) { return VAGUE_WORDS.indexOf(w) !== -1; });
+}
+
+/* Gelijkenis tussen 0 en 1 op basis van de bewerkingsafstand. */
+function textSimilarity(a, b) {
+  a = textWords(a).join(" ");
+  b = textWords(b).join(" ");
+  if (!a.length && !b.length) return 1;
+  var prev = [], cur = [];
+  for (var j = 0; j <= b.length; j++) prev[j] = j;
+  for (var i = 1; i <= a.length; i++) {
+    cur = [i];
+    for (var k = 1; k <= b.length; k++) {
+      cur[k] = Math.min(prev[k] + 1, cur[k - 1] + 1, prev[k - 1] + (a[i - 1] === b[k - 1] ? 0 : 1));
+    }
+    prev = cur;
+  }
+  return 1 - prev[b.length] / Math.max(a.length, b.length);
+}
+
+var DASH_PATTERN = /\u2014|\s\u2013\s/;
+
+/* chosenLevels: het aantal niveaus dat in de AI-hulp gekozen werd, of
+   0/undefined in de editor. Geeft een lijst met leesbare meldingen. */
+function rubricWarnings(rubrics, year, chosenLevels) {
+  var out = [];
+  var counts = rubrics.map(function (r) { return (r.options || []).length; });
+  var most = null, freq = {};
+  counts.forEach(function (c) { freq[c] = (freq[c] || 0) + 1; if (most === null || freq[c] > freq[most]) most = c; });
+
+  rubrics.forEach(function (r, ri) {
+    var nr = "Criterium " + (ri + 1);
+    var n = counts[ri];
+    if (chosenLevels && n !== chosenLevels) {
+      out.push(nr + ": " + n + " niveaus, je koos er " + chosenLevels + ".");
+    } else if (!chosenLevels && n !== most) {
+      out.push(nr + " heeft " + n + " niveaus, de andere " + most + ". Dan weegt het " + (n < most ? "minder" : "zwaarder") + " door.");
+    }
+    if (DASH_PATTERN.test(r.name || "") || DASH_PATTERN.test(r.description || "")) {
+      out.push(nr + ": de naam of uitleg bevat een gedachtestreep.");
+    }
+    (r.options || []).forEach(function (o, oi) {
+      var where = nr + ", niveau " + (oi + 1);
+      var desc = String(o.desc || "").trim();
+      if (!desc) out.push(where + ": nog geen omschrijving.");
+      else if (isVagueText(desc)) out.push(where + ": enkel \"" + desc.replace(/[.!]+$/, "").toLowerCase() + "\". Wat zie je concreet?");
+      else if (textWords(desc).length < 4) out.push(where + ": erg kort. Wat zie je concreet?");
+      if (DASH_PATTERN.test(desc) || DASH_PATTERN.test(o.next || "")) out.push(where + ": bevat een gedachtestreep.");
+      var nextOpt = r.options[oi + 1];
+      if (desc && nextOpt && String(nextOpt.desc || "").trim() && textSimilarity(desc, nextOpt.desc) >= 0.9) {
+        out.push(where + ": bijna dezelfde tekst als niveau " + (oi + 2) + ".");
+      }
+    });
+    if (yearHasGoals(year) && !(r.goals || []).length) out.push(nr + ": nog geen leerplandoel gekoppeld.");
+  });
+  return out;
 }
 
 function blankQuestion(taken) {
@@ -8884,6 +9092,7 @@ function duplicateEvaluation(year, name) {
         name: r.name,
         description: r.description,
         goals: (r.goals || []).slice(),
+        targetScore: r.targetScore,
         options: JSON.parse(JSON.stringify(r.options)),
       };
     }),
@@ -8935,12 +9144,7 @@ function renderDraft() {
   $("draftName").value = draft.name;
   $("draftYear").value = draft.year;
 
-  $("aiDescription").value = "";
-  $("aiPromptOut").value = "";
-  $("aiPromptBlock").classList.add("hidden");
-  $("aiResponseIn").value = "";
-  $("aiImportState").innerHTML = "";
-  $("aiRubricHelper").open = false;
+  resetAiRubricHelper();
 
   renderDraftRubrics();
   renderDraftQuestions();
@@ -9006,15 +9210,18 @@ function renderDraftRubrics() {
     desc.placeholder = "Korte uitleg: waar kijk je naar bij dit criterium?";
     desc.style.minHeight = "48px";
     desc.style.marginBottom = "12px";
-    desc.addEventListener("input", function () { rubric.description = this.value; });
+    desc.addEventListener("input", function () { rubric.description = this.value; renderDraftChecks(); });
     card.appendChild(desc);
 
     var headRow = el("div", "level-head");
-    ["Punten", "Niveau", "Wat je ziet", ""].forEach(function (t) {
+    ["Punten", "Niveau", "Wat je ziet", "Doel", ""].forEach(function (t) {
       headRow.appendChild(el("span", null, t));
     });
     card.appendChild(headRow);
 
+    var sortedScores = rubric.options.map(function (o) { return Number(o.score); });
+    var topScore = Math.max.apply(null, sortedScores.length ? sortedScores : [0]);
+    var target = rubricTargetScore(rubric, false);
     rubric.options.forEach(function (opt, oi) {
       var row = el("div", "level-row");
 
@@ -9041,8 +9248,22 @@ function renderDraftRubrics() {
       d.className = "desc-in";
       d.value = opt.desc || "";
       d.placeholder = "Beschrijf wat je concreet ziet bij dit niveau";
-      d.addEventListener("input", function () { opt.desc = this.value; });
+      d.addEventListener("input", function () { opt.desc = this.value; renderDraftChecks(); });
       row.appendChild(d);
+
+      // Welk niveau "doel behaald" is: wat een leerling toont die het
+      // leerplandoel haalt. Eén per criterium.
+      var goalLbl = el("label", "level-target");
+      goalLbl.title = "Dit niveau betekent: doel behaald";
+      var radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "target-" + index;
+      radio.checked = target !== null && Number(opt.score) === target;
+      radio.setAttribute("aria-label", "Niveau " + (oi + 1) + " is doel behaald");
+      radio.addEventListener("change", function () { rubric.targetScore = Number(opt.score); });
+      goalLbl.appendChild(radio);
+      goalLbl.appendChild(el("span", null, "doel"));
+      row.appendChild(goalLbl);
 
       var rmLevel = el("button", "icon-btn danger", "×");
       rmLevel.type = "button";
@@ -9057,6 +9278,19 @@ function renderDraftRubrics() {
         updateDraftSummary();
       });
       row.appendChild(rmLevel);
+
+      // Volgende stap voor de leerling (optioneel, niet bij het hoogste
+      // niveau): gebruikt door de feedback in Skore.
+      if (Number(opt.score) !== topScore) {
+        var nx = document.createElement("input");
+        nx.type = "text";
+        nx.className = "level-next";
+        nx.value = opt.next || "";
+        nx.placeholder = "Volgende stap voor de leerling (optioneel), bv. Schrijf vooraf op wat je verwacht te meten.";
+        nx.setAttribute("aria-label", "Volgende stap bij niveau " + (oi + 1));
+        nx.addEventListener("input", function () { opt.next = this.value; renderDraftChecks(); });
+        row.appendChild(nx);
+      }
 
       card.appendChild(row);
     });
@@ -9080,6 +9314,20 @@ function renderDraftRubrics() {
 
     host.appendChild(card);
   });
+  updateAiReviewAvailability();
+  renderDraftChecks();
+}
+
+/* Kwaliteitscontrole van de hele rubric, live onder de criteria. Enkel
+   waarschuwingen: opslaan blijft altijd mogelijk. */
+function renderDraftChecks() {
+  var host = $("draftChecks");
+  if (!host || !draft) return;
+  host.innerHTML = "";
+  var list = draft.rubrics.filter(function (r) { return !isUntouchedRubric(r); });
+  if (!list.length) return;
+  var warnings = rubricWarnings(draft.rubrics, draft.year, 0);
+  if (warnings.length) host.appendChild(renderWarningsBox(warnings, "Nakijken"));
 }
 
 
@@ -9287,6 +9535,9 @@ function updateDraftSummary() {
     }
   });
 
+  renderDraftChecks();
+  updateAiReviewAvailability();
+
   var named = draft.rubrics.filter(function (r) { return String(r.name || "").trim(); }).length;
   var goalSet = {};
   draft.rubrics.forEach(function (r) {
@@ -9398,17 +9649,26 @@ function saveDraft() {
 
   var cleaned = {
     rubrics: draft.rubrics.map(function (r) {
-      return {
+      var options = r.options
+        .map(function (o) {
+          var opt = { score: Number(o.score), label: String(o.label).trim(), desc: String(o.desc || "").trim() };
+          var next = String(o.next || "").trim();
+          if (next) opt.next = next;
+          return opt;
+        })
+        .sort(function (a, b) { return a.score - b.score; });
+      // Het hoogste niveau heeft geen volgende stap.
+      if (options.length) delete options[options.length - 1].next;
+      var out = {
         id: r.id,
         name: String(r.name).trim(),
         description: String(r.description || "").trim(),
         goals: (r.goals || []).slice(),
-        options: r.options
-          .map(function (o) {
-            return { score: Number(o.score), label: String(o.label).trim(), desc: String(o.desc || "").trim() };
-          })
-          .sort(function (a, b) { return a.score - b.score; }),
+        options: options,
       };
+      var target = rubricTargetScore({ options: options, targetScore: r.targetScore }, false);
+      if (target !== null) out.targetScore = target;
+      return out;
     }),
     questions: draft.questions.map(function (q) {
       return { id: q.id, label: String(q.label).trim(), hint: String(q.hint || "").trim() };
@@ -9466,88 +9726,241 @@ function saveDraft() {
 }
 
 
-/* AI-hulp bij het opstellen van rubrics. Afgesplitst uit
-   js/evaluations.js (1.19.1). */
+/* AI-hulp bij het opstellen en nakijken van rubrics. Afgesplitst uit
+   js/evaluations.js (1.19.1), grondig herwerkt in 1.24.0. */
 
 /* ------------------------------------------------------------------
-   AI-HULP: RUBRIC GENEREREN OP BASIS VAN EEN BESCHRIJVING
+   AI-HULP
    Geen sleutel, geen server: de tool bouwt een prompt, de leerkracht
    plakt die in een AI-gesprek dat hij toch al heeft (Claude, ChatGPT,
-   …), en plakt het antwoord terug. Alles blijft lokaal — er verlaat
-   nooit iets automatisch dit toestel.
+   …), en plakt het antwoord terug. Er verlaat nooit iets automatisch
+   dit toestel.
+
+   Twee standen:
+   - "nieuw": criteria laten maken op basis van de opdracht en een paar
+     optionele contextvragen;
+   - "nakijken": de huidige rubric laten verbeteren. Het aantal criteria
+     en niveaus blijft gelijk; de leerkracht ziet eerst per criterium wat
+     er verandert en kiest wat ze overneemt.
+
+   Waarom de prompt zo opgebouwd is (zie ook HANDOFF.md):
+   - Vast aantal niveaus met vaste labels uit de tool (LEVEL_TEMPLATES).
+     Een criterium met meer niveaus zou anders ongewild zwaarder wegen,
+     want de score is het niveaunummer.
+   - Een expliciete lat: het niveau "doel behaald" beschrijft het
+     leerplandoel op zijn Bloom-niveau; erboven gaat verder, eronder
+     toont wat ontbreekt.
+   - Kwaliteitsregels voor criteria en niveaus, een volgende stap per
+     niveau in je-vorm, en een zelfcontrole vóór het antwoord.
+   - Geen enkele gedachtestreep in de prompt: modellen nemen de stijl van
+     de vraag over.
    ------------------------------------------------------------------ */
 
 /* Een criterium dat nog exact is zoals blankRubric() het opleverde:
    geen naam, geen omschrijving, geen enkel niveau ingevuld. Enkel dán
-   mag AI-import het stilzwijgend vervangen — bij de kleinste twijfel
+   mag AI-import het stilzwijgend vervangen. Bij de kleinste twijfel
    (er staat al iets in) laten we het met rust. */
 function isUntouchedRubric(rubric) {
   if (rubric.name && rubric.name.trim()) return false;
   if (rubric.description && rubric.description.trim()) return false;
   return (rubric.options || []).every(function (o) {
-    return !o.desc || !o.desc.trim();
+    return (!o.desc || !o.desc.trim()) && (!o.next || !String(o.next).trim());
   });
 }
 
-function buildAiRubricPrompt(description, year) {
-  var goals = yearHasGoals(year) ? goalsForYear(year) : [];
+/* Lijst "a, b en c". */
+function joinWithEn(list) {
+  if (list.length <= 1) return list.join("");
+  return list.slice(0, -1).join(", ") + " en " + list[list.length - 1];
+}
 
-  var lines = [
-    "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Ik wil een " +
-      "beoordelingsrubric opstellen voor de volgende opdracht, voor leerlingen uit " + year + ":",
-    "",
-    "\"" + description.trim() + "\"",
-    "",
-    "Maak een rubric met 4 tot 7 duidelijke, meetbare criteria die samen deze opdracht " +
-      "dekken. Geef voor elk criterium 4 of 5 niveaus, van zwak naar sterk, met bij elk " +
-      "niveau een concrete, waarneembare omschrijving van 1 tot 2 zinnen. Vermijd vage " +
-      "woorden zoals \"goed\" of \"voldoende\" zonder uit te leggen wat je dan precies ziet.",
-  ];
+/* De contextregels: enkel wat echt ingevuld is. */
+function aiContextLines(ctx, mode) {
+  ctx = ctx || {};
+  var lines = [];
+  var evaluate = String(ctx.evaluate || "").trim();
+  if (evaluate) lines.push("Wat ik wil evalueren: " + evaluate.replace(/[.\s]+$/, "") + ".");
+  var deliver = (ctx.deliver || []).slice();
+  var other = String(ctx.deliverOther || "").trim();
+  if (other) deliver.push(other);
+  if (deliver.length) lines.push("Wat de leerlingen afleveren: " + joinWithEn(deliver) + ".");
+  if (ctx.workform) lines.push("Werkvorm: " + ctx.workform + ".");
+  if (ctx.time) lines.push("Lestijd: " + ctx.time + ".");
+  var prior = String(ctx.prior || "").trim();
+  if (prior) lines.push("Wat ze vooraf al leerden of oefenden: " + prior.replace(/[.\s]+$/, "") + ".");
+  if (mode !== "nakijken" && evaluate) {
+    lines.push(ctx.extraCriteria === false
+      ? "Beperk je tot de aspecten die ik noemde."
+      : "Je mag ook criteria voorstellen die ik niet noemde, als ze nodig zijn om de opdracht goed te beoordelen.");
+  }
+  return lines;
+}
+
+var AI_QUALITY_RULES = [
+  "Eén aspect per criterium. Een criterium meet nooit twee dingen tegelijk.",
+  "Elk niveau is concreet en waarneembaar: wat zie of lees je in het werk van de leerling? Gebruik geen vage woorden zoals \"goed\", \"voldoende\" of \"correct\" zonder te zeggen wat je dan precies ziet.",
+  "Elk niveau beschrijft wat er wel is, niet enkel wat ontbreekt. Ook het laagste niveau.",
+  "De niveaus zijn parallel: van niveau tot niveau verandert telkens hetzelfde aspect, met dezelfde zinsbouw. Zo ziet een leerling meteen wat het verschil maakt.",
+  "Geen criteria over de persoon, zoals inzet, houding of motivatie. Wel over het proces: hoe de leerling testte, bijstuurde of keuzes verantwoordde.",
+  "Bevat de opdracht een ontwerp- of onderzoekscyclus, neem dan minstens één procescriterium op.",
+  "Houd elke omschrijving op 1 of 2 zinnen.",
+  "Gebruik nergens een gedachtestreep. Schrijf gewone zinnen met punten en komma's.",
+];
+
+/* De huidige rubric als json, voor de stand "nakijken". */
+function rubricsForAiReview(rubrics, year) {
+  return {
+    criteria: rubrics.map(function (r) {
+      var target = rubricTargetScore(r, true);
+      var out = { id: r.id, naam: r.name || "", beschrijving: r.description || "" };
+      if (yearHasGoals(year)) {
+        out.leerplandoelen = (r.goals || []).map(function (k) { return k; });
+      }
+      var opts = (r.options || []).slice().sort(function (a, b) { return Number(a.score) - Number(b.score); });
+      if (target !== null) {
+        opts.forEach(function (o, i) { if (Number(o.score) === target) out.doelNiveau = i + 1; });
+      }
+      out.niveaus = opts.map(function (o, i) {
+        var n = { label: o.label || "", omschrijving: o.desc || "" };
+        if (i < opts.length - 1) n.volgendeStap = o.next || "";
+        return n;
+      });
+      return out;
+    }),
+  };
+}
+
+/* opts: { year, description, levels, context, mode, rubrics }
+   Oude aanroep (beschrijving, leerjaar) blijft werken. */
+function buildAiRubricPrompt(opts, legacyYear) {
+  if (typeof opts === "string") opts = { description: opts, year: legacyYear };
+  var year = opts.year;
+  var review = opts.mode === "nakijken";
+  var levels = LEVEL_TEMPLATES[opts.levels] ? opts.levels : DEFAULT_LEVEL_COUNT;
+  var labels = LEVEL_TEMPLATES[levels];
+  var target = LEVEL_TARGETS[levels];
+  var goals = yearHasGoals(year) ? goalsForYear(year) : [];
+  var description = String(opts.description || "").trim();
+
+  var lines = [];
+  if (review) {
+    lines.push(
+      "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Kijk de beoordelingsrubric " +
+        "hieronder na, voor leerlingen uit het " + year + ", en verbeter ze volgens de regels in deze vraag.",
+    );
+  } else {
+    lines.push(
+      "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Help me een beoordelingsrubric " +
+        "opstellen voor leerlingen uit het " + year + ".",
+    );
+  }
+
+  if (description) lines.push("", "OPDRACHT", "\"" + description + "\"");
+
+  var ctx = aiContextLines(opts.context, review ? "nakijken" : "nieuw");
+  if (ctx.length) lines.push.apply(lines, ["", "CONTEXT"].concat(ctx));
+
+  lines.push("", "NIVEAUS");
+  if (review) {
+    lines.push(
+      "Behoud bij elk criterium het aantal niveaus en hun namen (\"label\"). Het niveau \"doel behaald\" " +
+        "staat per criterium bij \"doelNiveau\" (het nummer van het niveau, van laag naar hoog).",
+      "Behoud van elk criterium het \"id\". Voeg geen criteria toe en verwijder er geen. Vul ontbrekende " +
+        "volgende stappen aan. Wat de regels hieronder al volgt, mag blijven zoals het is.",
+    );
+  } else {
+    lines.push("Elk criterium krijgt precies " + levels + " niveaus, van laag naar hoog:");
+    labels.forEach(function (l, i) {
+      lines.push((i + 1) + ". " + l + (i + 1 === target ? " (doel behaald)" : ""));
+    });
+    lines.push("De namen van de niveaus liggen vast. Jij schrijft enkel de omschrijvingen.");
+  }
+
+  var targetName = review ? "Het niveau \"doel behaald\"" : "Niveau " + target + " (" + labels[target - 1] + ")";
+  lines.push("", "DE LAT");
+  if (goals.length) {
+    lines.push(targetName + " beschrijft wat een leerling toont die het gekoppelde leerplandoel behaalt, op het Bloom-niveau van dat doel.");
+  } else {
+    lines.push(targetName + " beschrijft wat je minimaal verwacht om de opdracht geslaagd te noemen.");
+  }
+  lines.push(
+    "De niveaus erboven beschrijven werk dat verder gaat dan het doel.",
+    "De niveaus eronder tonen wat nog ontbreekt om het doel te halen.",
+  );
+
+  lines.push("", "KWALITEITSREGELS");
+  var rules = (review ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
+  rules.forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+
+  lines.push(
+    "", "VOLGENDE STAP",
+    "Schrijf bij elk niveau behalve het hoogste één korte zin in je-vorm, gericht tot de leerling. Die zin " +
+      "zegt concreet wat de leerling moet doen om het volgende niveau te halen. Bijvoorbeeld: \"Schrijf bij " +
+      "je hypothese vooraf op welk verschil je verwacht te meten.\"",
+  );
 
   if (goals.length) {
     lines.push(
+      "", "LEERPLANDOELEN",
+      "Koppel bij elk criterium de leerplandoelen uit de lijst hieronder die er inhoudelijk bij aansluiten, " +
+        "met hun code. Forceer geen zwakke match: een criterium zonder doel mag.",
+      "Zet in \"ookPassend\" de doelen die goed bij deze opdracht passen maar door geen enkel criterium " +
+        "gedekt worden, met één korte zin uitleg per doel.",
+      "Zet in \"zonderDoel\" de aspecten die ik wil evalueren maar die bij geen enkel doel passen.",
       "",
-      "Koppel daarnaast bij elk criterium de leerplandoelen (uit de lijst hieronder) die er " +
-        "inhoudelijk bij aansluiten, met hun code (bijvoorbeeld \"SW05\"). Een criterium mag ook " +
-        "geen enkel doel krijgen als er echt niets goed past. Verzin er dan liever geen bij dan " +
-        "een zwakke match te forceren. Meerdere doelen per criterium mag.",
-      "",
-      "Leerplandoelen om uit te kiezen:",
+      "Leerplandoelen (code [Bloom-niveau]: doel):",
     );
-    goals.forEach(function (g) {
-      lines.push(g.id + ": " + g.text);
-    });
+    goals.forEach(function (g) { lines.push(g.id + " [" + g.bloom + "]: " + g.text); });
   }
 
+  if (review) {
+    lines.push("", "HUIDIGE RUBRIC", "```json", JSON.stringify(rubricsForAiReview(opts.rubrics || [], year), null, 2), "```");
+  }
+
+  lines.push("", "ZELFCONTROLE", "Loop voor je antwoordt deze lijst na en verbeter je rubric waar nodig:");
+  var checks = review
+    ? ["Heeft elk criterium nog hetzelfde id en evenveel niveaus als in de huidige rubric?"]
+    : ["Heeft elk criterium precies " + levels + " niveaus?"];
+  checks = checks.concat([
+    "Meet elk criterium één aspect?",
+    "Is elk niveau waarneembaar, en beschrijft het wat er wel is?",
+    "Zijn de niveaus parallel?",
+  ]);
+  if (goals.length) {
+    checks.push(review
+      ? "Sluit het niveau \"doel behaald\" aan bij het Bloom-niveau van het gekoppelde doel?"
+      : "Sluit niveau " + target + " aan bij het Bloom-niveau van het gekoppelde doel?");
+  }
+  checks.push("Heeft elk niveau behalve het hoogste een volgende stap?", "Staat er nergens een gedachtestreep?");
+  checks.forEach(function (c) { lines.push("- " + c); });
+
   lines.push(
-    "",
-    "Antwoord ALLEEN met een JSON-blok in exact dit formaat, zonder tekst ervoor of erna:",
-    "",
-    "```json",
-    "{",
-    "  \"criteria\": [",
-    "    {",
+    "", "ANTWOORD",
+    "Antwoord alleen met een json-blok in exact dit formaat, zonder tekst ervoor of erna:",
+    "", "```json", "{", "  \"criteria\": [", "    {",
+  );
+  if (review) lines.push("      \"id\": \"het id uit de huidige rubric\",");
+  lines.push(
     "      \"naam\": \"Naam van het criterium\",",
-    "      \"beschrijving\": \"Korte omschrijving van wat dit criterium meet\",",
+    "      \"beschrijving\": \"Wat dit criterium meet, in één zin\",",
   );
-  if (goals.length) {
-    lines.push("      \"leerplandoelen\": [\"SW05\"],");
+  if (goals.length) lines.push("      \"leerplandoelen\": [\"SW05\"],");
+  lines.push("      \"niveaus\": [");
+  var exampleCount = review ? 3 : levels;
+  for (var i = 1; i <= exampleCount; i++) {
+    lines.push(i < exampleCount
+      ? "        { \"omschrijving\": \"Wat je ziet bij niveau " + i + "\", \"volgendeStap\": \"Zin in je-vorm\" },"
+      : "        { \"omschrijving\": \"Wat je ziet bij niveau " + i + "\" }");
   }
-  lines.push(
-    "      \"niveaus\": [",
-    "        { \"label\": \"Onvoldoende\", \"omschrijving\": \"Concrete, waarneembare beschrijving\" },",
-    "        { \"label\": \"Matig\", \"omschrijving\": \"…\" },",
-    "        { \"label\": \"Voldoende\", \"omschrijving\": \"…\" },",
-    "        { \"label\": \"Goed\", \"omschrijving\": \"…\" }",
-    "      ]",
-    "    }",
-    "  ]",
-    "}",
-    "```",
-  );
+  lines.push("      ]", "    }", "  ]" + (goals.length ? "," : ""));
   if (goals.length) {
-    lines.push("", "Laat \"leerplandoelen\" gewoon weg bij een criterium waar niets bij past. Een lege lijst mag ook.");
+    lines.push(
+      "  \"ookPassend\": [ { \"doel\": \"SW12\", \"uitleg\": \"Waarom dit doel bij de opdracht past\" } ],",
+      "  \"zonderDoel\": [ \"Aspect dat bij geen enkel doel past\" ]",
+    );
   }
+  lines.push("}", "```");
+  if (review) lines.push("", "Geef elk criterium evenveel niveaus als in de huidige rubric, ook als dat meer of minder is dan in dit voorbeeld.");
 
   return lines.join("\n");
 }
@@ -9563,68 +9976,144 @@ function extractJsonBlock(text) {
   return candidate.slice(start, end + 1);
 }
 
-/* Zet het geplakte AI-antwoord om in criteria in het formaat dat de
-   rubric-editor verwacht. Gooit een duidelijke, specifieke fout zodat
-   de leerkracht weet wat er mis is, in plaats van een kale parsefout. */
-function parseAiRubricResponse(text, year) {
+function readAiJson(text) {
   var jsonText = extractJsonBlock(text);
   if (!jsonText) {
     throw new Error("Geen json-blok gevonden. Zorg dat je het hele antwoord plakt, inclusief de accolades.");
   }
-
   var data;
   try {
     data = JSON.parse(jsonText);
   } catch (e) {
     throw new Error("De json kon niet gelezen worden (" + e.message + "). Vraag de AI om enkel geldige json terug te geven.");
   }
-
   if (!data || !Array.isArray(data.criteria) || !data.criteria.length) {
     throw new Error("Verwacht een lijst \"criteria\" met minstens één criterium, maar die ontbreekt of is leeg.");
   }
+  return data;
+}
 
-  var taken = takenIds();
-  var result = [];
-  var goalsSkipped = 0;
-  data.criteria.forEach(function (c, i) {
+/* Doelcodes van de AI omzetten naar sleutels; onbekende codes tellen. */
+function aiGoalKeys(codes, year, counter) {
+  var keys = [];
+  if (!Array.isArray(codes) || !year) return keys;
+  codes.forEach(function (code) {
+    var g = findGoal(year, String(code || "").trim());
+    if (g && keys.indexOf(g.id) === -1) keys.push(g.id);
+    else if (code && !g) counter.skipped++;
+  });
+  return keys;
+}
+
+/* Zet het geplakte AI-antwoord om. Leest het nieuwe formaat (1.24.0:
+   volgendeStap, ookPassend, zonderDoel) en het oude (label per niveau).
+   De labels komen altijd uit de tool: de standaardreeks bij het aantal
+   niveaus. Enkel voor een aantal zonder standaardreeks valt de tool
+   terug op het label van de AI.
+   Geeft { criteria, alsoFitting: [{goal, uitleg}], withoutGoal: [tekst],
+   goalsSkipped }. */
+function parseAiRubricResponse(text, year, taken) {
+  var data = readAiJson(text);
+  var counter = { skipped: 0 };
+  var used = (taken || []).slice();
+
+  var criteria = data.criteria.map(function (c, i) {
     if (!c || !c.naam || !String(c.naam).trim()) {
       throw new Error("Criterium " + (i + 1) + " heeft geen naam.");
     }
     if (!Array.isArray(c.niveaus) || !c.niveaus.length) {
       throw new Error("Criterium \"" + c.naam + "\" heeft geen niveaus.");
     }
-    var id = uniqueId(c.naam, taken);
-    taken.push(id);
-    var options = c.niveaus.map(function (n, li) {
+    var id = uniqueId(c.naam, used);
+    used.push(id);
+    var n = c.niveaus.length;
+    var template = LEVEL_TEMPLATES[n];
+    var options = c.niveaus.map(function (lv, li) {
       return {
         score: li + 1,
-        label: String((n && n.label) || "Niveau " + (li + 1)).trim(),
-        desc: String((n && n.omschrijving) || "").trim(),
+        label: template ? template[li] : String((lv && lv.label) || "Niveau " + (li + 1)).trim(),
+        desc: String((lv && lv.omschrijving) || "").trim(),
+        next: li < n - 1 ? String((lv && lv.volgendeStap) || "").trim() : "",
       };
     });
-
-    // De AI koppelt met een code (bv. "SW05"); enkel codes die echt
-    // bestaan voor dit leerjaar worden overgenomen. Een verzonnen of
-    // verkeerd getypte code wordt gewoon genegeerd, niet als fout
-    // behandeld — dat zou de hele import onnodig laten mislukken.
-    var goalKeys = [];
-    if (Array.isArray(c.leerplandoelen) && year) {
-      c.leerplandoelen.forEach(function (code) {
-        var g = findGoal(year, String(code || "").trim());
-        if (g && goalKeys.indexOf(g.id) === -1) goalKeys.push(g.id);
-        else if (code) goalsSkipped++;
-      });
-    }
-
-    result.push({
+    var r = {
       id: id,
       name: String(c.naam).trim(),
       description: String(c.beschrijving || "").trim(),
       options: options,
-      goals: goalKeys,
-    });
+      goals: aiGoalKeys(c.leerplandoelen, year, counter),
+    };
+    if (template) r.targetScore = LEVEL_TARGETS[n];
+    return r;
   });
-  result.goalsSkipped = goalsSkipped;
+
+  var linked = {};
+  criteria.forEach(function (r) { r.goals.forEach(function (k) { linked[k] = true; }); });
+  var alsoFitting = [];
+  (Array.isArray(data.ookPassend) ? data.ookPassend : []).forEach(function (item) {
+    var code = item && typeof item === "object" ? item.doel : item;
+    var g = year ? findGoal(year, String(code || "").trim()) : null;
+    if (!g) { if (code) counter.skipped++; return; }
+    if (linked[g.id] || alsoFitting.some(function (a) { return a.goal.id === g.id; })) return;
+    alsoFitting.push({ goal: g, uitleg: String((item && item.uitleg) || "").trim() });
+  });
+  var withoutGoal = (Array.isArray(data.zonderDoel) ? data.zonderDoel : [])
+    .map(function (t) { return String((t && typeof t === "object" ? t.aspect || t.tekst : t) || "").trim(); })
+    .filter(Boolean);
+
+  return { criteria: criteria, alsoFitting: alsoFitting, withoutGoal: withoutGoal, goalsSkipped: counter.skipped };
+}
+
+/* Stand "nakijken": vergelijkt het antwoord met de huidige criteria.
+   Koppelt op id, anders op plaats. Het aantal niveaus, de scores en de
+   labels blijven die van de huidige rubric. Geeft per criterium
+   { index, current, proposed, changes: [{what, was, wordt}], problem }. */
+function buildAiReview(currentRubrics, text, year) {
+  var data = readAiJson(text);
+  var counter = { skipped: 0 };
+  var byId = {};
+  data.criteria.forEach(function (c) { if (c && c.id) byId[String(c.id)] = c; });
+
+  var result = currentRubrics.map(function (cur, index) {
+    var c = byId[cur.id] || (data.criteria[index] && !data.criteria[index].id ? data.criteria[index] : null);
+    var item = { index: index, current: cur, proposed: null, changes: [], problem: "" };
+    if (!c) { item.problem = "Geen voorstel voor dit criterium."; return item; }
+    var opts = (cur.options || []).slice().sort(function (a, b) { return Number(a.score) - Number(b.score); });
+    if (!Array.isArray(c.niveaus) || c.niveaus.length !== opts.length) {
+      item.problem = "De AI gaf " + (Array.isArray(c.niveaus) ? c.niveaus.length : 0) + " niveaus in plaats van " +
+        opts.length + ". Dit criterium blijft zoals het is.";
+      return item;
+    }
+    var proposed = JSON.parse(JSON.stringify(cur));
+    proposed.options = opts.map(function (o, i) {
+      var lv = c.niveaus[i] || {};
+      return {
+        score: o.score,
+        label: o.label,
+        desc: String(lv.omschrijving || "").trim() || o.desc || "",
+        next: i < opts.length - 1 ? (String(lv.volgendeStap || "").trim() || o.next || "") : "",
+      };
+    });
+    if (c.naam && String(c.naam).trim()) proposed.name = String(c.naam).trim();
+    if (typeof c.beschrijving === "string") proposed.description = c.beschrijving.trim();
+    if (yearHasGoals(year) && Array.isArray(c.leerplandoelen)) proposed.goals = aiGoalKeys(c.leerplandoelen, year, counter);
+
+    function diff(what, was, wordt) {
+      if (String(was || "") !== String(wordt || "")) item.changes.push({ what: what, was: was || "", wordt: wordt || "" });
+    }
+    diff("Naam", cur.name, proposed.name);
+    diff("Uitleg", cur.description, proposed.description);
+    proposed.options.forEach(function (o, i) {
+      diff("Niveau " + (i + 1) + " (" + o.label + ")", opts[i].desc, o.desc);
+      if (i < opts.length - 1) diff("Volgende stap bij niveau " + (i + 1), opts[i].next, o.next);
+    });
+    if (yearHasGoals(year)) {
+      diff("Leerplandoelen", (cur.goals || []).join(", "), (proposed.goals || []).join(", "));
+    }
+    item.proposed = proposed;
+    return item;
+  });
+  result.goalsSkipped = counter.skipped;
   return result;
 }
 
@@ -9637,15 +10126,299 @@ function showNoticeIn(hostId, kind, title, body) {
   host.appendChild(box);
 }
 
+/* ---- scherm ---- */
+
+var aiMode = "nieuw";
+
+/* Keuzeknoppen: aria-pressed is de waarde. Bij één keuze kan je een
+   gekozen knop opnieuw aanklikken om hem uit te zetten (de vraag is
+   optioneel), behalve bij data-required. */
+function initChipGroup(id, onChange) {
+  var group = $(id);
+  var single = group.dataset.single === "1" || id === "aiLevels";
+  var required = group.dataset.required === "1" || id === "aiLevels";
+  group.querySelectorAll(".chip-toggle").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      var on = btn.getAttribute("aria-pressed") === "true";
+      if (single) {
+        if (on && required) return;
+        group.querySelectorAll(".chip-toggle").forEach(function (b) { b.setAttribute("aria-pressed", "false"); });
+      }
+      btn.setAttribute("aria-pressed", on ? "false" : "true");
+      if (onChange) onChange();
+    });
+  });
+}
+
+function chipValues(id) {
+  return Array.prototype.map.call($(id).querySelectorAll('.chip-toggle[aria-pressed="true"]'), function (b) {
+    return b.dataset.value;
+  });
+}
+
+function setChipValues(id, values) {
+  $(id).querySelectorAll(".chip-toggle").forEach(function (b) {
+    b.setAttribute("aria-pressed", values.indexOf(b.dataset.value) !== -1 ? "true" : "false");
+  });
+}
+
+function aiChosenLevels() {
+  return Number(chipValues("aiLevels")[0]) || DEFAULT_LEVEL_COUNT;
+}
+
+function aiContextFromForm() {
+  return {
+    evaluate: $("aiEvaluate").value,
+    deliver: chipValues("aiDeliver"),
+    deliverOther: $("aiDeliverOther").value,
+    workform: chipValues("aiWorkform")[0] || "",
+    time: chipValues("aiTime")[0] || "",
+    prior: $("aiPrior").value,
+    extraCriteria: chipValues("aiExtra")[0] !== "nee",
+  };
+}
+
+function renderAiLevelLabels() {
+  var n = aiChosenLevels();
+  var host = $("aiLevelLabels");
+  host.innerHTML = "";
+  LEVEL_TEMPLATES[n].forEach(function (l, i) {
+    if (i) host.appendChild(document.createTextNode(" · "));
+    if (i + 1 === LEVEL_TARGETS[n]) host.appendChild(el("strong", null, l + " (doel behaald)"));
+    else host.appendChild(document.createTextNode(l));
+  });
+}
+
+function setAiMode(mode) {
+  aiMode = mode;
+  $("aiModeNew").setAttribute("aria-pressed", mode === "nieuw" ? "true" : "false");
+  $("aiModeReview").setAttribute("aria-pressed", mode === "nakijken" ? "true" : "false");
+  document.querySelectorAll("#aiRubricHelper .ai-new-only").forEach(function (n) { n.classList.toggle("hidden", mode !== "nieuw"); });
+  document.querySelectorAll("#aiRubricHelper .ai-review-only").forEach(function (n) { n.classList.toggle("hidden", mode !== "nakijken"); });
+  $("btnAiImport").textContent = mode === "nieuw" ? "Criteria toevoegen aan deze evaluatie" : "Voorstel bekijken";
+  $("aiPromptBlock").classList.add("hidden");
+  $("aiPromptOut").value = "";
+  $("aiImportState").innerHTML = "";
+  $("aiImportResult").innerHTML = "";
+}
+
+/* Criteria met een naam: enkel die kunnen nagekeken worden. */
+function reviewableRubrics() {
+  return (draft ? draft.rubrics : []).filter(function (r) { return !isUntouchedRubric(r); });
+}
+
+function updateAiReviewAvailability() {
+  var can = reviewableRubrics().length > 0;
+  $("aiModeReview").disabled = !can;
+  $("btnAiReview").disabled = !can;
+  if (!can && aiMode === "nakijken") setAiMode("nieuw");
+}
+
+/* Reset bij het openen van een evaluatie in de editor. */
+function resetAiRubricHelper() {
+  ["aiDescription", "aiEvaluate", "aiDeliverOther", "aiPrior", "aiPromptOut", "aiResponseIn"].forEach(function (id) { $(id).value = ""; });
+  setChipValues("aiLevels", [String(DEFAULT_LEVEL_COUNT)]);
+  setChipValues("aiDeliver", []);
+  setChipValues("aiWorkform", []);
+  setChipValues("aiTime", []);
+  setChipValues("aiExtra", ["ja"]);
+  renderAiLevelLabels();
+  setAiMode("nieuw");
+  $("aiRubricHelper").open = false;
+  updateAiReviewAvailability();
+}
+
+function openAiReview() {
+  $("aiRubricHelper").open = true;
+  setAiMode("nakijken");
+  $("aiRubricHelper").scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* Na het inlezen van nieuwe criteria: gekoppelde doelen, "ook passend"
+   (met één klik koppelen of negeren), "zonder doel" en de controle. */
+function renderAiImportResult(parsed, levels) {
+  var host = $("aiImportResult");
+  host.innerHTML = "";
+  var box = el("div", "ai-result");
+
+  if (yearHasGoals(draft.year)) {
+    box.appendChild(el("h4", null, "Gekoppelde leerplandoelen"));
+    var ul = el("ul", "ai-linked");
+    parsed.criteria.forEach(function (r) {
+      var codes = r.goals.map(function (k) { var g = findGoal(draft.year, k); return g ? goalCodeLabel(g) : k; });
+      var li = el("li");
+      li.appendChild(el("strong", null, r.name + ": "));
+      li.appendChild(document.createTextNode(codes.length ? codes.join(", ") : "geen doel"));
+      ul.appendChild(li);
+    });
+    box.appendChild(ul);
+  }
+
+  if (parsed.alsoFitting.length) {
+    box.appendChild(el("h4", null, "Ook passend"));
+    box.appendChild(el("p", "hint", "Deze doelen passen bij de opdracht, maar geen criterium dekt ze. Koppel ze aan een criterium, of negeer ze."));
+    var list = el("div", "ai-also");
+    parsed.alsoFitting.forEach(function (item) {
+      var row = el("div", "ai-also-row");
+      var text = el("div", "ai-also-text");
+      var line = el("div");
+      line.appendChild(el("span", "goal-code", goalCodeLabel(item.goal)));
+      line.appendChild(bloomBadge(item.goal.bloom));
+      line.appendChild(document.createTextNode(" " + item.goal.text));
+      text.appendChild(line);
+      if (item.uitleg) text.appendChild(el("div", "muted", item.uitleg));
+      row.appendChild(text);
+
+      var controls = el("div", "btn-row");
+      var sel = document.createElement("select");
+      sel.className = "ai-also-target";
+      sel.setAttribute("aria-label", "Koppel " + item.goal.id + " aan criterium");
+      sel.appendChild(new Option("Koppel aan criterium…", ""));
+      draft.rubrics.forEach(function (r, i) {
+        if (String(r.name || "").trim()) sel.appendChild(new Option((i + 1) + ". " + r.name, String(i)));
+      });
+      var link = el("button", "btn-ghost btn-small ai-also-link", "Koppelen");
+      link.type = "button";
+      link.addEventListener("click", function () {
+        if (sel.value === "") { sel.focus(); return; }
+        var r = draft.rubrics[Number(sel.value)];
+        if (!r.goals) r.goals = [];
+        if (r.goals.indexOf(item.goal.id) === -1) r.goals.push(item.goal.id);
+        renderDraftRubrics();
+        updateDraftSummary();
+        row.innerHTML = "";
+        row.appendChild(el("div", "muted", goalCodeLabel(item.goal) + " gekoppeld aan " + r.name + "."));
+      });
+      var ignore = el("button", "btn-ghost btn-small ai-also-ignore", "Negeren");
+      ignore.type = "button";
+      ignore.addEventListener("click", function () { row.remove(); });
+      controls.appendChild(sel);
+      controls.appendChild(link);
+      controls.appendChild(ignore);
+      row.appendChild(controls);
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+  }
+
+  if (parsed.withoutGoal.length) {
+    box.appendChild(el("h4", null, "Zonder doel"));
+    box.appendChild(el("p", "hint", "Deze aspecten wil je evalueren, maar ze passen bij geen enkel leerplandoel. Ter info."));
+    var wl = el("ul", "ai-without");
+    parsed.withoutGoal.forEach(function (t) { wl.appendChild(el("li", null, t)); });
+    box.appendChild(wl);
+  }
+
+  var warnings = rubricWarnings(parsed.criteria, draft.year, levels);
+  if (warnings.length) box.appendChild(renderWarningsBox(warnings, "Nakijken"));
+
+  if (box.childNodes.length) host.appendChild(box);
+}
+
+function renderWarningsBox(warnings, title) {
+  var box = el("div", "notice warn rubric-warnings");
+  box.appendChild(el("strong", null, title + " (" + warnings.length + ")"));
+  var ul = document.createElement("ul");
+  warnings.forEach(function (w) { ul.appendChild(el("li", null, w)); });
+  box.appendChild(ul);
+  return box;
+}
+
+/* Stand "nakijken": per criterium wat er verandert, met een vinkje. */
+function renderAiReviewResult(review) {
+  var host = $("aiImportResult");
+  host.innerHTML = "";
+  var box = el("div", "ai-result ai-review");
+  var changed = review.filter(function (r) { return r.changes.length; });
+
+  review.forEach(function (item) {
+    var card = el("div", "ai-review-card");
+    var head = el("div", "ai-review-head");
+    var title = (item.index + 1) + ". " + (item.current.name || "zonder naam");
+    if (item.changes.length) {
+      var lbl = el("label", "ai-review-take");
+      var cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = true;
+      cb.dataset.index = String(item.index);
+      lbl.appendChild(cb);
+      lbl.appendChild(el("strong", null, " " + title));
+      lbl.appendChild(el("span", "muted", " (overnemen)"));
+      head.appendChild(lbl);
+    } else {
+      head.appendChild(el("strong", null, title));
+      head.appendChild(el("span", "muted", item.problem ? " " + item.problem : " Geen wijzigingen."));
+    }
+    card.appendChild(head);
+    item.changes.forEach(function (c) {
+      var row = el("div", "ai-change");
+      row.appendChild(el("div", "ai-change-what", c.what));
+      var was = el("div", "ai-change-was");
+      was.appendChild(el("span", "ai-change-tag", "Was: "));
+      was.appendChild(document.createTextNode(c.was || "(leeg)"));
+      var wordt = el("div", "ai-change-new");
+      wordt.appendChild(el("span", "ai-change-tag", "Wordt: "));
+      wordt.appendChild(document.createTextNode(c.wordt || "(leeg)"));
+      row.appendChild(was);
+      row.appendChild(wordt);
+      card.appendChild(row);
+    });
+    box.appendChild(card);
+  });
+
+  if (changed.length) {
+    var apply = el("button", "btn-primary", "Gekozen wijzigingen overnemen");
+    apply.type = "button";
+    apply.id = "btnAiApplyReview";
+    apply.addEventListener("click", function () {
+      var taken = 0;
+      box.querySelectorAll(".ai-review-take input:checked").forEach(function (cb) {
+        var item = review[Number(cb.dataset.index)];
+        var target = draft.rubrics.indexOf(item.current);
+        if (target === -1 || !item.proposed) return;
+        draft.rubrics[target] = item.proposed;
+        taken++;
+      });
+      renderDraftRubrics();
+      updateDraftSummary();
+      host.innerHTML = "";
+      showNoticeIn(
+        "aiImportState", "good",
+        taken + (taken === 1 ? " criterium bijgewerkt" : " criteria bijgewerkt"),
+        "Kijk alles na en klik op Evaluatie opslaan. Werd deze rubric al gebruikt, dan blijft de vorige tekst bewaard, zodat eerdere beoordelingen leesbaar blijven.",
+      );
+    });
+    var row = el("div", "btn-row");
+    row.style.marginTop = "12px";
+    row.appendChild(apply);
+    box.appendChild(row);
+  }
+  host.appendChild(box);
+}
+
 function initAiRubricHelper() {
+  initChipGroup("aiLevels", renderAiLevelLabels);
+  ["aiDeliver", "aiWorkform", "aiTime", "aiExtra"].forEach(function (id) { initChipGroup(id); });
+  renderAiLevelLabels();
+  $("aiModeNew").addEventListener("click", function () { setAiMode("nieuw"); });
+  $("aiModeReview").addEventListener("click", function () { setAiMode("nakijken"); });
+  $("btnAiReview").addEventListener("click", openAiReview);
+
   $("btnAiGeneratePrompt").addEventListener("click", function () {
     var desc = $("aiDescription").value.trim();
-    if (!desc) {
+    if (aiMode === "nieuw" && !desc) {
       showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan. Hoe concreter, hoe beter de rubric.");
       return;
     }
     var year = (draft && draft.year) || $("draftYear").value || "2de jaar";
-    $("aiPromptOut").value = buildAiRubricPrompt(desc, year);
+    $("aiPromptOut").value = buildAiRubricPrompt({
+      year: year,
+      description: desc,
+      levels: aiChosenLevels(),
+      context: aiContextFromForm(),
+      mode: aiMode,
+      rubrics: reviewableRubrics(),
+    });
     $("aiPromptBlock").classList.remove("hidden");
     $("aiImportState").innerHTML = "";
   });
@@ -9664,14 +10437,34 @@ function initAiRubricHelper() {
 
   $("btnAiImport").addEventListener("click", function () {
     var text = $("aiResponseIn").value;
+    $("aiImportResult").innerHTML = "";
     if (!text.trim()) {
       showNoticeIn("aiImportState", "warn", "Plak eerst het antwoord van de AI", "");
       return;
     }
 
-    var criteria;
+    if (aiMode === "nakijken") {
+      var review;
+      try {
+        review = buildAiReview(reviewableRubrics(), text, draft.year);
+      } catch (e) {
+        showNoticeIn("aiImportState", "warn", "Kon dit niet inlezen", e.message);
+        return;
+      }
+      var n = review.filter(function (r) { return r.changes.length; }).length;
+      showNoticeIn(
+        "aiImportState", n ? "info" : "good",
+        n ? "Voorstel voor " + n + (n === 1 ? " criterium" : " criteria") : "Geen wijzigingen voorgesteld",
+        n ? "Kies hieronder wat je overneemt. Er verandert nog niets tot je op de knop klikt." : "",
+      );
+      renderAiReviewResult(review);
+      $("aiResponseIn").value = "";
+      return;
+    }
+
+    var parsed;
     try {
-      criteria = parseAiRubricResponse(text, draft.year);
+      parsed = parseAiRubricResponse(text, draft.year, takenIds());
     } catch (e) {
       showNoticeIn("aiImportState", "warn", "Kon dit niet inlezen", e.message);
       return;
@@ -9680,7 +10473,7 @@ function initAiRubricHelper() {
     // Een nieuwe evaluatie start met één leeg criterium als startpunt
     // voor wie met de hand typt. Gebruikt de leerkracht in plaats
     // daarvan de AI-hulp, dan hoort dat lege criterium niet ernaast te
-    // blijven staan — enkel verwijderen als het echt nog helemaal
+    // blijven staan. Enkel verwijderen als het echt nog helemaal
     // onaangeroerd is, nooit iets waar al aan gewerkt is.
     var verwijderd = 0;
     draft.rubrics = draft.rubrics.filter(function (r) {
@@ -9688,6 +10481,7 @@ function initAiRubricHelper() {
       return true;
     });
 
+    var criteria = parsed.criteria;
     criteria.forEach(function (c) { draft.rubrics.push(c); });
     renderDraftRubrics();
     updateDraftSummary();
@@ -9695,18 +10489,15 @@ function initAiRubricHelper() {
     var gekoppeld = criteria.reduce(function (n, c) { return n + c.goals.length; }, 0);
     var extra = [];
     if (gekoppeld) extra.push(gekoppeld + " leerplandoel(en) alvast gekoppeld. Controleer of ze kloppen.");
-    if (criteria.goalsSkipped) extra.push(criteria.goalsSkipped + " voorgestelde code(s) van de AI niet herkend en genegeerd.");
+    if (parsed.goalsSkipped) extra.push(parsed.goalsSkipped + " voorgestelde code(s) van de AI niet herkend en genegeerd.");
 
     showNoticeIn(
       "aiImportState", "good",
       criteria.length + " criteria toegevoegd" + (verwijderd ? " (leeg startcriterium vervangen)" : ""),
       "Kijk de niveaus na en pas aan waar nodig. " + extra.join(" "),
     );
+    renderAiImportResult(parsed, aiChosenLevels());
     $("aiResponseIn").value = "";
-
-    var cards = $("draftRubrics").querySelectorAll(".rubric-edit");
-    var firstNew = cards[cards.length - criteria.length];
-    if (firstNew) firstNew.scrollIntoView({ behavior: "smooth", block: "start" });
   });
 }
 
@@ -12136,10 +12927,16 @@ function progressByAssessor(rows, students) {
    - Werkpunt: laagste positie, bij gelijke stand het eerste criterium
      van de rubric. Geen werkpunt als dat al het hoogste niveau is.
    - Sterk punt: hoogste positie (zelfde volgorde bij gelijke stand),
-     enkel vanaf het middelste niveau en enkel als het hoger ligt dan het
-     werkpunt. Zo komt er nooit valse lof.
-   - Volgende stap: de eigen feedforward als die er is, anders de
-     beschrijving van het niveau net boven het werkpunt.
+     enkel als het hoger ligt dan het werkpunt, en enkel vanaf het niveau
+     "doel behaald" (rubric.targetScore, sinds 1.24.0) of, zonder
+     doelniveau, vanaf het middelste niveau. Zo komt er nooit valse lof.
+   - Volgende stap, in deze volgorde (sinds 1.24.0):
+       1. de eigen feedforward van de leerkracht;
+       2. de volgende-stapzin (option.next, in je-vorm) van het behaalde
+          niveau van het werkpunt. Ontbreekt die in de rubricversie van
+          de beoordeling, dan uit de huidige rubric (zelfde criterium en
+          score): zo'n zin aanvullen maakt bewust geen nieuwe versie;
+       3. de beschrijving van het niveau net boven het werkpunt.
    - Nooit punten, percentages of niveaulabels: Smartschool toont het
      punt al, en een cijfer naast commentaar doet de commentaar vergeten.
    - Richtwaarde FEEDBACK_MAX_CHARS. Is het te lang, dan wordt eerst de
@@ -12156,8 +12953,9 @@ function joinNl(list) {
   return list.slice(0, -1).join(", ") + " en " + list[list.length - 1];
 }
 
-/* Per gescoord criterium: naam, behaald niveau, niveau erboven, positie. */
-function scoredCriteria(rubrics, scores) {
+/* Per gescoord criterium: naam, behaald niveau, niveau erboven, positie,
+   en of het doelniveau gehaald is (null als er geen doelniveau is). */
+function scoredCriteria(rubrics, scores, currentRubrics) {
   var out = [];
   (rubrics || []).forEach(function (r) {
     var v = scores ? scores[r.id] : undefined;
@@ -12168,11 +12966,23 @@ function scoredCriteria(rubrics, scores) {
     opts.forEach(function (o, i) { if (Number(o.score) === v) idx = i; });
     if (idx === -1) return;
     var low = Number(opts[0].score), high = Number(opts[opts.length - 1].score);
+    var nextText = String(opts[idx].next || "").trim();
+    if (!nextText && currentRubrics) {
+      currentRubrics.forEach(function (cr) {
+        if (cr.id !== r.id) return;
+        (cr.options || []).forEach(function (o) {
+          if (Number(o.score) === v && String(o.next || "").trim()) nextText = String(o.next).trim();
+        });
+      });
+    }
+    var target = typeof r.targetScore === "number" ? r.targetScore : null;
     out.push({
       name: String(r.name || "").trim(),
       level: opts[idx],
       next: opts[idx + 1] || null,
+      nextStep: nextText,
       pos: high > low ? (v - low) / (high - low) : 1,
+      reachedTarget: target === null ? null : v >= target,
     });
   });
   return out;
@@ -12187,7 +12997,7 @@ function criterionLine(prefix, c, option) {
    enkel dbObj en row, verandert niets. */
 function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
   var rubrics = rubricsForVersion(dbObj, year, evaluation, row.rubricVersion);
-  var crit = scoredCriteria(rubrics, row.scores);
+  var crit = scoredCriteria(rubrics, row.scores, rubricsFor(dbObj, year, evaluation));
   var ownFeedback = String(row.feedback || "").trim();
   var ownForward = String(row.feedforward || "").trim();
   var isGroup = (row.students || []).length > 1;
@@ -12198,7 +13008,10 @@ function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
     if (!sterk || c.pos > sterk.pos) sterk = c;
   });
   if (werk && !werk.next) werk = null;
-  if (sterk && !(sterk.pos >= 0.5 && (!werk || sterk.pos > werk.pos))) sterk = null;
+  if (sterk) {
+    var enough = sterk.reachedTarget === null ? sterk.pos >= 0.5 : sterk.reachedTarget;
+    if (!(enough && (!werk || sterk.pos > werk.pos))) sterk = null;
+  }
 
   function compose(fullList, withSterk) {
     var blocks = [];
@@ -12224,6 +13037,8 @@ function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
 
     if (ownForward) {
       blocks.push("Wat is je volgende stap?\n" + ownForward);
+    } else if (werk && werk.nextStep) {
+      blocks.push("Wat is je volgende stap?\nBij " + werk.name + ": " + werk.nextStep);
     } else if (werk && String(werk.next.desc || "").trim()) {
       blocks.push("Wat is je volgende stap?\nOm een niveau hoger te komen bij " + werk.name + ": " + String(werk.next.desc).trim());
     }

@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.23.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.24.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,67 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.23.0)
+## Volledige featurelijst (huidige stand, 1.24.0)
+
+- **AI-rubriekhulp herwerkt** (1.24.0, `js/ai-rubric.js`, controle in
+  `js/rubric-model.js`). Blijft kopiëren en plakken zonder sleutel.
+  **Scherm:** stand "nieuw" of "nakijken" (`aiMode`), aantal niveaus
+  (3/4/5, standaard `DEFAULT_LEVEL_COUNT` = 5) met labels, beschrijving
+  (enkel verplicht bij "nieuw"), zes optionele contextvragen
+  (keuzeknoppen `.chip-toggle` met `aria-pressed`; bij één keuze kan je
+  opnieuw klikken om uit te zetten). `aiContextLines()` zet enkel
+  beantwoorde vragen in de prompt; "andere criteria toegestaan" enkel als
+  "Wat wil je evalueren?" ingevuld is.
+  **Labels en lat:** `LEVEL_TEMPLATES` (3 = Onvoldoende, Voldoende, Sterk;
+  4 = Onvoldoende, Bijna, Voldoende, Sterk; 5 = Onvoldoende, Bijna,
+  Voldoende, Sterk, Uitstekend) en `LEVEL_TARGETS` (doelniveau 2, 3, 3),
+  ook voor "Criterium toevoegen" in de editor. De AI schrijft enkel
+  omschrijvingen; labels komen altijd uit de tool (ook bij het oude
+  antwoordformaat; enkel een aantal zonder reeks valt terug op het label
+  van de AI). Reden: de score is het niveaunummer, dus een gemengd aantal
+  niveaus laat criteria ongewild zwaarder wegen.
+  **Waarom de prompt zo is:** (1) het doelniveau beschrijft het gekoppelde
+  leerplandoel op zijn Bloom-niveau (staat bij elk doel in de lijst als
+  "SW01 [toepassen]: ..."), erboven gaat verder, eronder toont wat
+  ontbreekt; zonder doelen (1ste jaar) "wat je minimaal verwacht";
+  (2) kwaliteitsregels: één aspect per criterium, concreet en waarneembaar
+  (geen vage woorden zonder uitleg), elk niveau zegt wat er wél is, ook
+  het laagste, parallelle niveaus met dezelfde zinsbouw, geen criteria
+  over de persoon (inzet, houding, motivatie) maar wel over het proces,
+  minstens één procescriterium bij een ontwerp- of onderzoekscyclus,
+  1 of 2 zinnen, geen gedachtestreep; (3) een volgende stap per niveau
+  (behalve het hoogste) in je-vorm; (4) "ookPassend" (doelen die passen
+  maar door geen criterium gedekt worden, met uitleg) en "zonderDoel";
+  (5) een zelfcontrole vóór het antwoord. Geen gedachtestreep in de prompt
+  zelf: modellen nemen de stijl van de vraag over.
+  **Antwoordformaat:** `criteria[]` met `naam`, `beschrijving`,
+  `leerplandoelen`, `niveaus[]` (`omschrijving`, `volgendeStap`), en `id`
+  bij nakijken; daarnaast `ookPassend[]` (`doel`, `uitleg`) en
+  `zonderDoel[]`. `parseAiRubricResponse(text, year, takenIds)` geeft
+  `{criteria, alsoFitting, withoutGoal, goalsSkipped}`.
+  **Nakijken:** `buildAiReview()` koppelt op id (anders plaats), behoudt
+  scores, labels en aantal niveaus, en geeft per criterium de wijzigingen.
+  Niets verandert zonder "Gekozen wijzigingen overnemen"; daarna volgt
+  opslaan het gewone versiebeheer. Bewust geen criteria toevoegen of
+  schrappen (afgesproken): dat zou het maximum en bestaande beoordelingen
+  raken.
+  **Controle:** `rubricWarnings(rubrics, year, chosenLevels)`, enkel
+  waarschuwingen. Vaag = na het weglaten van vulwoorden enkel woorden uit
+  `VAGUE_WORDS`; kort = minder dan 4 woorden; bijna gelijk =
+  `textSimilarity()` van minstens 0,9 met het volgende niveau (afgesteld
+  zodat de bestaande rubrics geen valse meldingen geven, een test bewaakt
+  dat). Live onder de criteria (`#draftChecks`) en na het inlezen.
+  **Datamodel:** `rubric.targetScore` en `option.next`, optioneel.
+  `DB_VERSION` bleef 4. Geen velden op het niveau van de evaluatie:
+  `normaliseDb()` kopieert criteria volledig, maar niet onbekende velden
+  van de evaluatie. `saveDraft()` en `duplicateEvaluation()` nemen ze mee.
+  Ze tellen NIET mee in `rubricsDiffer()`, zodat zinnen aanvullen geen
+  nieuwe rubricversie maakt (anders melding "oudere rubricversie" bij
+  Controle voor alle eerdere beoordelingen).
+  **Feedback in Skore:** volgende stap = eigen feedforward, anders
+  `option.next` van het behaalde niveau van het werkpunt (valt terug op de
+  huidige rubric, zelfde id en score), anders de omschrijving van het
+  niveau erboven. Sterk punt vraagt `targetScore` als die er is.
 
 - **Feedback kopiëren vanuit Skore** (1.23.0, `js/feedback.js` en
   `buildSkoreCopyButton()` in `js/skore.js`): naast elk punt een
@@ -126,16 +186,7 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   **Bugfix meegenomen:** `collectSkore()` rekent het punt nu met
   `rubricsForVersion()`; een ander maximum in die versie wordt omgerekend
   naar het kolommaximum (`skoreCellScore()`).
-  **Uitgesteld, niet zelf bouwen:** de gebruiker neemt dit op in een
-  eigen, latere opdracht samen met andere aanpassingen. Achtergrond voor
-  dan: een optioneel veld `next` per
-  niveau (eigen "volgende stap"-zin in je-vorm), in de rubric-editor en
-  in de AI-rubriekhulp (prompt en omzetting). Belangrijk: `next` mag NIET
-  meetellen in `rubricsDiffer()`, anders maakt het aanvullen van zinnen
-  een nieuwe rubricversie en krijgen alle eerdere beoordelingen de
-  melding "oudere rubricversie" bij Controle. Ontbreekt `next` in de
-  versie van de rij, dan opzoeken in de huidige rubric (zelfde id en
-  score). Samenvoegen en `DB_VERSION` blijven ongewijzigd.
+  De eigen volgende-stapzin per niveau kwam er in 1.24.0 (zie hierboven).
 
 - **Tabblad Controle** (1.22.0, `js/controle.js`, was Resultaten): toont
   enkel wat ontbreekt of niet klopt, zonder punten of grafieken. Interne
@@ -361,7 +412,8 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   bewerken na gebruik)
 - Leerplandoelen 2de jaar (46 unieke doelen TW+MW samengevoegd), koppeling
   per criterium
-- **AI-hulp bij rubrics opstellen** (1.5.0, uitgebreid in 1.6.0): beschrijving
+- **AI-hulp bij rubrics opstellen** (1.5.0, uitgebreid in 1.6.0, herwerkt
+  in 1.24.0, zie bovenaan): beschrijving
   → gegenereerde prompt → kopiëren naar eigen AI-gesprek (Claude/ChatGPT/…) →
   antwoord plakken → automatisch omgezet naar criteria, inclusief
   leerplandoelen-koppeling die de AI zelf meebepaalt. Bewust **geen**
@@ -447,6 +499,16 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
   (huidige rubric, gelijke stand, drempel): de tests faalden zoals
   verwacht.
+- `ai-rubric.spec.js`: prompt (enkel beantwoorde vragen, labels en
+  doelniveau, Bloom, geen gedachtestreep in alle varianten, nakijkprompt),
+  inlezen (nieuw en oud formaat, labels uit de tool, volgende stappen,
+  ook passend, zonder doel), nakijken (`buildAiReview()`), elke
+  waarschuwing en geen valse meldingen bij de bestaande rubrics, volgorde
+  van de volgende stap in de feedback, de volledige flow op het scherm,
+  nakijken met bevestigen en een nieuwe versie, velden na opslaan,
+  heropenen en synchronisatie tussen twee personen, `rubricsDiffer()`.
+  Getoetst met ingebouwde fouten (opslaan vergeet de volgende stap,
+  labels van de AI, `next` telt mee voor versies): telkens rood.
 
 Elke test controleert ook dat er geen JavaScript-fouten waren
 (`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:
@@ -455,8 +517,9 @@ gecontroleerd door de fout van vóór 1.18.1 tijdelijk terug te zetten: de
 testen voor beschadigde opslag faalden toen zoals verwacht.
 
 **Nog niet gedekt** (vroeger wel, bij uitbreiden eerst hieraan denken):
-klaslijsten en Excel-import, rubric-editor, team en gedeelde map,
-de inhoud van afgedrukte rapporten, schooljaren, groepscorrectie, AI-hulp,
+klaslijsten en Excel-import, rubric-editor (behalve doelniveau en
+volgende stap), team en gedeelde map,
+de inhoud van afgedrukte rapporten, schooljaren, groepscorrectie,
 verwijderen voor iedereen/mezelf, cijfertoetsen, jaaroverzicht afdrukken.
 De groeigrafiek staat sinds 1.22.0 niet meer op het scherm en heeft dus ook
 geen test.
