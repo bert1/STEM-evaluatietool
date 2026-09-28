@@ -47,6 +47,14 @@ opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
   `db.tombstones.exemptions["schooljaar||leerjaar||evaluatie||klas||leerling"]`.
   `DB_VERSION` blijft 4: de velden zijn optioneel en oude bestanden openen
   gewoon.
+- Bugfix Skore, periodes aanpassen: bij het openklappen van "Periodes van
+  dit schooljaar" tekende de editor zich een fractie later opnieuw (via
+  het toggle-event). Op een trage computer kon dat een net ingevulde
+  datum wissen, waarna de oude data stilletjes opgeslagen werden. Gevonden
+  doordat de test één keer faalde op GitHub, nagemaakt met een vertraagd
+  toggle-event. Nu vervallen niet-bewaarde wijzigingen bij het
+  dichtklappen in plaats van bij het openklappen, en de datumvelden
+  luisteren ook naar "input". Twee nieuwe testen.
 - Skore toont een vrijgestelde leerling als "vrijgesteld" in plaats van
   "–" (met de reden als tooltip), en de kolom Beoordeeld wordt
   bijvoorbeeld "22/24, 2 vrijgesteld". Is iedereen beoordeeld of
