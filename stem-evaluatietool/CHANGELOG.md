@@ -22,11 +22,10 @@ naar Skore (Smartschool).**
   periode van vandaag open; met ‹ en › blader je naar andere periodes.
 - Bovenaan een lijst van de evaluaties in die periode, in de volgorde
   waarin ze gebeurden: map, datum, hoeveel leerlingen beoordeeld zijn,
-  maximum, een vinkje "Overgezet naar Skore" (gedeeld met collega's) en
-  een knop "Kopieer punten" (één punt per regel, in de volgorde van de
-  leerlingen, met een komma als decimaalteken).
+  maximum en een vinkje "Overgezet naar Skore" (gedeeld met collega's).
+  Een kopieerknop is bewust weggelaten: plakken kan niet in Skore.
 - Daaronder een tabel: leerlingen alfabetisch en genummerd zoals in
-  Skore, per evaluatie een kolom met de punten. Groepsscores tellen met
+  Skore, per evaluatie een kolom met de punten (komma als decimaalteken). Groepsscores tellen met
   de individuele correctie. Tussentijdse checks tellen niet mee.
 - "Punten op": zoals in de rubric, of omgerekend naar 10, 20 of 100.
 - Periodes zijn per schooljaar aan te passen onder "Periodes van dit

@@ -78,17 +78,15 @@ test("overzicht per klas en periode, zonder tussentijdse checks", async ({ page 
   page.expectNoErrors();
 });
 
-test("omrekenen naar 10 en punten kopiëren in de volgorde van de leerlingen", async ({ page, context }) => {
-  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+test("omrekenen naar 10", async ({ page }) => {
   await openTool(page);
   const d = await seedRows(page);
   await openSkoreFor(page, 0);
   await page.selectOption("#skoreScale", "10");
   await expect(page.locator(".skore-table th .skore-th-max").first()).toHaveText("/10");
-  await page.locator(".skore-evals button", { hasText: "Kopieer punten" }).first().click();
-  const lines = (await page.evaluate(() => navigator.clipboard.readText())).split("\n");
-  expect(lines).toHaveLength(d.students.length);
-  expect(lines.slice(0, 5)).toEqual(["10", "10", "10", "10", ""]);
+  await expect(page.locator(".skore-table tbody tr").first().locator("td").nth(1)).toHaveText("10");
+  await expect(page.locator(".skore-evals tbody tr").first().locator("td").nth(4)).toHaveText("10 (van " + d.max[0] + ")");
+  await expect(page.locator(".skore-evals button")).toHaveCount(0); // geen kopieerknop: plakken kan niet in Skore
 });
 
 test("overgezet naar Skore aanvinken blijft bewaard", async ({ page }) => {

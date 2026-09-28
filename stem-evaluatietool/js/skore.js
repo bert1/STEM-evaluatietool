@@ -2,8 +2,8 @@
    SKORE
    Overzicht per klas en per rapportperiode (GE1, GE2, …) van de punten
    die in Skore (Smartschool) ingebracht moeten worden. De leerlingen
-   staan alfabetisch, net als in Skore, zodat je kolom per kolom kan
-   overnemen of plakken.
+   staan alfabetisch en genummerd, net als in Skore, zodat je kolom per
+   kolom kan overnemen (plakken kan niet in Skore).
 
    Periodes horen bij een schooljaar en worden gedeeld met het team:
    db.schoolYears[label].periods = {
@@ -334,7 +334,7 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
   var table = el("table", "skore-evals");
   var thead = document.createElement("thead");
   var hr = document.createElement("tr");
-  ["Evaluatie", "Map", "Datum", "Beoordeeld", "Max", "Overgezet naar Skore", ""].forEach(function (h) {
+  ["Evaluatie", "Map", "Datum", "Beoordeeld", "Max", "Overgezet naar Skore"].forEach(function (h) {
     hr.appendChild(el("th", null, h));
   });
   thead.appendChild(hr);
@@ -373,20 +373,6 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
     lbl.appendChild(el("span", null, done ? "Ja" : "Nog niet"));
     doneTd.appendChild(lbl);
     tr.appendChild(doneTd);
-
-    var copyTd = el("td");
-    var copy = el("button", "btn-ghost btn-small", "Kopieer punten");
-    copy.type = "button";
-    copy.title = "Kopieert de punten van deze evaluatie, één per regel, in de volgorde van de leerlingen.";
-    copy.addEventListener("click", function () {
-      var lines = data.students.concat(data.notInRoster).map(function (s) {
-        var v = e.byStudent[s];
-        return v ? formatScore(scaleScore(v.total, e.max, scale)) : "";
-      });
-      copyToClipboard(lines.join("\n"), copy);
-    });
-    copyTd.appendChild(copy);
-    tr.appendChild(copyTd);
 
     tbody.appendChild(tr);
   });
@@ -438,32 +424,6 @@ function buildSkoreTable(data, scale) {
   table.appendChild(tbody);
   wrap.appendChild(table);
   return wrap;
-}
-
-function copyToClipboard(text, button) {
-  function done(ok) {
-    var old = button.textContent;
-    button.textContent = ok ? "Gekopieerd ✓" : "Kopiëren lukte niet";
-    setTimeout(function () { button.textContent = old; }, 1600);
-  }
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(text).then(function () { done(true); }, function () { done(fallbackCopy(text)); });
-  } else {
-    done(fallbackCopy(text));
-  }
-}
-
-function fallbackCopy(text) {
-  var ta = document.createElement("textarea");
-  ta.value = text;
-  ta.style.position = "fixed";
-  ta.style.opacity = "0";
-  document.body.appendChild(ta);
-  ta.select();
-  var ok = false;
-  try { ok = document.execCommand("copy"); } catch (e) {}
-  document.body.removeChild(ta);
-  return ok;
 }
 
 /* ---- periodes aanpassen ---- */

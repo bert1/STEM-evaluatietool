@@ -89,7 +89,8 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
 ## Volledige featurelijst (huidige stand, 1.21.0)
 
 - **Tabblad Skore** (1.21.0, `js/skore.js`): per leerjaar, klas en
-  rapportperiode de punten om over te zetten naar Skore (Smartschool).
+  rapportperiode de punten om over te typen in Skore (Smartschool; plakken
+  kan daar niet, dus bewust geen kopieerknop).
   Periodes per schooljaar in `db.schoolYears[label].periods`
   (`{list: [{name, start}], end, updatedAt}`, een periode loopt tot de dag
   vóór de volgende start; zonder eigen periodes geldt `defaultPeriods()`,
@@ -357,7 +358,7 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
 - `samenvoegen.spec.js`: de "nooit verwijderen bij samenvoegen"-regel
   (team, tombstones, rijen)
 - `skore.spec.js`: periodes, overzicht per klas en periode, omrekenen,
-  kopiëren, overgezet-vinkjes, periodes aanpassen, `createdAt`, samenvoegen
+  overgezet-vinkjes, periodes aanpassen, `createdAt`, samenvoegen
 
 Elke test controleert ook dat er geen JavaScript-fouten waren
 (`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:
