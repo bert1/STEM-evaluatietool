@@ -1,0 +1,100 @@
+/* ---------- Rapport ---------- */
+
+#printArea { display: none; }
+
+.report { padding: 4px 0 10px; }
+.report-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  border-bottom: 2px solid #1e293b;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+.report-head h1 { margin: 0; font-size: 20px; }
+.report-head .sub { color: #475569; font-size: 13px; margin-top: 2px; }
+.report-score { margin-left: auto; text-align: right; }
+.report-score .big { font-size: 24px; font-weight: 700; line-height: 1.1; }
+.report-score .sub { font-size: 13px; color: #475569; }
+.report-score .correction-note { font-size: 11px; color: #0284c7; font-weight: 600; margin-top: 1px; }
+
+.report-meta {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-size: 11.5px;
+  color: #475569;
+  margin-bottom: 12px;
+}
+.report-meta .flag { font-weight: 700; color: #92400e; }
+
+table.report-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+table.report-table th {
+  text-align: left;
+  border-bottom: 1px solid #94a3b8;
+  padding: 5px 8px 5px 0;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+}
+table.report-table td {
+  padding: 7px 8px 7px 0;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: top;
+}
+table.report-table .muted { color: #475569; font-size: 11.5px; }
+table.report-table .score-cell { text-align: right; white-space: nowrap; font-weight: 700; }
+table.report-table .score-cell.low { color: #b91c1c; }
+
+.report-block { margin-top: 12px; }
+.report-block h2 {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #475569;
+  margin: 0 0 3px;
+}
+.report-block p { margin: 0; font-size: 12.5px; white-space: pre-wrap; }
+.report-foot {
+  margin-top: 14px;
+  padding-top: 6px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 10.5px;
+  color: #64748b;
+}
+
+@media print {
+  body.printing > *:not(#printArea) { display: none !important; }
+  body.printing { background: #fff; padding: 0; }
+  body.printing #printArea { display: block; }
+  .report { page-break-after: always; break-after: page; }
+  .report:last-child { page-break-after: auto; break-after: auto; }
+  table.report-table tr { page-break-inside: avoid; break-inside: avoid; }
+  @page { margin: 15mm; }
+}
+
+/* ---------- Feed-up blad (afgedrukt voor leerlingen) ---------- */
+
+.feedup-intro { font-size: 13px; color: #475569; margin: 4px 0 16px; }
+.feedup-block { margin-bottom: 16px; page-break-inside: avoid; break-inside: avoid; }
+.feedup-block h2 {
+  font-size: 13px;
+  margin: 0 0 2px;
+  color: #1e293b;
+  text-transform: none;
+  letter-spacing: 0;
+}
+table.feedup-table { table-layout: fixed; margin-top: 6px; }
+table.feedup-table th {
+  text-align: center;
+  background: #f8fafc;
+  font-size: 10px;
+}
+table.feedup-table td {
+  font-size: 11px;
+  vertical-align: top;
+  border-right: 1px solid #f1f5f9;
+}
+.report.feedup .report-foot { margin-top: 18px; }
+.feedforward-block h2 { color: #075985; }

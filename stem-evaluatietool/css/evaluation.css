@@ -1,0 +1,326 @@
+/* ---------- Voortgang ---------- */
+
+.progress-wrap { margin-bottom: 14px; }
+.progress-bar {
+  height: 7px;
+  background: var(--border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.progress-bar span {
+  display: block;
+  height: 100%;
+  background: var(--success);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 12.5px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.chip-removable {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-right: 6px;
+  cursor: default;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  font-size: 12px;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 0.12s ease, transform 0.12s ease, background 0.12s ease, color 0.12s ease;
+  pointer-events: none;
+  cursor: pointer;
+}
+.chip-removable:hover {
+  background: var(--danger-soft);
+  border-color: #fecaca;
+}
+.chip-removable:hover .chip-remove {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.chip-remove:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+@media (hover: none) {
+  .chip-remove {
+    opacity: 1;
+    transform: scale(1);
+    pointer-events: auto;
+  }
+}
+
+/* ---------- Klas-chip met klapbare leerlingenlijst (Klaslijsten-scherm) ---------- */
+
+.roster-klas-chip {
+  cursor: pointer;
+}
+.roster-klas-chip:hover, .roster-klas-chip.chip-open {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.roster-klas-chip:hover .chip-remove {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+.roster-student-list {
+  margin: 6px 0 10px 2px;
+  padding: 10px 12px;
+  background: #fcfdfe;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13.5px;
+}
+.roster-student-list strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+.roster-student-names {
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* ---------- Leerlingen ---------- */
+
+.checkbox-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 6px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  background: #fcfdfe;
+}
+.student {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0;
+  padding: 6px 9px;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 14.5px;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+}
+.student:hover { background: var(--primary-soft); }
+.student input { accent-color: var(--primary); width: 16px; height: 16px; flex: none; }
+.student .student-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+}
+.student .klas-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  background: #f1f5f9;
+  padding: 1px 7px;
+  border-radius: 999px;
+  flex: none;
+}
+.student .who {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--success);
+  background: var(--success-soft);
+  padding: 1px 7px;
+  border-radius: 999px;
+  flex: none;
+}
+
+/* ---------- Rubrics ---------- */
+
+.rubric-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  background: #fcfdfe;
+}
+.rubric-card.done { border-color: #bae6fd; background: #fbfeff; }
+.rubric-header { display: flex; align-items: baseline; gap: 10px; }
+.rubric-header .num {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-radius: 6px;
+  padding: 2px 8px;
+  flex: none;
+}
+.rubric-header h3 { margin: 0; font-size: 15.5px; }
+.rubric-desc { margin: 6px 0 12px; color: var(--muted); font-size: 14px; }
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.option-btn {
+  text-align: left;
+  border: 1px solid var(--border);
+  background: #fff;
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.12s, background 0.12s;
+}
+.option-btn:hover { border-color: var(--primary); background: #f8fdff; }
+.option-btn .score {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--primary);
+}
+.option-btn .lbl { font-weight: 600; font-size: 13px; }
+.option-btn .desc { color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.option-btn.selected {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+.option-btn.selected .lbl { color: var(--primary-hover); }
+
+body.compact .rubric-desc,
+body.compact .option-btn .desc { display: none; }
+body.compact .option-btn { flex-direction: row; align-items: center; gap: 8px; }
+
+/* ---------- Footer van formulier ---------- */
+
+.eval-footer {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.total-display { font-size: 17px; font-weight: 700; margin-right: auto; }
+.total-display .pct { color: var(--muted); font-weight: 600; font-size: 14px; }
+
+/* ---------- Feedback / feedforward tweeling ---------- */
+
+.feedback-pair {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.feedback-pair .form-group { margin-top: 18px; }
+@media (max-width: 720px) {
+  .feedback-pair { grid-template-columns: 1fr; gap: 0; }
+}
+
+/* ---------- Formatieve toggle ---------- */
+
+.formative-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0 4px;
+  padding: 11px 14px;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius);
+  background: #fbfcfe;
+  cursor: pointer;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.formative-toggle input {
+  margin-top: 3px;
+  accent-color: var(--primary);
+  flex: none;
+}
+.formative-toggle strong { display: block; font-size: 14px; color: var(--text); }
+.formative-toggle .muted { display: block; font-size: 12.5px; color: var(--muted); margin-top: 2px; }
+
+.badge.formative { background: #ede9fe; color: #5b21b6; }
+
+/* ---------- Individuele correctie bij groepswerk ---------- */
+
+#groupCorrections {
+  margin: 14px 0 4px;
+  padding: 14px 16px;
+  border: 1px dashed #cbd5e1;
+  border-radius: var(--radius);
+  background: #fbfcfe;
+}
+.correction-heading {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+#groupCorrections > .hint { margin: 0 0 12px; }
+.correction-list { display: flex; flex-direction: column; gap: 8px; }
+.correction-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--border);
+}
+.correction-row.adjusted { border-color: var(--primary); background: var(--primary-soft); }
+.correction-name { font-weight: 600; min-width: 160px; flex: 1; }
+.correction-input {
+  width: 70px;
+  padding: 6px 8px;
+  text-align: center;
+  font-weight: 700;
+}
+.correction-preview {
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.correction-preview.adjusted { color: var(--primary); font-weight: 600; }
+
+@media (max-width: 620px) {
+  .correction-row { flex-direction: column; align-items: stretch; }
+  .correction-name { min-width: 0; }
+}
