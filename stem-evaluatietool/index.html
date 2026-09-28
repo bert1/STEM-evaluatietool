@@ -1,0 +1,693 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>STEM Evaluatietool</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/evaluation.css" />
+    <link rel="stylesheet" href="css/print.css" />
+  </head>
+  <body>
+    <div id="setupWizard" class="hidden">
+      <div class="wizard-overlay"></div>
+      <div class="wizard-card">
+        <h2>Welkom</h2>
+        <p class="hint">
+          Voor je begint, een paar instellingen. Dit hoef je maar één keer te doen — daarna opent
+          de tool voortaan meteen op het evaluatiescherm.
+        </p>
+
+        <div class="form-group">
+          <label for="wizardInitials">Jouw initialen</label>
+          <input type="text" id="wizardInitials" maxlength="20" placeholder="JVDB" autofocus />
+          <p class="hint" style="margin: 4px 0 0">
+            Dit koppelt je evaluaties aan je naam en is nodig om later samen te werken met
+            collega's.
+          </p>
+        </div>
+
+        <div class="form-group">
+          <label for="wizardName">Jouw volledige naam</label>
+          <input type="text" id="wizardName" placeholder="Jan Van den Bergh" />
+          <p class="hint" style="margin: 4px 0 0">Optioneel, maar handig zodat collega's je herkennen in overzichten.</p>
+        </div>
+
+        <div class="form-group" id="wizardFolderGroup">
+          <label>Gedeelde map</label>
+          <p class="hint" style="margin: 0 0 8px">
+            Werk je samen met collega's? Kies de map die jullie delen — een map op OneDrive, of een
+            netwerkschijf van de school. Ken je dit pad niet, vraag het aan je ICT-verantwoordelijke.
+            Dit kan ook later nog, via het Team-scherm.
+          </p>
+          <div class="btn-row">
+            <button type="button" class="btn-ghost" id="wizardPickFolder">Gedeelde map kiezen</button>
+          </div>
+          <div id="wizardFolderState" style="margin-top: 10px"></div>
+        </div>
+
+        <div class="form-group hidden" id="wizardNetSyncGroup">
+          <div class="notice good">
+            <strong>Automatische synchronisatie met school</strong>
+            Deze school heeft netwerksynchronisatie ingesteld. Je werk wordt automatisch
+            uitgewisseld met collega's zodra je op het schoolnetwerk bent — hier hoef je niets
+            voor te kiezen of te onthouden.
+          </div>
+        </div>
+
+        <div class="wizard-actions">
+          <button type="button" class="btn-ghost" id="wizardSkip">Overslaan, ik doe dit later</button>
+          <button type="button" class="btn-primary" id="wizardFinish" disabled>Beginnen</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="demoBanner" class="hidden">
+      <div class="demo-banner-text">
+        <strong>Testomgeving — fictieve gegevens</strong>
+        Alle klassen, leerlingen en resultaten hierin zijn verzonnen. Klik gerust overal op, maak
+        fouten en probeer dingen kapot te maken — dit heeft geen invloed op je echte werkbestand.
+      </div>
+      <button type="button" class="btn-ghost btn-small" id="btnDemoReset">
+        Testgegevens wissen en opnieuw beginnen
+      </button>
+    </div>
+
+    <div class="topbar">
+      <div class="brand">
+        STEM Evaluatietool <span class="app-version" id="appVersion"></span>
+        <small>Werkt offline · je gegevens blijven op dit toestel</small>
+        <div class="school-year-field">
+          <select id="schoolYearSelect"></select>
+          <button type="button" class="btn-ghost btn-small" id="btnAddSchoolYear" title="Nieuw schooljaar toevoegen">
+            + Nieuw schooljaar
+          </button>
+        </div>
+      </div>
+      <div class="assessor-field">
+        <label for="assessor">Beoordelaar</label>
+        <input
+          type="text"
+          id="assessor"
+          maxlength="20"
+          placeholder="JVDB"
+          title="Je initialen. Die komen bij elke evaluatie te staan, zodat je nadien kan samenvoegen met je collega."
+        />
+      </div>
+      <nav class="nav-group">
+        <button type="button" class="nav-btn active" id="btnHome">Evalueren</button>
+        <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
+        <button type="button" class="nav-btn" id="btnEvals">Rubrics</button>
+        <button type="button" class="nav-btn" id="btnResults">Resultaten</button>
+        <button type="button" class="nav-btn" id="btnTeam">Team</button>
+      </nav>
+      <span class="status nofile" id="status">Geen bestand gekozen</span>
+      <span class="status net-status hidden" id="netSyncStatus"></span>
+    </div>
+
+    <div class="container">
+      <div id="notice"></div>
+
+      <div class="card hidden" id="rosterCard">
+        <h2>
+          Klaslijsten
+          <span class="sub">Vervang ze aan het begin van het schooljaar</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseRoster" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <div class="notice info">
+          <strong>Klaslijsten uit Smartschool</strong>
+          Download je klaslijsten uit Smartschool en kies ze hieronder. De klasnaam wordt uit het
+          tabblad gehaald, de titelregels en de telling onderaan worden overgeslagen.
+        </div>
+
+        <div class="btn-row" style="margin-bottom: 18px">
+          <button type="button" class="btn-primary" id="btnPickXlsx">
+            Kies Smartschool-bestand(en)
+          </button>
+          <span class="hint" style="margin: 0; align-self: center" id="xlsxHint">
+            Meerdere klassen tegelijk mag — één bestand per klas.
+          </span>
+        </div>
+
+        <details id="pasteDetails" style="margin-bottom: 4px">
+          <summary style="cursor: pointer; font-size: 14px; color: var(--muted); margin-bottom: 12px">
+            Of plakken vanuit Excel
+          </summary>
+
+        <div class="form-group">
+          <label for="pasteArea">Plakken vanuit Excel</label>
+          <textarea
+            id="pasteArea"
+            style="min-height: 130px; font-family: ui-monospace, Consolas, monospace; font-size: 13px"
+            placeholder="Klas&#9;Naam&#10;1WM&#9;Bogaerts Finn&#10;1WM&#9;De Meyer Mats"
+          ></textarea>
+          <div class="btn-row" style="margin-top: 9px">
+            <button type="button" class="btn-ghost btn-small" id="btnPickCsv">
+              Of kies een CSV-bestand
+            </button>
+            <button type="button" class="btn-ghost btn-small" id="btnClearPaste">Leegmaken</button>
+          </div>
+        </div>
+        </details>
+
+        <div id="mapper" class="hidden">
+          <div class="selection-grid" style="margin-bottom: 14px">
+            <div class="form-group" style="margin: 0">
+              <label for="mapYear">Leerjaar</label>
+              <select id="mapYear"></select>
+            </div>
+          </div>
+
+          <div class="selection-grid" style="margin-bottom: 14px" id="columnFields">
+            <div class="form-group" style="margin: 0">
+              <label for="mapClassCol">Kolom met de klas</label>
+              <select id="mapClassCol"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="mapNameCol">Kolom met de naam</label>
+              <select id="mapNameCol"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="mapName2Col">Tweede naamkolom</label>
+              <select id="mapName2Col"></select>
+            </div>
+          </div>
+
+          <label id="headerField" style="text-transform: none; letter-spacing: 0; font-size: 13.5px; font-weight: 400; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 14px">
+            <input type="checkbox" id="mapHeader" checked />
+            De eerste rij bevat kolomtitels
+          </label>
+
+          <div id="rosterPreview"></div>
+
+          <div class="btn-row" style="margin-top: 14px">
+            <button type="button" class="btn-primary" id="btnRosterApply">
+              Klaslijsten bijwerken
+            </button>
+            <button type="button" class="btn-danger" id="btnRosterReplace">
+              Alle klassen van dit leerjaar vervangen
+            </button>
+            <button type="button" class="btn-ghost" id="btnRosterCancel">Annuleren</button>
+          </div>
+          <p class="hint">
+            Bijwerken raakt alleen de klassen die in je geplakte lijst staan. Vervangen verwijdert
+            ook klassen die er niet meer in voorkomen. Je opgeslagen evaluaties blijven in beide
+            gevallen bewaard.
+          </p>
+        </div>
+
+        <div id="rosterCurrent" style="margin-top: 18px"></div>
+        <div class="btn-row" style="margin-top: 14px">
+          <button type="button" class="btn-danger" id="btnClearAllClasses">
+            Alle klaslijsten wissen
+          </button>
+        </div>
+        <p class="hint">
+          Wist alle klassen en leerlingen uit alle leerjaren. Je opgeslagen evaluaties blijven
+          bewaard — die staan op naam en verdwijnen niet mee.
+        </p>
+
+        <details id="moveStudentSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
+          <summary style="cursor: pointer; font-size: 14px; color: var(--muted)">
+            Leerling van klas veranderen
+          </summary>
+          <p class="hint">
+            Voor wie in het begin van het schooljaar nog wisselt van klasgroep — verplaats één
+            leerling zonder de hele klaslijst opnieuw in te lezen. Opgeslagen evaluaties verhuizen
+            zoveel mogelijk mee.
+          </p>
+          <div class="selection-grid" style="margin-bottom: 10px">
+            <div class="form-group" style="margin: 0">
+              <label for="moveYear">Leerjaar</label>
+              <select id="moveYear"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="moveFromKlas">Huidige klas</label>
+              <select id="moveFromKlas" disabled>
+                <option value="">Kies eerst een leerjaar</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="moveStudent">Leerling</label>
+              <select id="moveStudent" disabled>
+                <option value="">Kies eerst een klas</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="moveToKlas">Nieuwe klas</label>
+              <select id="moveToKlas" disabled>
+                <option value="">Kies eerst een leerling</option>
+              </select>
+            </div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn-primary" id="btnMoveStudent" disabled>
+              Verplaatsen
+            </button>
+          </div>
+        </details>
+
+        <input type="file" id="csvInput" accept=".csv,.txt,text/csv,text/plain" class="hidden" />
+        <input type="file" id="xlsxInput" accept=".xlsx" multiple class="hidden" />
+      </div>
+
+      <div class="card hidden" id="evalCard">
+        <h2>
+          Rubrics
+          <span class="sub">Criteria en open vragen beheren</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseEval" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <div id="evalListView">
+          <div class="selection-grid" style="margin-bottom: 16px">
+            <div class="form-group" style="margin: 0">
+              <label for="evalListYear">Leerjaar</label>
+              <select id="evalListYear"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="evalListSearch">Zoeken</label>
+              <input
+                type="text"
+                id="evalListSearch"
+                placeholder="Zoek op naam…"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          <div id="evalList"></div>
+          <div class="btn-row" style="margin-top: 16px">
+            <button type="button" class="btn-primary" id="btnNewEval">Nieuwe evaluatie</button>
+            <button type="button" class="btn-ghost" id="btnNewFolder">+ Nieuwe map</button>
+            <button type="button" class="btn-ghost" id="btnYearOverview">Jaaroverzicht afdrukken</button>
+          </div>
+        </div>
+
+        <div id="evalEditView" class="hidden">
+          <div id="evalProblems"></div>
+
+          <div class="selection-grid" style="margin-bottom: 18px">
+            <div class="form-group" style="margin: 0">
+              <label for="draftName">Naam van de evaluatie</label>
+              <input type="text" id="draftName" placeholder="Challenge zonnewagen" />
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="draftYear">Leerjaar</label>
+              <select id="draftYear"></select>
+            </div>
+          </div>
+
+          <details id="aiRubricHelper" style="margin-bottom: 18px">
+            <summary class="section-toggle">AI-hulp: rubric genereren op basis van een beschrijving</summary>
+            <div style="margin-top: 12px">
+              <p class="hint">
+                Geen sleutel, geen account nodig — je gebruikt gewoon een AI-gesprek dat je toch al
+                hebt (Claude, ChatGPT, Copilot, …). Beschrijf hieronder de opdracht, laat een prompt
+                genereren, plak die in je AI-gesprek, en plak het antwoord terug hier.
+              </p>
+
+              <div class="form-group">
+                <label for="aiDescription">Beschrijf de opdracht of les die je wil evalueren</label>
+                <textarea id="aiDescription" rows="3" placeholder="Bijvoorbeeld: leerlingen bouwen in groepjes van drie een brug van houten staafjes en testen die op draagkracht, met een verslag van hun ontwerpproces."></textarea>
+              </div>
+
+              <div class="btn-row">
+                <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt genereren</button>
+              </div>
+
+              <div id="aiPromptBlock" class="hidden" style="margin-top: 14px">
+                <label for="aiPromptOut">Kopieer dit naar je AI-gesprek</label>
+                <textarea id="aiPromptOut" rows="8" readonly></textarea>
+                <div class="btn-row" style="margin-top: 8px">
+                  <button type="button" class="btn-ghost btn-small" id="btnAiCopyPrompt">Kopieer prompt</button>
+                </div>
+              </div>
+
+              <div class="form-group" style="margin-top: 16px">
+                <label for="aiResponseIn">Plak hier het antwoord van de AI</label>
+                <textarea id="aiResponseIn" rows="8" placeholder="Plak het volledige antwoord, inclusief het json-blok…"></textarea>
+              </div>
+              <div class="btn-row">
+                <button type="button" class="btn-primary" id="btnAiImport">Criteria toevoegen aan deze evaluatie</button>
+              </div>
+              <div id="aiImportState" style="margin-top: 10px"></div>
+            </div>
+          </details>
+
+          <label>Criteria</label>
+          <div id="draftRubrics"></div>
+          <div class="add-block" style="margin: 10px 0 24px">
+            <span class="add-label">Criterium toevoegen met</span>
+            <div class="btn-row">
+              <button type="button" class="btn-ghost btn-small" id="btnAddRubric5">5 niveaus</button>
+              <button type="button" class="btn-ghost btn-small" id="btnAddRubric4">4 niveaus</button>
+              <button type="button" class="btn-ghost btn-small" id="btnAddRubric3">3 niveaus</button>
+            </div>
+            <span class="add-hint">Onvoldoende tot Zeer Goed staan al klaar</span>
+          </div>
+
+          <label>Open vragen</label>
+          <p class="hint" style="margin: 0 0 10px">
+            Vrije tekstvelden die je bij elke leerling invult, naast de scores. Laat dit leeg als
+            je ze niet nodig hebt — dan verschijnen ze ook niet in het formulier.
+          </p>
+          <div id="draftQuestions"></div>
+          <div class="add-block" style="margin: 10px 0 24px">
+            <div class="btn-row">
+              <button type="button" class="btn-ghost btn-small" id="btnAddQuestion">
+                Open vraag toevoegen
+              </button>
+            </div>
+            <span class="add-hint">Bijvoorbeeld: welke tip geef je mee voor de volgende keer?</span>
+          </div>
+
+          <div class="eval-footer">
+            <div class="total-display">
+              Maximum: <span id="draftMax">0</span> punten
+              <div class="hint" id="draftSummary" style="margin: 0"></div>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn-ghost" id="btnCancelEval">Annuleren</button>
+              <button type="button" class="btn-primary" id="btnSaveEval">Evaluatie opslaan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="teamCard">
+        <h2>
+          Team
+          <span class="sub">Wie geeft samen welke klas?</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseTeam" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <div id="folderSection">
+          <span class="add-label">Gedeelde map op OneDrive of SharePoint</span>
+          <p class="hint" style="margin: 6px 0 12px">
+            Kies één keer de map die jullie delen. De tool schrijft daar jouw eigen bestand in en
+            leest dat van je collega's. Niemand schrijft in andermans bestand, dus OneDrive kan er
+            geen conflictkopieën van maken.
+          </p>
+          <div class="btn-row" id="folderButtons"></div>
+          <div id="folderState" style="margin-top: 12px"></div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0" />
+
+        <span class="add-label">Collega's</span>
+        <p class="hint" style="margin: 6px 0 12px">
+          Voeg je collega's toe met hun initialen — dezelfde die zij bovenaan invullen. Dat is wat
+          hun evaluaties aan hun naam koppelt.
+        </p>
+        <div id="memberRows"></div>
+        <div class="add-block" style="margin: 10px 0 24px">
+          <div class="btn-row">
+            <button type="button" class="btn-ghost btn-small" id="btnAddMember">
+              Collega toevoegen
+            </button>
+          </div>
+          <span class="add-hint">Jouw eigen initialen staan er automatisch bij</span>
+        </div>
+
+        <span class="add-label">Wie staat voor welke klas?</span>
+        <p class="hint" style="margin: 6px 0 12px">
+          Vink per klas aan wie er samen voor staat. In het evaluatiescherm zie je dan hoever
+          iedereen staat en wie er nog moet.
+        </p>
+        <div class="selection-grid" style="margin-bottom: 14px">
+          <div class="form-group" style="margin: 0">
+            <label for="teamYear">Leerjaar</label>
+            <select id="teamYear"></select>
+          </div>
+        </div>
+        <div id="teamClasses"></div>
+      </div>
+
+      <div class="card hidden" id="resultsCard2">
+        <h2>
+          Resultaten
+          <span class="sub">Hoe scoort de klas, en waar moet je op inzetten?</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseResults" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <div class="selection-grid" style="margin-bottom: 20px">
+          <div class="form-group" style="margin: 0">
+            <label for="resYear">Leerjaar</label>
+            <select id="resYear"></select>
+          </div>
+          <div class="form-group eval-combo-wrap" id="resEvalComboWrap" style="margin: 0; position: relative">
+            <label for="resEvalComboInput">Evaluatie</label>
+            <input
+              type="text"
+              id="resEvalComboInput"
+              class="eval-combo-input"
+              placeholder="Zoek een evaluatie…"
+              autocomplete="off"
+            />
+            <div id="resEvalComboPanel" class="eval-combo-panel hidden"></div>
+            <select id="resEval" class="eval-select-hidden" tabindex="-1" aria-hidden="true"></select>
+          </div>
+          <div class="form-group" style="margin: 0">
+            <label for="resKlas">Klas</label>
+            <select id="resKlas"></select>
+          </div>
+        </div>
+
+        <div id="resultsBody"></div>
+
+        <details id="coverageWrap" open style="margin-bottom: 14px">
+          <summary class="section-toggle">Dekking over het schooljaar</summary>
+          <div id="coverageBody" style="margin-top: 10px"></div>
+        </details>
+
+        <details id="growthWrap" style="margin-bottom: 22px">
+          <summary class="section-toggle">Groei over het jaar</summary>
+          <div style="margin-top: 10px">
+            <div class="growth-sub-heading">Per leerling</div>
+            <div id="growthBody"></div>
+
+            <div id="growthWorkpoints" style="margin-top: 22px"></div>
+          </div>
+        </details>
+
+        <details id="goalsWrap" style="margin-bottom: 22px">
+          <summary class="section-toggle">Leerplandoelen</summary>
+          <div id="goalsBody" style="margin-top: 10px"></div>
+        </details>
+      </div>
+
+      <div id="mainView">
+
+      <div id="archivedYearBar" class="hidden"></div>
+
+      <div id="safetyBar" class="hidden"></div>
+
+      <div class="card" style="padding: 14px 22px">
+        <div class="file-groups">
+          <div class="file-group">
+            <span class="add-label">Jouw bestand</span>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="btnSaveFile">Opslaan</button>
+              <button type="button" class="btn-ghost" id="btnSaveFileAs">Opslaan als…</button>
+            </div>
+          </div>
+
+          <div class="file-group hidden" id="folderGroup">
+            <span class="add-label">Gedeelde map</span>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="btnSyncTeam">Team bijwerken</button>
+            </div>
+          </div>
+
+          <div class="file-group">
+            <span class="add-label">Bestand inlezen</span>
+            <div class="btn-row">
+              <button type="button" class="btn-ghost" id="btnMergeFile">
+                Werk van collega toevoegen
+              </button>
+              <button type="button" class="btn-ghost" id="btnOpenFile">Ander bestand openen</button>
+            </div>
+          </div>
+        </div>
+
+        <p class="hint" id="fileHint"></p>
+        <input type="file" id="fallbackInput" accept=".json,application/json" class="hidden" />
+      </div>
+
+      <div class="card selection-grid">
+        <div class="form-group" style="margin: 0">
+          <label for="yearSelect">Leerjaar</label>
+          <select id="yearSelect">
+            <option value="">Kies een jaar</option>
+          </select>
+        </div>
+        <div class="form-group klas-multi-wrap" style="margin: 0; position: relative">
+          <label for="klasMultiInput">Klas</label>
+          <button type="button" id="klasMultiInput" class="klas-multi-input" disabled>
+            Kies eerst een jaar
+          </button>
+          <div id="klasMultiPanel" class="klas-multi-panel hidden"></div>
+          <select id="classSelect" multiple class="klas-select-hidden" disabled tabindex="-1" aria-hidden="true">
+            <option value="">Kies eerst een jaar</option>
+          </select>
+        </div>
+        <div class="form-group eval-combo-wrap" id="evalComboWrap" style="margin: 0; position: relative">
+          <label for="evalComboInput">Evaluatiemoment</label>
+          <input
+            type="text"
+            id="evalComboInput"
+            class="eval-combo-input"
+            placeholder="Zoek eerst een jaar en klas…"
+            autocomplete="off"
+            disabled
+          />
+          <div id="evalComboPanel" class="eval-combo-panel hidden"></div>
+          <select id="evalSelect" class="eval-select-hidden" disabled tabindex="-1" aria-hidden="true">
+            <option value="">Kies eerst een jaar</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card hidden" id="formCard">
+        <h2>
+          <span id="formTitle">Evaluatie</span>
+          <span class="sub" id="formSubtitle"></span>
+          <label
+            style="
+              margin-left: auto;
+              text-transform: none;
+              letter-spacing: 0;
+              font-size: 13px;
+              display: flex;
+              align-items: center;
+              gap: 7px;
+              color: var(--muted);
+            "
+          >
+            <input type="checkbox" id="compactToggle" />
+            Korte weergave
+          </label>
+        </h2>
+
+        <p class="hint" style="margin: -6px 0 14px">
+          Typ <strong>1-5</strong> om een criterium te scoren — springt automatisch naar het
+          volgende. Na het opslaan van één leerling schuift de tool door naar de eerstvolgende.
+        </p>
+
+        <div class="progress-wrap">
+          <div class="progress-bar"><span id="progressFill" style="width: 0%"></span></div>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; align-items: baseline">
+            <strong style="font-size: 14px" id="progressText">0 van 0 leerlingen beoordeeld</strong>
+          </div>
+          <div class="team-progress" id="teamProgress"></div>
+          <div class="chips" id="remaining" style="margin-top: 8px"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Leerling(en) — vink meerdere aan voor groepswerk</label>
+          <div id="studentGrid" class="checkbox-grid"></div>
+        </div>
+
+        <div id="rubrics"></div>
+
+        <div id="groupCorrections" class="hidden"></div>
+
+        <div id="openQuestions"></div>
+
+        <div class="feedback-pair">
+          <div class="form-group" style="margin-top: 18px">
+            <label for="feedback">Feedback — wat ging goed, wat kon beter?</label>
+            <textarea id="feedback" placeholder="Wat viel op aan dit werk…"></textarea>
+          </div>
+          <div class="form-group" style="margin-top: 18px">
+            <label for="feedforward">Feedforward — wat doet de leerling de volgende keer anders?</label>
+            <textarea id="feedforward" placeholder="Eén concrete volgende stap…"></textarea>
+          </div>
+        </div>
+
+        <label class="formative-toggle">
+          <input type="checkbox" id="formativeToggle" />
+          <span>
+            <strong>Tussentijdse check</strong>
+            <span class="muted">
+              Voor een snelle formatieve controle halverwege. Je hoeft dan niet elk criterium in
+              te vullen, en deze telt niet mee in het eindresultaat.
+            </span>
+          </span>
+        </label>
+
+        <div class="eval-footer">
+          <div class="total-display">
+            Totaal: <span id="currentTotal">0</span> / <span id="maxTotal">0</span
+            ><span class="pct" id="currentPct"></span>
+            <div class="hint" id="formHint" style="margin: 0"></div>
+          </div>
+          <div class="btn-row">
+            <button type="button" class="btn-ghost" id="btnCancel">Leegmaken</button>
+            <button type="button" class="btn-primary" id="btnSave">Opslaan</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card hidden" id="resultsCard">
+        <h2>
+          Overzicht
+          <span class="sub" id="rowCount"></span>
+        </h2>
+
+        <div id="conflicts"></div>
+
+        <div class="table-wrap">
+          <table>
+            <thead id="tableHead"></thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="filebar" style="margin-top: 18px">
+          <button type="button" class="btn-primary" id="btnCopy">Kopieer tabel</button>
+          <button type="button" class="btn-ghost" id="btnExportCsv">Exporteren naar Excel</button>
+          <button type="button" class="btn-danger spacer" id="btnClearSession">
+            Deze klas wissen
+          </button>
+        </div>
+
+        <p class="hint">
+          <strong>Kopieer tabel</strong> zet de resultaten op je klembord — plak ze rechtstreeks in
+          een openstaand Excel-blad, zonder bestand en zonder gedoe met scheidingstekens. De
+          Excel-export doet hetzelfde als bestand. Beide gaan alleen over de klas en het
+          evaluatiemoment die je hierboven gekozen hebt, met één rij per opgeslagen evaluatie —
+          een groep blijft dus één regel.
+        </p>
+
+      </div>
+
+      </div>
+    </div>
+
+    <div id="printArea"></div>
+
+    <script src="data/curriculum.js"></script>
+    <script src="data/roster-seed.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/rosters.js"></script>
+    <script src="js/evaluations.js"></script>
+    <script src="js/results.js"></script>
+    <script src="js/reports.js"></script>
+    <script src="js/goals.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
