@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.25.1.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.25.2.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -357,7 +357,9 @@ hij eruit:
   rubric.
 - **Hier kan je groeien:** het criterium dat het meest aandacht nodig
   heeft, met de feedbackzin uit de rubric. Daaronder een korte zin waarin
-  je zegt dat je veel verwacht en gelooft dat de leerling het kan. Daarna
+  je zegt dat je gelooft dat de leerling het kan leren, of dat je graag
+  helpt, bijvoorbeeld "Fouten maken hoort bij leren. Ik help je graag
+  verder." Daarna
   jouw eigen **feedback**, als je die invulde bij het beoordelen.
 - **Zo pak je het de volgende keer aan:** jouw eigen **feedforward**.
   Vulde je die niet in, dan de **volgende stap** uit de rubric bij het

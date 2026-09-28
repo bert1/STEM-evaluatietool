@@ -169,7 +169,11 @@ test.describe("feedbacktekst", () => {
     expect(r.vast).toBe(true);
     expect(r.lijst.length).toBeGreaterThanOrEqual(6);
     expect(r.lijst.length).toBeLessThanOrEqual(8);
-    r.lijst.forEach((z) => { expect(z).toMatch(/^Ik /); expect(z).not.toMatch(DASH); });
+    r.lijst.forEach((z) => {
+      expect(z).not.toMatch(DASH);
+      // Motiverend zonder druk (1.25.2): geen hoge verwachtingen, geen lat, niet streng.
+      expect(z).not.toMatch(/verwacht|lat hoog|streng|zeker van|moet/i);
+    });
     const a = await feedback(page, [4, 3, 3, 4], null, null, "Janssens Lotte");
     expect(a).toContain(await vertrouwen(page, "Janssens Lotte"));
   });

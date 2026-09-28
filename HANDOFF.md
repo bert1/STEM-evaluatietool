@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.25.1**.
+Laatst bijgewerkt: 28 september 2026, versie **1.25.2**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,15 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.25.1)
+## Volledige featurelijst (huidige stand, 1.25.2)
+
+- **Vertrouwenszinnen zonder druk** (1.25.2). De gebruiker vond "Ik geef
+  je deze tip omdat ik veel van je verwacht" te veel druk voor 12 tot 14
+  jaar. Alle zeven zinnen in `CONFIDENCE_SENTENCES` herschreven: vertrouwen
+  dat de leerling het kan leren, hulp aanbieden, fouten horen bij leren.
+  Geen "verwacht", "lat hoog", "streng", "zeker van" of "moet" (een test
+  bewaakt dat). Niet terugdraaien naar de oorspronkelijke formulering van
+  Yeager ("hoge verwachtingen") zonder de gebruiker te vragen.
 
 - **Feedback duidelijk zonder de rubric** (1.25.1). De gebruiker vond
   "Bij Meten: ..." onduidelijk: een leerling weet weken later niet meer
@@ -250,7 +258,9 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   - Mueller en Dweck (1998): prijs de aanpak, niet het talent.
   - Yeager en collega's (2014), wise feedback: leerlingen van 12 à 13
     jaar gebruiken feedback veel vaker als de leerkracht hoge
-    verwachtingen uitspreekt en zegt dat de leerling die kan halen.
+    verwachtingen uitspreekt en zegt dat de leerling die kan halen. Sinds
+    1.25.2 enkel het vertrouwen en de hulp, zonder de hoge verwachtingen:
+    die legden volgens de gebruiker te veel druk.
   - Butler (1988): geen cijfer naast de commentaar.
   - Shute (2008): kort, concreet, eenvoudige woorden; hoogstens één sterk
     punt, één werkpunt, één uitvoerbare volgende stap.

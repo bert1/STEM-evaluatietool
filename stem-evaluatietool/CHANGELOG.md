@@ -13,6 +13,17 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.25.2 · 28 september 2026
+
+**Vertrouwenszinnen zonder druk**
+
+- De zeven vaste zinnen bij een werkpunt (`CONFIDENCE_SENTENCES`) zijn
+  herschreven. Zinnen als "Ik verwacht veel van je", "Ik leg de lat hoog"
+  en "Ik ben streng voor je werk" legden te veel druk. De nieuwe zinnen
+  zeggen dat de leerling het kan leren, dat fouten erbij horen en dat de
+  leerkracht graag helpt. Een test bewaakt dat er geen drukwoorden in
+  staan.
+
 ## 1.25.1 · 28 september 2026
 
 **Feedback in Skore is duidelijk zonder de rubric erbij**

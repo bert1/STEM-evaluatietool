@@ -4774,7 +4774,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.25.1";
+var APP_VERSION = "1.25.2";
 
 var DB_VERSION = 4;
 
@@ -13158,8 +13158,8 @@ function progressByAssessor(rows, students) {
      feedbackzinnen van de rubric gaan over wat de leerling deed.
    - Yeager en collega's (2014), wise feedback: leerlingen van 12 à 13
      jaar gebruiken feedback veel vaker als de leerkracht zegt dat ze
-     hoge verwachtingen heeft en gelooft dat de leerling die haalt.
-     Daarom één vaste vertrouwenszin bij een werkpunt.
+     gelooft dat de leerling het kan. Daarom één vaste vertrouwenszin bij
+     een werkpunt: vertrouwen en hulp, zonder druk (sinds 1.25.2).
    - Butler (1988): geen cijfer naast de commentaar.
    - Shute (2008): kort, concreet, eenvoudige woorden. Hoogstens één
      sterk punt, één werkpunt en één volgende stap.
@@ -13220,17 +13220,19 @@ var FEEDBACK_LABELS = {
 
 var FEEDBACK_GROUP_NOTE = "Dit was een groepsopdracht, de feedback gaat over het werk van jullie groep.";
 
-/* Wise feedback (Yeager en collega's, 2014): hoge verwachtingen en
-   vertrouwen, in de ik-vorm van de leerkracht. Vast in de tool, niet
-   door een AI geschreven. Enkel bij een werkpunt. */
+/* Wise feedback (Yeager en collega's, 2014): vertrouwen dat de leerling
+   het kan leren, en hulp aanbieden. Sinds 1.25.2 bewust zonder "ik
+   verwacht veel", "de lat hoog" of "streng": dat legt bij 12 tot 14 jaar
+   te veel druk. Vast in de tool, niet door een AI geschreven. Enkel bij
+   een werkpunt. */
 var CONFIDENCE_SENTENCES = [
-  "Ik geef je deze tip omdat ik veel van je verwacht, en ik weet dat je het kan.",
-  "Ik verwacht veel van je, omdat ik weet dat je dit kan.",
-  "Ik leg de lat hoog, omdat ik weet dat je die kan halen.",
-  "Ik geloof dat je dit de volgende keer beter kan.",
-  "Ik ben streng voor je werk, omdat ik weet dat je dit kan leren.",
+  "Ik geef je deze tip omdat ik weet dat je dit kan leren.",
+  "Ik geloof dat je hier stap voor stap beter in wordt.",
   "Ik weet dat je hier sterker in kan worden, en ik help je daar graag bij.",
-  "Ik ben er zeker van dat je dit de volgende keer beter doet.",
+  "Ik weet dat je dit kan leren. Je mag me altijd om hulp vragen.",
+  "Fouten maken hoort bij leren. Ik help je graag verder.",
+  "Iedereen leert dit op eigen tempo. Vraag gerust hulp als je vastzit.",
+  "Ik ben benieuwd naar je volgende poging.",
 ];
 
 /* Eenvoudige, vaste hash: dezelfde leerling bij dezelfde evaluatie krijgt
