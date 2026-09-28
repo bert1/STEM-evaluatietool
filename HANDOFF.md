@@ -106,7 +106,9 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   `isTombstoned()` (nieuwe soort in `TOMBSTONE_KINDS`). Samenvoegen in
   `mergeExemptions()` (nieuwste wint). Verhuist mee via
   `migrateExemptions()`, aangeroepen door `migrateStudentEvaluations(year,
-  student, toKlas, fromKlas)`. `DB_VERSION` bleef 4.
+  student, toKlas, fromKlas)`. `DB_VERSION` bleef 4. Skore toont een
+  vrijgestelde leerling als "vrijgesteld" (`getExemption()` in
+  `buildSkoreTable()` en `buildSkoreEvalList()`).
   **Groeigrafiek** staat niet meer op het scherm, de functies in
   `js/goals.js` bleven (zie CHANGELOG 1.22.0). De drempelinstelling voor
   leerplandoelen is weg; de standaarddrempels gelden nog voor het
@@ -465,7 +467,4 @@ geen test.
 - Automatische reservekopie met datum in de gedeelde OneDrive-map
 - Laatst gebruikte evaluatie bovenaan in de zoeklijsten
 - Resultaten per map exporteren naar Excel
-- Skore: een vrijgestelde leerling tonen als "vrijgesteld" in plaats van
-  "–" in de puntentabel, en "22/24, 2 vrijgesteld" in de kolom Beoordeeld
-  (voorgesteld in 1.22.0, nog niet gebouwd: wacht op akkoord)
 - De groeigrafiek elders terugzetten (functies staan nog in js/goals.js)

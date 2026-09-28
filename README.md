@@ -253,7 +253,9 @@ Je krijgt twee overzichten:
   allemaal zijn) en het maximum.
 - **Een tabel met de punten**: de leerlingen staan alfabetisch en
   genummerd, net als in Skore. Een "–" betekent: niet beoordeeld in deze
-  periode.
+  periode. "vrijgesteld" betekent dat de leerling deze evaluatie niet moet
+  krijgen (ingesteld op het tabblad Controle); daar hoeft geen punt in
+  Skore.
 
 Typ de punten kolom per kolom over in Skore. Vink daarna **Overgezet naar
 Skore** aan, dan weet je (en je collega's) wat al gebeurd is. Plakken in

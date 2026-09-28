@@ -47,6 +47,10 @@ opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
   `db.tombstones.exemptions["schooljaar||leerjaar||evaluatie||klas||leerling"]`.
   `DB_VERSION` blijft 4: de velden zijn optioneel en oude bestanden openen
   gewoon.
+- Skore toont een vrijgestelde leerling als "vrijgesteld" in plaats van
+  "–" (met de reden als tooltip), en de kolom Beoordeeld wordt
+  bijvoorbeeld "22/24, 2 vrijgesteld". Is iedereen beoordeeld of
+  vrijgesteld, dan kleurt die kolom niet meer oranje.
 - Blok Leerplandoelen: per rubriek drie toestanden (niet gekoppeld,
   gekoppeld maar nog niet beoordeeld, beoordeeld met de evaluaties). De
   balkjes, stat-kaarten en de instelling van de drempels zijn weg; de

@@ -166,3 +166,24 @@ test("samenvoegen: nieuwste periodes winnen, overgezet-vinkjes gaan nooit verlor
   });
   expect(r).toEqual({ naam: "A", k1: false, k2: true });
 });
+
+test("een vrijgestelde leerling staat als 'vrijgesteld' in Skore en telt mee als afgewerkt", async ({ page }) => {
+  await openTool(page);
+  const d = await seedRows(page);
+  // eval 0: leerlingen 0 tot 3 beoordeeld; leerling 4 vrijstellen
+  await page.evaluate(([ev, s]) => { setExemption("1ste jaar", ev, "1WM", s, "ziek"); persist(); }, [d.names[0], d.students[4]]);
+  await openSkoreFor(page, 0);
+  const cel = page.locator(".skore-table tbody tr").nth(4).locator("td").nth(1);
+  await expect(cel).toHaveText("vrijgesteld");
+  await expect(cel).toHaveAttribute("title", "Niet te beoordelen: ziek");
+  await expect(page.locator(".skore-table tbody tr").nth(5).locator("td").nth(1)).toHaveText("–");
+  await expect(page.locator(".skore-evals tbody tr").first().locator("td").nth(3))
+    .toHaveText("4/" + d.students.length + ", 1 vrijgesteld");
+
+  // ongedaan maken: terug een streepje
+  await page.evaluate(([ev, s]) => { clearExemption("1ste jaar", ev, "1WM", s); persist(); }, [d.names[0], d.students[4]]);
+  await page.selectOption("#skoreKlas", "1WTa");
+  await page.selectOption("#skoreKlas", "1WM");
+  await expect(page.locator(".skore-table tbody tr").nth(4).locator("td").nth(1)).toHaveText("–");
+  page.expectNoErrors();
+});

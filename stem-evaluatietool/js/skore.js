@@ -317,7 +317,7 @@ function renderSkore() {
   ));
 
   host.appendChild(buildSkoreEvalList(data, year, klas, range, scale));
-  host.appendChild(buildSkoreTable(data, scale));
+  host.appendChild(buildSkoreTable(data, year, klas, scale));
 
   if (data.notInRoster.length) {
     host.appendChild(el(
@@ -356,7 +356,13 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
     var first = e.dates[0], last = e.dates[e.dates.length - 1];
     tr.appendChild(el("td", null, first === last ? formatShortDate(first) : formatShortDate(first) + " – " + formatShortDate(last)));
     var n = Object.keys(e.byStudent).filter(function (s) { return data.students.indexOf(s) !== -1; }).length;
-    tr.appendChild(el("td", "num" + (n < total ? " skore-incomplete" : ""), n + "/" + total));
+    var vrij = data.students.filter(function (s) {
+      return !e.byStudent[s] && getExemption(year, e.name, klas, s);
+    }).length;
+    tr.appendChild(el(
+      "td", "num" + (n + vrij < total ? " skore-incomplete" : ""),
+      n + "/" + total + (vrij ? ", " + vrij + " vrijgesteld" : ""),
+    ));
     tr.appendChild(el("td", "num", scale ? scale + " (van " + e.max + ")" : e.max));
 
     var doneTd = el("td");
@@ -381,7 +387,7 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
   return wrap;
 }
 
-function buildSkoreTable(data, scale) {
+function buildSkoreTable(data, year, klas, scale) {
   var wrap = el("div", "table-wrap");
   var table = el("table", "skore-table");
   var thead = document.createElement("thead");
@@ -412,6 +418,12 @@ function buildSkoreTable(data, scale) {
           td.classList.add("skore-dup");
           td.title = "Deze leerling is meer dan eens beoordeeld; de recentste beoordeling telt.";
         }
+      } else if (data.notInRoster.indexOf(s) === -1 && getExemption(year, e.name, klas, s)) {
+        // Vrijgesteld op het Controle-tabblad: geen punt in Skore nodig.
+        var ex = getExemption(year, e.name, klas, s);
+        td.textContent = "vrijgesteld";
+        td.classList.add("skore-exempt");
+        td.title = "Niet te beoordelen" + (ex.reason ? ": " + ex.reason : "");
       } else {
         td.textContent = "–";
         td.classList.add("skore-missing");
