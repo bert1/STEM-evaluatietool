@@ -31,7 +31,6 @@ gedeelde map, geen installatie voor niet zo computervaardige collega's).
 stem-evaluatietool/
 ├── index.html          het enige HTML-bronbestand
 ├── build.js             bouwt het bestand voor leerkrachten
-├── build-demo.js         idem, maar met de gevulde testomgeving
 │
 ├── css/
 │   ├── base.css          kleuren, basistypografie
@@ -51,7 +50,7 @@ stem-evaluatietool/
 │   ├── results.js         statistieken, grafieken, kalibratie, dekking
 │   ├── reports.js         leerlingrapport, feed-up-blad afdrukken
 │   ├── goals.js           leerplandoelen, drempels, groei over het jaar
-│   ├── sync.js            gedeelde map, team, netwerksynchronisatie
+│   ├── sync.js            gedeelde map (bv. in OneDrive), team
 │   └── app.js             opstarten, wizard, schermnavigatie
 │
 └── data/
@@ -71,7 +70,7 @@ Vanaf nu krijgt elke wijziging een versienummer volgens
 Het versienummer staat in `js/state.js` als `APP_VERSION`, en is zichtbaar
 bovenaan de tool zelf. Elke wijziging krijgt een regel in `CHANGELOG.md`.
 
-`build.js` en `build-demo.js` schrijven **twee** bestanden: een met vaste
+`build.js` schrijft **twee** bestanden: een met vaste
 naam (`STEM-Evaluatietool.html`) waar de testreeks naar verwijst — die moet
 bij elke versie bruikbaar blijven zonder alle testbestanden aan te passen —
 en een kopie met het versienummer erin (`STEM-Evaluatietool-v1.0.0.html`).
@@ -85,18 +84,18 @@ bestanden. Dat verandert veel minder vaak dan `APP_VERSION`.
 ## Bouwen
 
 ```bash
-node build.js         # de gewone tool
-node build-demo.js     # de testomgeving met verzonnen gegevens
+node build.js         # de tool
 ```
 
-Standaard schrijven ze naar `dist/` naast de broncode (staat in
+Standaard schrijft het naar `dist/` naast de broncode (staat in
 `.gitignore`). Een andere map kan als eerste argument of via
-`STEM_OUT_DIR`, bijvoorbeeld voor de testreeks die het bestand in
-`/mnt/user-data/outputs/` verwacht:
+`STEM_OUT_DIR`, bijvoorbeeld `node build.js ../uit`.
 
-```bash
-node build.js /mnt/user-data/outputs
-```
+## Testen
+
+Vanuit de hoofdmap van de repository: `npm test`. Dat bouwt eerst en draait
+dan de Playwright-testen in `tests/`. Op GitHub gebeurt dit automatisch bij
+elke push.
 
 ## Belangrijk om te weten voor je hierin werkt
 

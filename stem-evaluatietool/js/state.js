@@ -63,10 +63,6 @@ function loadFromStorage() {
 
   // Eerste start: neem de klaslijsten uit de tool over als vertrekpunt.
   // Daarna leven ze in het werkbestand en kan je ze plakken uit Excel.
-  if (freshStart && typeof DEMO_SEED !== "undefined") {
-    db = normaliseDb(Object.assign({}, emptyDb(), DEMO_SEED, { assessor: db.assessor }));
-  }
-
   if (!db.roster || !Object.keys(db.roster).length) {
     db.roster = seedRoster(CONFIG, STUDENTS);
   }
@@ -75,8 +71,6 @@ function loadFromStorage() {
   }
   if (!db.team) db.team = emptyTeam();
   if (!db.settings) db.settings = emptySettings();
-
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) initDemoBanner();
 
   try {
     instanceId = localStorage.getItem(INSTANCE_KEY) || "";
@@ -129,7 +123,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.19.1";
+var APP_VERSION = "1.20.0";
 
 var DB_VERSION = 4;
 

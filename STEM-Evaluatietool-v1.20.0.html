@@ -1121,44 +1121,6 @@ table.report-table td.rubriek-row {
   border-bottom: 1px solid #94a3b8;
 }
 
-/* ---------- Testomgeving ---------- */
-
-#demoBanner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: repeating-linear-gradient(
-    135deg, #f5f3ff, #f5f3ff 14px, #ede9fe 14px, #ede9fe 28px
-  );
-  border-bottom: 2px solid #a78bfa;
-  padding: 11px 16px;
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-#demoBanner .demo-banner-text {
-  font-size: 13.5px;
-  color: #5b21b6;
-  line-height: 1.5;
-}
-#demoBanner .demo-banner-text strong {
-  display: block;
-  font-size: 14.5px;
-  margin-bottom: 2px;
-}
-#demoBanner .btn-row, #demoBanner button {
-  margin-left: auto;
-  background: #fff;
-  border-color: #c4b5fd;
-  color: #5b21b6;
-  white-space: nowrap;
-}
-#demoBanner button:hover { background: #f5f3ff; }
-
-@media (max-width: 620px) {
-  #demoBanner button { margin-left: 0; width: 100%; }
-}
 
 /* ---------- Groeigrafiek ---------- */
 
@@ -1221,10 +1183,6 @@ body.wizard-open { overflow: hidden; }
   .wizard-actions #wizardSkip { margin-right: 0; text-align: center; }
 }
 
-/* ---------- Netwerksynchronisatie ---------- */
-
-.net-status.on { background: var(--success-soft); color: var(--success); }
-.net-status.off { background: #f1f5f9; color: var(--muted); }
 </style>
     <style>
 /* ---------- Voortgang ---------- */
@@ -1695,31 +1653,11 @@ table.feedup-table td {
           <div id="wizardFolderState" style="margin-top: 10px"></div>
         </div>
 
-        <div class="form-group hidden" id="wizardNetSyncGroup">
-          <div class="notice good">
-            <strong>Automatische synchronisatie met school</strong>
-            Deze school heeft netwerksynchronisatie ingesteld. Je werk wordt automatisch
-            uitgewisseld met collega's zodra je op het schoolnetwerk bent — hier hoef je niets
-            voor te kiezen of te onthouden.
-          </div>
-        </div>
-
         <div class="wizard-actions">
           <button type="button" class="btn-ghost" id="wizardSkip">Overslaan, ik doe dit later</button>
           <button type="button" class="btn-primary" id="wizardFinish" disabled>Beginnen</button>
         </div>
       </div>
-    </div>
-
-    <div id="demoBanner" class="hidden">
-      <div class="demo-banner-text">
-        <strong>Testomgeving — fictieve gegevens</strong>
-        Alle klassen, leerlingen en resultaten hierin zijn verzonnen. Klik gerust overal op, maak
-        fouten en probeer dingen kapot te maken — dit heeft geen invloed op je echte werkbestand.
-      </div>
-      <button type="button" class="btn-ghost btn-small" id="btnDemoReset">
-        Testgegevens wissen en opnieuw beginnen
-      </button>
     </div>
 
     <div class="topbar">
@@ -1751,7 +1689,6 @@ table.feedup-table td {
         <button type="button" class="nav-btn" id="btnTeam">Team</button>
       </nav>
       <span class="status nofile" id="status">Geen bestand gekozen</span>
-      <span class="status net-status hidden" id="netSyncStatus"></span>
     </div>
 
     <div class="container">
@@ -4472,10 +4409,6 @@ function loadFromStorage() {
 
   // Eerste start: neem de klaslijsten uit de tool over als vertrekpunt.
   // Daarna leven ze in het werkbestand en kan je ze plakken uit Excel.
-  if (freshStart && typeof DEMO_SEED !== "undefined") {
-    db = normaliseDb(Object.assign({}, emptyDb(), DEMO_SEED, { assessor: db.assessor }));
-  }
-
   if (!db.roster || !Object.keys(db.roster).length) {
     db.roster = seedRoster(CONFIG, STUDENTS);
   }
@@ -4484,8 +4417,6 @@ function loadFromStorage() {
   }
   if (!db.team) db.team = emptyTeam();
   if (!db.settings) db.settings = emptySettings();
-
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) initDemoBanner();
 
   try {
     instanceId = localStorage.getItem(INSTANCE_KEY) || "";
@@ -4538,7 +4469,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.19.1";
+var APP_VERSION = "1.20.0";
 
 var DB_VERSION = 4;
 
@@ -12382,23 +12313,6 @@ function renderFolderSection() {
   buttons.innerHTML = "";
   state.innerHTML = "";
 
-  if (netSyncEnabled()) {
-    var box = el("div", "folder-state " + (netSyncReachable ? "" : "off"));
-    box.appendChild(document.createTextNode(
-      netSyncReachable
-        ? "Verbonden met het schoolnetwerk. Werk van collega's wordt automatisch bijgewerkt, ongeveer elke minuut."
-        : "Kan het schoolnetwerk nu niet bereiken. Dat hoort zo als je thuis werkt — je gegevens blijven bewaard " +
-          "en synchroniseren vanzelf zodra je weer op school bent.",
-    ));
-    state.appendChild(box);
-
-    var info = el("p", "hint");
-    info.style.marginTop = "8px";
-    info.textContent = "Deze school gebruikt automatische netwerksynchronisatie. Er is niets in te stellen — dit werkt vanzelf.";
-    state.appendChild(info);
-    return;
-  }
-
   if (!FOLDER_SUPPORTED) {
     var off = el("div", "folder-state off");
     off.appendChild(document.createTextNode(
@@ -12685,210 +12599,6 @@ function syncTeam(quiet) {
         (err && err.message ? err.message + ". " : "") + "Koppel de map opnieuw via het Teamscherm.",
       );
     });
-}
-
-/* ---- overgenomen uit netsync.js ---- */
-
-/* ------------------------------------------------------------------
-   NETWERKSYNCHRONISATIE (schoolnetwerk)
-
-   Voor scholen met een altijd-aan machine (meestal een NAS) op het
-   eigen netwerk. In plaats van een gedeelde map kiezen, praat de tool
-   rechtstreeks met een klein programma op die machine — automatisch,
-   op de achtergrond, zonder dat een leerkracht ooit iets hoeft te
-   kiezen of op "bijwerken" te klikken.
-
-   Werkt alleen wanneer NETWORK_SYNC is ingebakken bij het bouwen (zie
-   build.js). Is dat niet het geval, dan doet dit bestand niets en
-   blijft de gewone gedeelde-map-werking (team.js) intact.
-
-   Bereikbaarheid is vanzelf beperkt tot het schoolnetwerk: thuis kan
-   dat adres niet bereikt worden, dus valt alles automatisch terug op
-   de lokale kopie in de browser.
-   ------------------------------------------------------------------ */
-
-var netSyncTimer = null;
-
-var netSyncBusy = false;
-
-var netSyncReachable = null;
-
- // null = nog niet gecheckt
-var netSyncLastError = "";
-
-function netSyncEnabled() {
-  return typeof NETWORK_SYNC !== "undefined" && NETWORK_SYNC && NETWORK_SYNC.url;
-}
-
-function netSyncHeaders(extra) {
-  var h = { "X-Stem-Token": NETWORK_SYNC.token || "" };
-  if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
-  return h;
-}
-
-
-
-/* Korte timeout: dit moet snel weten "ben ik op school", niet lang
-   hangen op een netwerk dat toch niet gaat antwoorden. */
-function netFetch(path, opts, timeoutMs) {
-  var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-  var timer = controller ? setTimeout(function () { controller.abort(); }, timeoutMs || 2500) : null;
-  var init = Object.assign({}, opts || {});
-  if (controller) init.signal = controller.signal;
-
-  return fetch(NETWORK_SYNC.url.replace(/\/$/, "") + path, init).finally(function () {
-    if (timer) clearTimeout(timer);
-  });
-}
-
-function netSyncPing() {
-  return netFetch("/ping", {}, 2000)
-    .then(function (res) { return res.ok; })
-    .catch(function () { return false; });
-}
-
-
-
-/* Eigen werk naar de server sturen. */
-function netSyncPush() {
-  var initials = cleanAssessor(db.assessor);
-  if (!initials) return Promise.resolve(false);
-
-  var body = JSON.stringify({
-    format: DB_FORMAT,
-    version: DB_VERSION,
-    assessor: db.assessor,
-    instanceId: instanceId,
-    schoolYears: db.schoolYears,
-    currentSchoolYear: db.currentSchoolYear,
-    activeSchoolYear: db.activeSchoolYear,
-    evaluations: db.evaluations,
-    evaluationFolders: db.evaluationFolders,
-    tombstones: db.tombstones,
-    team: db.team,
-    settings: db.settings,
-  });
-
-  return netFetch("/file/" + encodeURIComponent(initials), {
-    method: "PUT",
-    headers: netSyncHeaders({ "Content-Type": "application/json" }),
-    body: body,
-  }, 4000)
-    .then(function (res) { return res.ok; })
-    .catch(function () { return false; });
-}
-
-
-
-/* Bestanden van collega's ophalen en samenvoegen — dezelfde
-   samenvoeglogica als bij de gedeelde map, alleen via het netwerk. */
-function netSyncPull() {
-  var initials = cleanAssessor(db.assessor);
-
-  return netFetch("/files", { headers: netSyncHeaders() }, 3000)
-    .then(function (res) { return res.ok ? res.json() : { files: [] }; })
-    .then(function (data) {
-      var others = (data.files || []).filter(function (f) { return f.id !== initials; });
-      var jobs = others.map(function (f) {
-        return netFetch("/file/" + encodeURIComponent(f.id), { headers: netSyncHeaders() }, 3000)
-          .then(function (res) { return res.ok ? res.json() : null; })
-          .catch(function () { return null; });
-      });
-      return Promise.all(jobs);
-    })
-    .then(function (results) {
-      var totals = { added: 0, updated: 0, classes: [], evaluations: [], team: false };
-      results.filter(Boolean).forEach(function (incoming) {
-        var read = readAnyFile(incoming, CONFIG);
-        if (!read) return;
-        var stats = mergeDb(db, read.db);
-        totals.added += stats.added;
-        totals.updated += stats.updated;
-        totals.classes = totals.classes.concat(stats.classes || []);
-        totals.evaluations = totals.evaluations.concat(stats.evaluations || []);
-        if (stats.team) totals.team = true;
-      });
-      return totals;
-    })
-    .catch(function () {
-      return { added: 0, updated: 0, classes: [], evaluations: [], team: false };
-    });
-}
-
-
-
-/* Eén synchronisatieronde: pushen, dan pullen, stil op de achtergrond.
-   Geeft nooit een fout op het scherm — als school niet bereikbaar is,
-   werkt de leerkracht gewoon lokaal verder, zoals de rest van de tool
-   dat ook al doet. */
-function netSyncRound(opts) {
-  if (!netSyncEnabled() || netSyncBusy) return;
-  netSyncBusy = true;
-
-  netSyncPing()
-    .then(function (reachable) {
-      var wasReachable = netSyncReachable;
-      netSyncReachable = reachable;
-      updateNetSyncIndicator();
-
-      if (!reachable) {
-        netSyncBusy = false;
-        return;
-      }
-
-      return netSyncPush()
-        .then(function () { return netSyncPull(); })
-        .then(function (totals) {
-          var changed = totals.added || totals.updated || totals.classes.length || totals.evaluations.length || totals.team;
-          if (changed) {
-            persist();
-            refreshAll();
-          }
-          // Alleen de eerste keer dat we op school verbinden een melding
-          // tonen — daarna gebeurt dit stil, zoals afgesproken.
-          if (!wasReachable && (opts && opts.announce !== false)) {
-            showNotice(
-              "good",
-              "Verbonden met school",
-              "Werk van collega's wordt vanaf nu automatisch bijgewerkt op de achtergrond." +
-                (changed ? " Er kwam meteen al iets binnen." : ""),
-            );
-          }
-          netSyncBusy = false;
-        });
-    })
-    .catch(function (err) {
-      netSyncLastError = err && err.message ? err.message : "onbekende fout";
-      netSyncBusy = false;
-    });
-}
-
-function updateNetSyncIndicator() {
-  var el2 = $("netSyncStatus");
-  if (!el2) return;
-  el2.classList.remove("hidden");
-  el2.classList.toggle("on", !!netSyncReachable);
-  el2.classList.toggle("off", !netSyncReachable);
-  el2.textContent = netSyncReachable ? "Verbonden met school" : "Niet op school — werkt lokaal";
-  el2.title = netSyncReachable
-    ? "Wordt automatisch bijgewerkt zolang je op het schoolnetwerk bent."
-    : "Kan de school niet bereiken. Je werk blijft lokaal bewaard en synchroniseert zodra je weer op school bent.";
-}
-
-function startNetSync() {
-  if (!netSyncEnabled()) return;
-  updateNetSyncIndicator();
-  netSyncRound({ announce: true });
-  netSyncTimer = setInterval(function () {
-    // Niet synchroniseren op een verborgen tabblad — geen zin, en
-    // scheelt onnodig netwerkverkeer op batterijvoeding.
-    if (document.hidden) return;
-    netSyncRound({ announce: true });
-  }, (NETWORK_SYNC.intervalSeconds || 60) * 1000);
-
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) netSyncRound({ announce: true });
-  });
 }
 
 /* ---- overgenomen uit core.js ---- */
@@ -13182,7 +12892,6 @@ function init() {
   resEvalCombo.init();
   initKlasMulti();
   initMoveStudent();
-  startNetSync();
 }
 
 
@@ -13192,17 +12901,13 @@ function init() {
 /* ------------------------------------------------------------------ */
 
 function initSetupWizard() {
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) return; // de testomgeving heeft haar eigen introductie
   if (!freshStart) return;
 
   $("setupWizard").classList.remove("hidden");
   document.body.classList.add("wizard-open");
   $("wizardInitials").focus();
 
-  if (netSyncEnabled()) {
-    $("wizardFolderGroup").classList.add("hidden");
-    $("wizardNetSyncGroup").classList.remove("hidden");
-  } else if (!FOLDER_SUPPORTED) {
+  if (!FOLDER_SUPPORTED) {
     $("wizardFolderGroup").classList.add("hidden");
   }
 
@@ -13277,20 +12982,6 @@ function initSetupWizard() {
   });
 }
 
-function initDemoBanner() {
-  $("demoBanner").classList.remove("hidden");
-  $("btnDemoReset").addEventListener("click", function () {
-    if (!confirm(
-      "Alle testgegevens wissen en de testomgeving herladen met de oorspronkelijke voorbeelddata?\n\n" +
-      "Eigen wijzigingen die je hier maakte, gaan verloren. Dit raakt alleen deze testomgeving, niet je echte werkbestand.",
-    )) return;
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-    // Anders vraagt de browser zelf óók nog eens of je de pagina mag
-    // verlaten, bovenop onze eigen bevestiging hierboven.
-    dirty = false;
-    location.reload();
-  });
-}
 
 
 

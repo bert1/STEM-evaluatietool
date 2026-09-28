@@ -13,6 +13,23 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.20.0 · 28 september 2026
+
+**Opgeruimd en automatisch getest.**
+
+- De NAS-netwerksynchronisatie is verwijderd: de school werkt enkel met
+  OneDrive (gedeelde map). Weg zijn het netwerkdeel van `js/sync.js`, de
+  netwerkstatus bovenaan, het netwerkblok in de opstartwizard en het
+  inbakken van `NETWORK_SYNC` in `build.js`. Werkbestanden blijven gewoon
+  werken; de gedeelde map verandert niet. Nog terug te vinden in de
+  git-historie (tot en met 1.19.1).
+- De ongebruikte demo-omgeving is verwijderd (`build-demo.js`, `IS_DEMO`,
+  `DEMO_SEED`, de demo-balk en bijbehorende stijlen).
+- Nieuwe testreeks in `tests/` (Playwright, 27 testen) met
+  `npm test`, en automatische controle op GitHub bij elke push
+  (`.github/workflows/controle.yml`). Het gebouwde HTML-bestand is na
+  elke geslaagde run te downloaden onder "Artifacts".
+
 ## 1.19.1 · 28 september 2026
 
 **Onderhoud van de code, geen zichtbare nieuwe functies.**

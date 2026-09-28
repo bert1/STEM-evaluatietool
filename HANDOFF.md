@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.19.1**.
+Laatst bijgewerkt: 28 september 2026, versie **1.20.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -21,25 +21,26 @@ De belangrijkste, terugkerende ontwerpregel doorheen dit hele project:
 ontwikkelaar.** Bijna elke architecturale keuze hieronder is daaruit te
 verklaren.
 
-## Waar alles staat (in déze sessie — zie hieronder voor een nieuwe sessie)
+## Waar alles staat
 
-- **Broncode, dé bron van waarheid:** `/home/claude/stem-evaluatietool/`
-- **Gebouwde bestanden voor de gebruiker:** `/mnt/user-data/outputs/`
-  (`STEM-Evaluatietool.html` = vaste naam voor tests, `STEM-Evaluatietool-v1.6.0.html`
-  = wat de leerkracht effectief krijgt)
-- **Testbestanden (16 stuks, horen NIET in de product-zip):** `/home/claude/build/test-*.js`
-- **Oude, voorbijgestreefde platte bronmap (technische schuld, zie onderaan):**
-  `/home/claude/build/*.js` (zonder `test-` voorvoegsel)
+Sinds 28 september 2026 staat alles in de GitHub-repository
+`bert1/STEM-evaluatietool`:
 
-### In een NIEUWE sessie bestaat niets hiervan nog
+- **Broncode, dé bron van waarheid:** `stem-evaluatietool/`
+- **Testreeks:** `tests/*.spec.js` (Playwright), instellingen in
+  `playwright.config.js`, afhankelijkheden in `package.json`
+- **Automatische controle:** `.github/workflows/controle.yml` bouwt en test
+  bij elke push; het gebouwde HTML-bestand staat bij elke geslaagde run
+  onder "Artifacts"
+- **Laatst gebouwde versie voor collega's:** `STEM-Evaluatietool-vX.Y.Z.html`
+  in de hoofdmap van de repository
 
-De sandbox is dan leeg. Eerste stappen:
-1. Pak `stem-evaluatietool-broncode.zip` uit naar `/home/claude/stem-evaluatietool/`
-2. Pak `stem-evaluatietool-tests.zip` uit, kopieer de `test-*.js`-bestanden naar
-   `/home/claude/build/` (zie `LEESMIJ-TESTS.md` erin voor het volledige stappenplan)
-3. `cd stem-evaluatietool && node build.js /mnt/user-data/outputs` (zonder
-   argument schrijft het naar `dist/`)
-4. Test pas daarna
+### Starten in een nieuwe sessie
+
+1. `npm ci`
+2. `npm test` (bouwt naar `stem-evaluatietool/dist/` en draait de testreeks;
+   in de Claude-cloudomgeving met `PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`)
+3. Pas daarna wijzigen, en na elke wijziging opnieuw `npm test`
 
 ## Architectuur
 
@@ -61,7 +62,7 @@ boven): `ui.js` ($/el-hulpfuncties en `makeSearchCombo`, moet als eerste laden),
 Excel-import), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
 `results.js` (statistieken, grafieken, kalibratie), `reports.js` (rapport,
 feed-up-blad), `goals.js` (leerplandoelen-UI, groeigrafiek), `sync.js`
-(gedeelde map, team, netwerksynchronisatie), `app.js` (opstart, wizard,
+(gedeelde map, team), `app.js` (opstart, wizard,
 navigatie, moet als laatste laden).
 
 **Belangrijke valkuil, al één keer misgegaan:** `build.js` gebruikt
@@ -85,8 +86,13 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.19.1)
+## Volledige featurelijst (huidige stand, 1.20.0)
 
+- **Opgeruimd en automatisch getest** (1.20.0): demo-omgeving
+  (`build-demo.js`, `IS_DEMO`, `DEMO_SEED`, `#demoBanner`) en
+  NAS-netwerksynchronisatie (`NETWORK_SYNC`, `netSync*`, `#netSyncStatus`,
+  `#wizardNetSyncGroup`) verwijderd. Nieuwe testreeks in `tests/` met
+  GitHub Actions, zie "Testinfrastructuur".
 - **Code opgesplitst** (1.19.1): `js/evaluations.js` is nu vier bestanden,
   in deze laadvolgorde: `rubric-model.js`, `evaluations.js`,
   `rubric-editor.js`, `ai-rubric.js`. `build.js` schrijft naar `dist/`
@@ -288,11 +294,10 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
 - Resultatenscherm: kerncijfers, "Per leerling"-tabel, "Grafieken per
   criterium en spreiding" (ingeklapt, onderaan), Dekking/Groei/Leerplandoelen
   als losse inklapbare secties
-- Team: gedeelde map (File System Access API) of optionele
-  netwerksynchronisatie op het schoolnetwerk (zie `js/sync.js`,
-  `NETWORK_SYNC`-configuratie, `sync-server/`)
-- Opstartwizard, leest bestaande bestanden correct in, slaat mapkeuze over
-  als netwerksynchronisatie al actief is
+- Team: gedeelde map (File System Access API), in de praktijk een map in
+  OneDrive. De NAS-netwerksynchronisatie is in 1.20.0 verwijderd: de school
+  gebruikt enkel OneDrive (staat nog in de git-historie, tot en met 1.19.1)
+- Opstartwizard, leest bestaande bestanden correct in
 - Printbare rapporten en feed-up-blad, met automatische PDF-bestandsnaam
   (`klas_evaluatie` of `leerling_klas_evaluatie`) via een tijdelijke
   `document.title`-wissel
@@ -325,23 +330,31 @@ rechtstreeks vergelijken met `<=`.**
 
 ## Testinfrastructuur
 
-22 Playwright-bestanden, ruim 1000 tests, volledige regressie voor élke
-release. Filosofie doorheen het hele project: **niet aannemen dat iets werkt,
-altijd empirisch verifiëren** — inclusief tegen zichzelf (bv. de
-JSON-extractie-tool voor de architectuur-opsplitsing controleerde zichzelf op
-byte-exacte heropbouw).
+De oorspronkelijke testreeks (22 bestanden, ruim 1000 tests) is niet meer
+beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
+`tests/`, die bij elke push automatisch draait op GitHub:
 
-Standaardregressie (20 bestanden, zie ook `LEESMIJ-TESTS.md` in het testpakket):
-```
-test-e2e test-roster-e2e test-xlsx-e2e test-editor-e2e test-nav-e2e
-test-team-e2e test-results-e2e test-safety-e2e test-inspect-e2e
-test-goals-e2e test-phase2-e2e test-wizard-e2e test-schoolyear-e2e
-test-correction-e2e test-ai-rubric-e2e test-folders-e2e
-test-deletion-scope-e2e test-shortcuts-e2e test-search-e2e
-test-yearoverview-e2e
-```
-Apart: `test-netsync-e2e.js` (heeft een draaiende server nodig, zie
-`LEESMIJ-TESTS.md`).
+- `opstarten.spec.js`: build, alle scriptbestanden bestaan, opstarten
+  zonder fouten (gebouwd én losse `index.html`), opstartwizard, alle tabbladen
+- `evalueren.spec.js`: een leerling beoordelen, opslaan en terugzien bij
+  Resultaten; melding bij ontbrekende criteria; dekkingstabel
+- `zoeklijst.spec.js`: beide zoeklijsten (mappen, accenten, mapnaam,
+  Enter, ARIA)
+- `opslaan.spec.js`: beschadigde browseropslag, gelijktijdig schrijven,
+  mislukte opslag
+- `samenvoegen.spec.js`: de "nooit verwijderen bij samenvoegen"-regel
+  (team, tombstones, rijen)
+
+Elke test controleert ook dat er geen JavaScript-fouten waren
+(`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:
+**niet aannemen dat iets werkt, altijd empirisch verifiëren**. De reeks is
+gecontroleerd door de fout van vóór 1.18.1 tijdelijk terug te zetten: de
+testen voor beschadigde opslag faalden toen zoals verwacht.
+
+**Nog niet gedekt** (vroeger wel, bij uitbreiden eerst hieraan denken):
+klaslijsten en Excel-import, rubric-editor, team en gedeelde map,
+leerplandoelen en groei, schooljaren, groepscorrectie, AI-hulp,
+verwijderen voor iedereen/mezelf, cijfertoetsen, jaaroverzicht afdrukken.
 
 ## Bekende openstaande schuld
 
@@ -361,21 +374,9 @@ Apart: `test-netsync-e2e.js` (heeft een draaiende server nodig, zie
    geschreven zijn.** Beide gerepareerd; zie de git-historie/diff van
    `test-folders-e2e.js` in het huidige testpakket voor het patroon.
 
-1. **`test-core.js` en `test-roster.js` testen verouderde code.** Deze twee
-   Node-only testbestanden (uit de periode vóór de architectuur-opsplitsing)
-   lezen rechtstreeks de oude platte bestanden (`build/core.js`,
-   `build/goals.js`) via `require()`, niet de huidige modulaire bron in
-   `stem-evaluatietool/js/`. Ze testen dus code die niet meer verzonden wordt.
-   Bewust niet meegenomen in het testpakket om verwarring te vermijden. Twee
-   opties voor een volgende sessie: (a) herschrijven tegen de nieuwe bron —
-   vereist `module.exports`-blokken toevoegen aan de nieuwe bestanden (veilig,
-   want no-op in de browser, `typeof module === "undefined"` daar), of (b)
-   gewoon laten vervallen, want hun logica wordt al onrechtstreeks gedekt door
-   de editor/results-e2e-tests.
-2. **`build-demo.js` staat nog in de broncode**, onaangeroerd sinds de
-   gebruiker vroeg om de testomgeving niet meer te maken. Niet verwijderd
-   (voor het geval het later terug nodig is), maar ook niet onderhouden —
-   bouwt mogelijk niet meer foutloos na latere wijzigingen.
+1. **De testreeks dekt nog niet alles**, zie "Nog niet gedekt" hierboven.
+2. (opgelost in 1.20.0: `build-demo.js`, de demo-code en de oude
+   `test-core.js`/`test-roster.js` zijn weg.)
 3. **Offline trefwoord-matching voor leerplandoelen is volledig verwijderd**
    (1.6.0) — werkte niet betrouwbaar genoeg door Nederlandse woordvormen.
    Vervangen door AI-gestuurde koppeling als deel van dezelfde prompt. Geen
@@ -388,8 +389,8 @@ Apart: `test-netsync-e2e.js` (heeft een draaiende server nodig, zie
   Gebruiker koos expliciet voor de kopieer-plak-aanpak (geen sleutel, geen
   server). Twee andere opties werden voorgelegd en niet gekozen: elke
   collega een eigen sleutel (te veel drempel voor niet-technische
-  collega's), of via het NAS-servertje (haalbaar, maar infrastructuur-
-  afhankelijk) — deze twee blijven een optie als de gebruiker ooit terugkomt
+  collega's), of via een eigen server (niet meer van toepassing: de school
+  werkt enkel met OneDrive) — de eerste blijft een optie als de gebruiker ooit terugkomt
   op deze keuze.
 - **`type="module"` (`import`/`export`)** voor de losse broncode: empirisch
   bevestigd dat dit geblokkeerd wordt door browsers bij een `file://`-pagina
@@ -403,13 +404,15 @@ Apart: `test-netsync-e2e.js` (heeft een draaiende server nodig, zie
 
 - Geen testomgeving meer aanmaken/bouwen (sinds het gesprek daarover)
 - Versiebeheer bij elke wijziging, met onderscheid groot/klein
-- Volledige regressie vóór elke oplevering, geen uitzonderingen
+- Volledige regressie vóór elke oplevering, geen uitzonderingen (`npm test`)
+- Enkel OneDrive voor het delen, geen NAS of eigen server
+- Geen gedachtestreep in Nederlandse teksten die de gebruiker leest
 - Eenvoud voor collega's staat boven ontwikkelaarsgemak — bij twijfel dat
   toetsen
 
 ## Suggesties voor een volgende sessie (niet gevraagd, enkel ter overweging)
 
-- De technische schuld rond `test-core.js`/`test-roster.js` opruimen
-- Overwegen of `build-demo.js` definitief verwijderd moet worden
-- De NAS-netwerksynchronisatie is gebouwd en getest, maar niet standaard
-  actief — bij interesse: `sync-server/` bevat de volledige serverimplementatie
+- De testreeks uitbreiden met de onderdelen onder "Nog niet gedekt"
+- Automatische reservekopie met datum in de gedeelde OneDrive-map
+- Laatst gebruikte evaluatie bovenaan in de zoeklijsten
+- Resultaten per map exporteren naar Excel

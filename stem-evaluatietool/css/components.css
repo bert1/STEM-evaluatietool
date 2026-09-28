@@ -1080,44 +1080,6 @@ table.report-table td.rubriek-row {
   border-bottom: 1px solid #94a3b8;
 }
 
-/* ---------- Testomgeving ---------- */
-
-#demoBanner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: repeating-linear-gradient(
-    135deg, #f5f3ff, #f5f3ff 14px, #ede9fe 14px, #ede9fe 28px
-  );
-  border-bottom: 2px solid #a78bfa;
-  padding: 11px 16px;
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-#demoBanner .demo-banner-text {
-  font-size: 13.5px;
-  color: #5b21b6;
-  line-height: 1.5;
-}
-#demoBanner .demo-banner-text strong {
-  display: block;
-  font-size: 14.5px;
-  margin-bottom: 2px;
-}
-#demoBanner .btn-row, #demoBanner button {
-  margin-left: auto;
-  background: #fff;
-  border-color: #c4b5fd;
-  color: #5b21b6;
-  white-space: nowrap;
-}
-#demoBanner button:hover { background: #f5f3ff; }
-
-@media (max-width: 620px) {
-  #demoBanner button { margin-left: 0; width: 100%; }
-}
 
 /* ---------- Groeigrafiek ---------- */
 
@@ -1180,7 +1142,3 @@ body.wizard-open { overflow: hidden; }
   .wizard-actions #wizardSkip { margin-right: 0; text-align: center; }
 }
 
-/* ---------- Netwerksynchronisatie ---------- */
-
-.net-status.on { background: var(--success-soft); color: var(--success); }
-.net-status.off { background: #f1f5f9; color: var(--muted); }

@@ -149,7 +149,6 @@ function init() {
   resEvalCombo.init();
   initKlasMulti();
   initMoveStudent();
-  startNetSync();
 }
 
 
@@ -159,17 +158,13 @@ function init() {
 /* ------------------------------------------------------------------ */
 
 function initSetupWizard() {
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) return; // de testomgeving heeft haar eigen introductie
   if (!freshStart) return;
 
   $("setupWizard").classList.remove("hidden");
   document.body.classList.add("wizard-open");
   $("wizardInitials").focus();
 
-  if (netSyncEnabled()) {
-    $("wizardFolderGroup").classList.add("hidden");
-    $("wizardNetSyncGroup").classList.remove("hidden");
-  } else if (!FOLDER_SUPPORTED) {
+  if (!FOLDER_SUPPORTED) {
     $("wizardFolderGroup").classList.add("hidden");
   }
 
@@ -244,20 +239,6 @@ function initSetupWizard() {
   });
 }
 
-function initDemoBanner() {
-  $("demoBanner").classList.remove("hidden");
-  $("btnDemoReset").addEventListener("click", function () {
-    if (!confirm(
-      "Alle testgegevens wissen en de testomgeving herladen met de oorspronkelijke voorbeelddata?\n\n" +
-      "Eigen wijzigingen die je hier maakte, gaan verloren. Dit raakt alleen deze testomgeving, niet je echte werkbestand.",
-    )) return;
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-    // Anders vraagt de browser zelf óók nog eens of je de pagina mag
-    // verlaten, bovenop onze eigen bevestiging hierboven.
-    dirty = false;
-    location.reload();
-  });
-}
 
 
 

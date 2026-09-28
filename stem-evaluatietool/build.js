@@ -30,15 +30,7 @@ if (!match) throw new Error("Geen <script src>-blok gevonden in index.html");
 const srcPaths = [...match[0].matchAll(/<script src="([^"]+)">/g)].map((m) => m[1]);
 if (!srcPaths.length) throw new Error("Geen scriptbestanden herkend");
 
-let networkSyncData = "";
-const netCfgPath = path.join(root, "..", "build", "networksync-config.json");
-if (fs.existsSync(netCfgPath)) {
-  const cfg = JSON.parse(fs.readFileSync(netCfgPath, "utf8"));
-  networkSyncData = "\nvar NETWORK_SYNC = " + JSON.stringify(cfg, null, 2) + ";\n";
-  console.log("Netwerksynchronisatie ingebakken naar:", cfg.url);
-}
-
-const js = srcPaths.map((p) => fs.readFileSync(path.join(root, p), "utf8")).join("\n\n") + networkSyncData;
+const js = srcPaths.map((p) => fs.readFileSync(path.join(root, p), "utf8")).join("\n\n");
 if (/<\/script/i.test(js)) throw new Error("Samengevoegde JS bevat </script>");
 
 html = html.replace(scriptBlock, () => "<script>\n" + js + "\n</script>\n");
