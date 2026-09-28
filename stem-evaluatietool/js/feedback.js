@@ -91,7 +91,7 @@ var CONFIDENCE_SENTENCES = [
   "Ik weet dat je dit kan leren. Je mag me altijd om hulp vragen.",
   "Fouten maken hoort bij leren. Ik help je graag verder.",
   "Iedereen leert dit op eigen tempo. Vraag gerust hulp als je vastzit.",
-  "Ik ben benieuwd naar je volgende poging.",
+  "Elke keer dat je iets probeert, leer je iets bij.",
 ];
 
 /* Eenvoudige, vaste hash: dezelfde leerling bij dezelfde evaluatie krijgt

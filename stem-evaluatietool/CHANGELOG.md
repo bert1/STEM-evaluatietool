@@ -13,6 +13,13 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.25.3 · 28 september 2026
+
+**Eén vertrouwenszin vervangen**
+
+- "Ik ben benieuwd naar je volgende poging." is vervangen door "Elke keer
+  dat je iets probeert, leer je iets bij." (`CONFIDENCE_SENTENCES`).
+
 ## 1.25.2 · 28 september 2026
 
 **Vertrouwenszinnen zonder druk**
