@@ -12,7 +12,7 @@ installatie — wordt hieruit **gebouwd**, niet met de hand onderhouden.
 testen — dat werkt zonder server, precies zoals het uiteindelijke bestand.
 
 **Uitlevering**: `node build.js` plakt alles samen tot één bestand in
-`/mnt/user-data/outputs/STEM-Evaluatietool.html`. Dat is wat leerkrachten
+`dist/STEM-Evaluatietool.html`. Dat is wat leerkrachten
 openen. Zij zien deze mapstructuur nooit.
 
 Waarom niet gewoon overal losse bestanden gebruiken? Omdat `type="module"`
@@ -40,11 +40,14 @@ stem-evaluatietool/
 │   └── print.css         leerlingrapport en feed-up-blad
 │
 ├── js/
-│   ├── ui.js              $() en el() — de twee hulpfuncties die alles gebruikt
+│   ├── ui.js              $() en el(), plus de zoeklijst makeSearchCombo()
 │   ├── state.js           het db-object, opslaan/laden, rijen samenvoegen
 │   ├── storage.js         bestand opslaan/openen, File System Access API
 │   ├── rosters.js         klaslijsten, Excel-import
-│   ├── evaluations.js     rubrics bewerken, scores geven, rubricversies
+│   ├── rubric-model.js    evaluatiedefinities, mappen, rubricversies (enkel gegevens)
+│   ├── evaluations.js     Evalueren-scherm: selectie, leerlingen, scores geven
+│   ├── rubric-editor.js   Rubrics-scherm: evaluaties en criteria bewerken
+│   ├── ai-rubric.js       AI-hulp bij het opstellen van rubrics
 │   ├── results.js         statistieken, grafieken, kalibratie, dekking
 │   ├── reports.js         leerlingrapport, feed-up-blad afdrukken
 │   ├── goals.js           leerplandoelen, drempels, groei over het jaar
@@ -86,7 +89,14 @@ node build.js         # de gewone tool
 node build-demo.js     # de testomgeving met verzonnen gegevens
 ```
 
-Beide schrijven naar `/mnt/user-data/outputs/`.
+Standaard schrijven ze naar `dist/` naast de broncode (staat in
+`.gitignore`). Een andere map kan als eerste argument of via
+`STEM_OUT_DIR`, bijvoorbeeld voor de testreeks die het bestand in
+`/mnt/user-data/outputs/` verwacht:
+
+```bash
+node build.js /mnt/user-data/outputs
+```
 
 ## Belangrijk om te weten voor je hierin werkt
 

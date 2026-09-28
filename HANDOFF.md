@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.19.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.19.1**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -37,8 +37,8 @@ De sandbox is dan leeg. Eerste stappen:
 1. Pak `stem-evaluatietool-broncode.zip` uit naar `/home/claude/stem-evaluatietool/`
 2. Pak `stem-evaluatietool-tests.zip` uit, kopieer de `test-*.js`-bestanden naar
    `/home/claude/build/` (zie `LEESMIJ-TESTS.md` erin voor het volledige stappenplan)
-3. `cd /home/claude/stem-evaluatietool && node build.js` — dit schrijft naar
-   `/mnt/user-data/outputs/`
+3. `cd stem-evaluatietool && node build.js /mnt/user-data/outputs` (zonder
+   argument schrijft het naar `dist/`)
 4. Test pas daarna
 
 ## Architectuur
@@ -54,7 +54,8 @@ De sandbox is dan leeg. Eerste stappen:
   `<link>`/`<script src>` door hun inhoud — er is dus maar één HTML-bronbestand,
   geen apart "shell"-sjabloon.
 
-**Modules** (`js/`): `ui.js` ($/el-hulpfuncties, moet als eerste laden),
+**Modules** (`js/`, sinds 1.19.1 is `evaluations.js` opgesplitst, zie
+boven): `ui.js` ($/el-hulpfuncties en `makeSearchCombo`, moet als eerste laden),
 `state.js` (db-model, opslaan/laden, mergeDb, schooljaren), `storage.js`
 (bestand openen/opslaan, File System Access API), `rosters.js` (klaslijsten,
 Excel-import), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
@@ -84,7 +85,14 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.19.0)
+## Volledige featurelijst (huidige stand, 1.19.1)
+
+- **Code opgesplitst** (1.19.1): `js/evaluations.js` is nu vier bestanden,
+  in deze laadvolgorde: `rubric-model.js`, `evaluations.js`,
+  `rubric-editor.js`, `ai-rubric.js`. `build.js` schrijft naar `dist/`
+  (of het eerste argument / `STEM_OUT_DIR`). De testreeks verwacht
+  `/mnt/user-data/outputs/STEM-Evaluatietool.html`: bouw dan met
+  `node build.js /mnt/user-data/outputs`.
 
 - **Slimmer zoeken in de evaluatielijsten** (1.19.0): in
   `makeSearchCombo()` (`js/ui.js`) zonder accenten/hoofdletters via

@@ -13,6 +13,26 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.19.1 · 28 september 2026
+
+**Onderhoud van de code, geen zichtbare nieuwe functies.**
+
+- `js/evaluations.js` (2500 regels) is opgesplitst volgens de bestaande
+  secties: `js/rubric-model.js` (evaluatiedefinities, mappen,
+  rubricversies, enkel gegevens), `js/evaluations.js` (Evalueren-scherm),
+  `js/rubric-editor.js` (Rubrics-scherm) en `js/ai-rubric.js` (AI-hulp).
+  Regel voor regel gecontroleerd: enkel commentaar is anders.
+- De mapindeling van de evaluatie-keuzelijsten zit op één plek:
+  `fillGroupedEvalSelect()` gebruikt `evaluationGroups()`, zowel bij
+  Evalueren als bij Resultaten.
+- Dubbele regels bij een klik in de dekkingstabel verwijderd.
+- Bugfix: een klik op een vakje zonder resultaten in de dekkingstabel
+  liet het veld "Klas" leeg; nu staat het op "Alle klassen".
+- `build.js` schrijft standaard naar `dist/` naast de broncode, in
+  plaats van naar het vaste pad `/mnt/user-data/outputs`. Een andere map
+  kan als argument (`node build.js /mnt/user-data/outputs`) of via
+  `STEM_OUT_DIR`.
+
 ## 1.19.0 · 28 september 2026
 
 **Slimmer zoeken in de evaluatielijsten** (Evalueren en Resultaten).

@@ -8,6 +8,10 @@ const fs = require("fs");
 const path = require("path");
 
 const root = __dirname;
+
+// Uitvoermap: eerste argument ("node build.js ../uit"), anders de
+// omgevingsvariabele STEM_OUT_DIR, anders dist/ naast deze broncode.
+const outDir = path.resolve(process.argv[2] || process.env.STEM_OUT_DIR || path.join(root, "dist"));
 let html = fs.readFileSync(path.join(root, "index.html"), "utf8");
 
 // --- CSS: elke <link rel="stylesheet" href="css/x.css" /> inlinen ---
@@ -61,8 +65,8 @@ html = html.replace(scriptBlock, () => "<script>\n" + js + "\n</script>\n");
   console.log("Structuurcontrole: alle tags netjes genest");
 })(html);
 
-const out = path.join("/mnt/user-data/outputs", "STEM-Evaluatietool.html");
-fs.mkdirSync(path.dirname(out), { recursive: true });
+const out = path.join(outDir, "STEM-Evaluatietool.html");
+fs.mkdirSync(outDir, { recursive: true });
 fs.writeFileSync(out, html);
 
 // De bestaande testreeks (15 bestanden, 900+ tests) verwijst naar deze
@@ -74,7 +78,7 @@ fs.writeFileSync(out, html);
 const versionMatch = js.match(/var APP_VERSION = "([^"]+)"/);
 if (!versionMatch) throw new Error("APP_VERSION niet gevonden — kan geen versienummer in de bestandsnaam zetten");
 const version = versionMatch[1];
-const versionedOut = path.join("/mnt/user-data/outputs", `STEM-Evaluatietool-v${version}.html`);
+const versionedOut = path.join(outDir, `STEM-Evaluatietool-v${version}.html`);
 fs.writeFileSync(versionedOut, html);
 
 const studentsData = JSON.parse(js.match(/var STUDENTS = ([\s\S]*?);\n\nvar CONFIG/)[1]);
