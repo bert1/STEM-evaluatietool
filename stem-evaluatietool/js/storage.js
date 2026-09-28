@@ -438,6 +438,11 @@ function refreshAll() {
     fillMoveFromKlasOptions();
   }
   if (currentView === "evals" && !draft) renderEvalList();
+  periodDraft = null; // ander schooljaar of samengevoegd: opnieuw vertrekken van wat bewaard is
+  if (currentView === "skore") {
+    fillSkoreSelectors(false);
+    renderSkore();
+  }
   if (currentView === "results") {
     fillResultSelectors();
     renderResults();

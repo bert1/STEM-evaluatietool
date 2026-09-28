@@ -81,6 +81,7 @@
         <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
         <button type="button" class="nav-btn" id="btnEvals">Rubrics</button>
         <button type="button" class="nav-btn" id="btnResults">Resultaten</button>
+        <button type="button" class="nav-btn" id="btnSkore">Skore</button>
         <button type="button" class="nav-btn" id="btnTeam">Team</button>
       </nav>
       <span class="status nofile" id="status">Geen bestand gekozen</span>
@@ -465,6 +466,48 @@
         </details>
       </div>
 
+      <div class="card hidden" id="skoreCard">
+        <h2>
+          Skore
+          <span class="sub">Welke punten moet je per periode in Skore zetten?</span>
+        </h2>
+
+        <div class="selection-grid skore-grid" style="margin-bottom: 20px">
+          <div class="form-group" style="margin: 0">
+            <label for="skoreYear">Leerjaar</label>
+            <select id="skoreYear"></select>
+          </div>
+          <div class="form-group" style="margin: 0">
+            <label for="skoreKlas">Klas</label>
+            <select id="skoreKlas"></select>
+          </div>
+          <div class="form-group" style="margin: 0">
+            <label for="skorePeriod">Periode</label>
+            <div class="skore-period-nav">
+              <button type="button" class="btn-ghost btn-small" id="skorePrev" aria-label="Vorige periode">‹</button>
+              <select id="skorePeriod"></select>
+              <button type="button" class="btn-ghost btn-small" id="skoreNext" aria-label="Volgende periode">›</button>
+            </div>
+          </div>
+          <div class="form-group" style="margin: 0">
+            <label for="skoreScale">Punten op</label>
+            <select id="skoreScale">
+              <option value="">Zoals in de rubric</option>
+              <option value="10">Omrekenen naar 10</option>
+              <option value="20">Omrekenen naar 20</option>
+              <option value="100">Omrekenen naar 100</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="skoreBody"></div>
+
+        <details id="skorePeriodsWrap" style="margin-top: 22px">
+          <summary class="section-toggle">Periodes van dit schooljaar</summary>
+          <div id="skorePeriodEditor" style="margin-top: 10px"></div>
+        </details>
+      </div>
+
       <div id="mainView">
 
       <div id="archivedYearBar" class="hidden"></div>
@@ -670,6 +713,7 @@
     <script src="js/reports.js"></script>
     <script src="js/goals.js"></script>
     <script src="js/sync.js"></script>
+    <script src="js/skore.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

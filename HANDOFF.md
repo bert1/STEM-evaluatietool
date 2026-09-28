@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.20.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.21.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -86,7 +86,19 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.20.0)
+## Volledige featurelijst (huidige stand, 1.21.0)
+
+- **Tabblad Skore** (1.21.0, `js/skore.js`): per leerjaar, klas en
+  rapportperiode de punten om over te zetten naar Skore (Smartschool).
+  Periodes per schooljaar in `db.schoolYears[label].periods`
+  (`{list: [{name, start}], end, updatedAt}`, een periode loopt tot de dag
+  vóór de volgende start; zonder eigen periodes geldt `defaultPeriods()`,
+  de indeling van 2026-2027). "Overgezet"-vinkjes in
+  `db.schoolYears[label].skoreDone`. Beide worden bewaard in
+  `normaliseDb()` en samengevoegd in `mergeDb()` via `mergePeriods()` en
+  `mergeSkoreDone()`. Rijen hebben nu `createdAt` (datum van de
+  beoordeling, blijft bij bewerken), oudere rijen vallen terug op
+  `updatedAt`. Tussentijdse checks (`row.formative`) tellen niet mee.
 
 - **Opgeruimd en automatisch getest** (1.20.0): demo-omgeving
   (`build-demo.js`, `IS_DEMO`, `DEMO_SEED`, `#demoBanner`) en
@@ -344,6 +356,8 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   mislukte opslag
 - `samenvoegen.spec.js`: de "nooit verwijderen bij samenvoegen"-regel
   (team, tombstones, rijen)
+- `skore.spec.js`: periodes, overzicht per klas en periode, omrekenen,
+  kopiëren, overgezet-vinkjes, periodes aanpassen, `createdAt`, samenvoegen
 
 Elke test controleert ook dat er geen JavaScript-fouten waren
 (`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:

@@ -106,7 +106,7 @@ label {
   text-transform: uppercase;
 }
 
-select, input[type="text"], textarea {
+select, input[type="text"], input[type="date"], textarea {
   padding: 10px 12px;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
@@ -1142,3 +1142,70 @@ body.wizard-open { overflow: hidden; }
   .wizard-actions #wizardSkip { margin-right: 0; text-align: center; }
 }
 
+
+/* ---------- Skore ---------- */
+
+.skore-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+@media (max-width: 900px) { .skore-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .skore-grid { grid-template-columns: 1fr; } }
+
+.skore-period-nav { display: flex; gap: 6px; align-items: stretch; }
+.skore-period-nav select { flex: 1; min-width: 0; }
+.skore-period-nav button { font-size: 18px; line-height: 1; padding: 0 12px; }
+.skore-period-nav button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.skore-summary { margin: 0 0 12px; font-weight: 600; }
+
+.skore-col-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.skore-eval-name { font-weight: 600; }
+table.skore-evals tr.skore-done td { background: var(--success-soft); }
+table.skore-evals tr.skore-done .skore-eval-name { color: var(--success); }
+.skore-done-toggle { display: inline-flex; align-items: center; gap: 7px; cursor: pointer; white-space: nowrap; }
+td.skore-incomplete { color: var(--warning); font-weight: 600; }
+
+table.skore-table th { vertical-align: bottom; white-space: normal; min-width: 70px; }
+table.skore-table th .skore-col-num { margin: 0 0 4px; }
+table.skore-table th .skore-th-name {
+  display: block;
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 12px;
+  color: var(--text);
+  max-width: 140px;
+  margin: 0 auto;
+}
+table.skore-table th .skore-th-max { display: block; margin-top: 3px; }
+table.skore-table td.skore-student { white-space: nowrap; }
+table.skore-table td.num { font-size: 15px; font-weight: 600; }
+table.skore-table td.skore-missing { color: #cbd5e1; font-weight: 400; }
+table.skore-table td.skore-dup { background: var(--warning-soft); color: var(--warning); }
+table.skore-table tr.skore-extra td { color: var(--muted); font-style: italic; }
+
+.period-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.period-row .period-name { width: 110px; }
+.period-row .period-label { color: var(--muted); font-size: 13.5px; }
+.period-row .period-end-label { min-width: 110px; }
+table.skore-table th.num { text-align: center; }
+table.skore-table th:first-child { width: 1%; white-space: nowrap; }
+.skore-done-toggle {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin: 0;
+}
+.period-row input[type="date"] { width: auto; }

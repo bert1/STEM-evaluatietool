@@ -712,6 +712,10 @@ function saveEvaluation() {
 
   var list = rows();
   var i = list.findIndex(function (r) { return r.id === row.id; });
+  // De datum van de beoordeling zelf (voor de periodes in Skore) blijft
+  // behouden bij het bewerken; enkel updatedAt schuift mee.
+  var previous = i !== -1 ? list[i] : null;
+  row.createdAt = (previous && (previous.createdAt || previous.updatedAt)) || row.updatedAt;
   if (i !== -1) list[i] = row;
   else list.push(row);
 

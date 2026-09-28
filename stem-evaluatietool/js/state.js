@@ -123,7 +123,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.20.0";
+var APP_VERSION = "1.21.0";
 
 var DB_VERSION = 4;
 
@@ -463,6 +463,9 @@ function mergeDb(target, incoming) {
       classesChanged.map(function (c) { return c + " [" + yr + "]"; }),
     );
 
+    mergePeriods(bucket, incBucket.periods);
+    mergeSkoreDone(bucket, incBucket.skoreDone);
+
     var sessResult = mergeSessionsInto(bucket.sessions, incBucket.sessions);
     stats.added += sessResult.added;
     stats.updated += sessResult.updated;
@@ -613,11 +616,18 @@ function normaliseDb(db) {
           feedback: r.feedback || "",
           feedforward: r.feedforward || "",
           corrections: corrections,
+          createdAt: r.createdAt || 0,
           updatedAt: r.updatedAt || 0,
         };
       });
     });
 
+    if (src.periods && Array.isArray(src.periods.list) && src.periods.list.length) {
+      bucket.periods = JSON.parse(JSON.stringify(src.periods));
+    }
+    if (src.skoreDone && typeof src.skoreDone === "object") {
+      bucket.skoreDone = JSON.parse(JSON.stringify(src.skoreDone));
+    }
     out.schoolYears[yearLabel] = bucket;
   });
 

@@ -57,6 +57,7 @@ function init() {
   $("btnEvals").addEventListener("click", openEvals);
   $("btnTeam").addEventListener("click", openTeam);
   $("btnResults").addEventListener("click", openResults);
+  $("btnSkore").addEventListener("click", openSkore);
   $("btnCloseResults").addEventListener("click", goHome);
   $("resYear").addEventListener("change", function () {
     resEvalCombo.close(); // ander leerjaar = andere lijst, oud zoekwoord slaat nergens meer op
@@ -147,6 +148,7 @@ function init() {
   initScoringShortcuts();
   initEvalCombo();
   resEvalCombo.init();
+  initSkore();
   initKlasMulti();
   initMoveStudent();
 }
@@ -248,9 +250,9 @@ function initSetupWizard() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore" }
 
 var currentView = "main";
 
