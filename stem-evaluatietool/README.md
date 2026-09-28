@@ -12,7 +12,7 @@ installatie — wordt hieruit **gebouwd**, niet met de hand onderhouden.
 testen — dat werkt zonder server, precies zoals het uiteindelijke bestand.
 
 **Uitlevering**: `node build.js` plakt alles samen tot één bestand in
-`/mnt/user-data/outputs/STEM-Evaluatietool.html`. Dat is wat leerkrachten
+`dist/STEM-Evaluatietool.html`. Dat is wat leerkrachten
 openen. Zij zien deze mapstructuur nooit.
 
 Waarom niet gewoon overal losse bestanden gebruiken? Omdat `type="module"`
@@ -31,7 +31,6 @@ gedeelde map, geen installatie voor niet zo computervaardige collega's).
 stem-evaluatietool/
 ├── index.html          het enige HTML-bronbestand
 ├── build.js             bouwt het bestand voor leerkrachten
-├── build-demo.js         idem, maar met de gevulde testomgeving
 │
 ├── css/
 │   ├── base.css          kleuren, basistypografie
@@ -40,15 +39,18 @@ stem-evaluatietool/
 │   └── print.css         leerlingrapport en feed-up-blad
 │
 ├── js/
-│   ├── ui.js              $() en el() — de twee hulpfuncties die alles gebruikt
+│   ├── ui.js              $() en el(), plus de zoeklijst makeSearchCombo()
 │   ├── state.js           het db-object, opslaan/laden, rijen samenvoegen
 │   ├── storage.js         bestand opslaan/openen, File System Access API
 │   ├── rosters.js         klaslijsten, Excel-import
-│   ├── evaluations.js     rubrics bewerken, scores geven, rubricversies
+│   ├── rubric-model.js    evaluatiedefinities, mappen, rubricversies (enkel gegevens)
+│   ├── evaluations.js     Evalueren-scherm: selectie, leerlingen, scores geven
+│   ├── rubric-editor.js   Rubrics-scherm: evaluaties en criteria bewerken
+│   ├── ai-rubric.js       AI-hulp bij het opstellen van rubrics
 │   ├── results.js         statistieken, grafieken, kalibratie, dekking
 │   ├── reports.js         leerlingrapport, feed-up-blad afdrukken
 │   ├── goals.js           leerplandoelen, drempels, groei over het jaar
-│   ├── sync.js            gedeelde map, team, netwerksynchronisatie
+│   ├── sync.js            gedeelde map (bv. in OneDrive), team
 │   └── app.js             opstarten, wizard, schermnavigatie
 │
 └── data/
@@ -68,7 +70,7 @@ Vanaf nu krijgt elke wijziging een versienummer volgens
 Het versienummer staat in `js/state.js` als `APP_VERSION`, en is zichtbaar
 bovenaan de tool zelf. Elke wijziging krijgt een regel in `CHANGELOG.md`.
 
-`build.js` en `build-demo.js` schrijven **twee** bestanden: een met vaste
+`build.js` schrijft **twee** bestanden: een met vaste
 naam (`STEM-Evaluatietool.html`) waar de testreeks naar verwijst — die moet
 bij elke versie bruikbaar blijven zonder alle testbestanden aan te passen —
 en een kopie met het versienummer erin (`STEM-Evaluatietool-v1.0.0.html`).
@@ -82,11 +84,18 @@ bestanden. Dat verandert veel minder vaak dan `APP_VERSION`.
 ## Bouwen
 
 ```bash
-node build.js         # de gewone tool
-node build-demo.js     # de testomgeving met verzonnen gegevens
+node build.js         # de tool
 ```
 
-Beide schrijven naar `/mnt/user-data/outputs/`.
+Standaard schrijft het naar `dist/` naast de broncode (staat in
+`.gitignore`). Een andere map kan als eerste argument of via
+`STEM_OUT_DIR`, bijvoorbeeld `node build.js ../uit`.
+
+## Testen
+
+Vanuit de hoofdmap van de repository: `npm test`. Dat bouwt eerst en draait
+dan de Playwright-testen in `tests/`. Op GitHub gebeurt dit automatisch bij
+elke push.
 
 ## Belangrijk om te weten voor je hierin werkt
 

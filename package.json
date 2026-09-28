@@ -1,0 +1,12 @@
+{
+  "name": "stem-evaluatietool",
+  "private": true,
+  "description": "Offline evaluatietool voor STEM-lessen",
+  "scripts": {
+    "build": "node stem-evaluatietool/build.js",
+    "test": "node stem-evaluatietool/build.js && playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

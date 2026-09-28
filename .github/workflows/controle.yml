@@ -1,0 +1,48 @@
+# Automatische controle bij elke push en pull request: bouwt de tool en
+# draait de volledige testreeks in een echte browser. Het gebouwde
+# HTML-bestand is achteraf te downloaden bij de run (onder "Artifacts").
+name: Controle
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  bouwen-en-testen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Afhankelijkheden installeren
+        run: npm ci
+
+      - name: Chromium installeren
+        run: npx playwright install --with-deps chromium
+
+      - name: Bouwen en testen
+        run: npm test
+
+      - name: Gebouwde tool bewaren
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: STEM-Evaluatietool
+          path: stem-evaluatietool/dist/STEM-Evaluatietool-v*.html
+          retention-days: 30
+
+      - name: Testrapport bewaren
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testrapport
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14

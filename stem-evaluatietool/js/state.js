@@ -5,6 +5,10 @@
    ------------------------------------------------------------------ */
 
 var STORAGE_KEY = "STEM_EVAL_DB_V3";
+// Reservekopie van browseropslag die niet meer te lezen was. Bewust een
+// aparte sleutel: persist() overschrijft STORAGE_KEY bij de eerstvolgende
+// wijziging, en dan zou de oude inhoud anders voorgoed weg zijn.
+var STORAGE_RESCUE_KEY = "STEM_EVAL_DB_V3_BESCHADIGD";
 
 var INSTANCE_KEY = "STEM_EVAL_INSTANCE";
 
@@ -34,6 +38,7 @@ function loadFromStorage() {
       db = normaliseDb(JSON.parse(raw));
     } catch (e) {
       db = emptyDb();
+      try { localStorage.setItem(STORAGE_RESCUE_KEY, raw); } catch (e2) {}
     }
   } else {
     // Eerste start op dit toestel: kijk of er nog data van de vorige versie staat.
@@ -58,10 +63,6 @@ function loadFromStorage() {
 
   // Eerste start: neem de klaslijsten uit de tool over als vertrekpunt.
   // Daarna leven ze in het werkbestand en kan je ze plakken uit Excel.
-  if (freshStart && typeof DEMO_SEED !== "undefined") {
-    db = normaliseDb(Object.assign({}, emptyDb(), DEMO_SEED, { assessor: db.assessor }));
-  }
-
   if (!db.roster || !Object.keys(db.roster).length) {
     db.roster = seedRoster(CONFIG, STUDENTS);
   }
@@ -70,8 +71,6 @@ function loadFromStorage() {
   }
   if (!db.team) db.team = emptyTeam();
   if (!db.settings) db.settings = emptySettings();
-
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) initDemoBanner();
 
   try {
     instanceId = localStorage.getItem(INSTANCE_KEY) || "";
@@ -102,7 +101,12 @@ function persist() {
 /* Bestandsstatus                                                      */
 /* ------------------------------------------------------------------ */
 
-function markDirty() { dirty = true; updateStatus(); }
+/* changeCount telt elke wijziging. Een schrijfactie onthoudt bij de start
+   tot welke wijziging ze bewaart; enkel als er intussen niets bijkwam,
+   mag de status op "opgeslagen" (zie writeHandle() in js/storage.js). */
+var changeCount = 0;
+
+function markDirty() { dirty = true; changeCount++; updateStatus(); }
 
 function markClean() { dirty = false; updateStatus(); }
 
@@ -119,7 +123,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.18.0";
+var APP_VERSION = "1.20.0";
 
 var DB_VERSION = 4;
 

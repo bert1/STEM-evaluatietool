@@ -6,12 +6,22 @@ var fileName = "";
 
 var dirty = false;
 
+// Tekst van de laatste mislukte automatische opslag, "" als alles goed ging.
+// Blijft staan (rode status + balk) tot een volgende opslag wel lukt.
+var saveError = "";
+
+var writing = null;
+var writeAgain = false;
+
 var canPickFiles = typeof window.showSaveFilePicker === "function";
 
 function updateStatus() {
   var s = $("status");
   s.className = "status";
-  if (fileHandle && !dirty) {
+  if (saveError && fileHandle) {
+    s.classList.add("error");
+    s.textContent = "Niet opgeslagen!";
+  } else if (fileHandle && !dirty) {
     s.classList.add("saved");
     s.textContent = "Opgeslagen in " + fileName;
   } else if (dirty && fileHandle) {
@@ -42,23 +52,62 @@ function updateSafetyBar() {
     return n + db.sessions[key].length;
   }, 0);
 
+  var rescued = storageRescueData();
+  var failed = !!(saveError && fileHandle);
   var needsFolder = pendingFolder && !folderHandle;
   // Zonder opgeslagen werk valt er niets te verliezen; dan is een
   // waarschuwing alleen maar ruis bij het eerste gebruik.
   var needsFile = !fileHandle && !(!canPickFiles && fileName) && rowCount > 0;
 
-  if (!needsFolder && !needsFile) {
+  if (!rescued && !failed && !needsFolder && !needsFile) {
     bar.classList.add("hidden");
     return;
   }
 
   bar.classList.remove("hidden");
+  bar.classList.toggle("error", !!(rescued || failed));
   bar.innerHTML = "";
 
   var txt = el("div", "txt");
   var btns = el("div", "btn-row");
 
-  if (needsFolder) {
+  if (rescued) {
+    txt.appendChild(el("strong", null, "Je werk in deze browser kon niet gelezen worden"));
+    txt.appendChild(document.createTextNode(
+      "De tool is leeg gestart. Open je laatste werkbestand (bijvoorbeeld uit OneDrive) om verder te werken. " +
+      "De onleesbare gegevens zijn apart bewaard; download ze als reservekopie voor je deze melding verbergt.",
+    ));
+    var open = el("button", "btn-primary", "Werkbestand openen…");
+    open.type = "button";
+    open.addEventListener("click", function () { pickFile("open"); });
+    var dl = el("button", "btn-ghost", "Reservekopie downloaden");
+    dl.type = "button";
+    dl.addEventListener("click", downloadStorageRescue);
+    var hide = el("button", "btn-ghost", "Verbergen");
+    hide.type = "button";
+    hide.addEventListener("click", function () {
+      if (!confirm("De apart bewaarde, onleesbare gegevens worden gewist. Heb je je werk terug of de reservekopie gedownload?")) return;
+      try { localStorage.removeItem(STORAGE_RESCUE_KEY); } catch (e) {}
+      storageRescueCache = "";
+      updateSafetyBar();
+    });
+    btns.appendChild(open);
+    btns.appendChild(dl);
+    btns.appendChild(hide);
+  } else if (failed) {
+    txt.appendChild(el("strong", null, "Automatisch opslaan naar " + fileName + " is mislukt"));
+    txt.appendChild(document.createTextNode(
+      "Je laatste wijzigingen staan enkel in deze browser. " + saveError,
+    ));
+    var retry = el("button", "btn-primary", "Opnieuw proberen");
+    retry.type = "button";
+    retry.addEventListener("click", function () { writeHandle(); });
+    var saveAsBtn = el("button", "btn-ghost", "Opslaan als…");
+    saveAsBtn.type = "button";
+    saveAsBtn.addEventListener("click", function () { saveToFile(true); });
+    btns.appendChild(retry);
+    btns.appendChild(saveAsBtn);
+  } else if (needsFolder) {
     txt.appendChild(el("strong", null, "Gedeelde map niet verbonden"));
     txt.appendChild(document.createTextNode(
       "Je werk wordt bewaard in deze browser, maar komt niet in " + pendingFolder.name +
@@ -201,17 +250,60 @@ function saveToFile(forceNew) {
   downloadDb();
 }
 
+/* Schrijft naar het werkbestand. Nooit twee schrijfacties tegelijk: loopt
+   er al een, dan volgt er na afloop nog precies één met de nieuwste
+   stand. De status gaat pas op "opgeslagen" als er tijdens het schrijven
+   niets meer veranderd is, anders zou het tabblad sluiten zonder
+   waarschuwing terwijl de laatste wijziging nog niet op schijf staat. */
 function writeHandle() {
-  if (!fileHandle) return;
-  return fileHandle
+  if (!fileHandle) return Promise.resolve();
+  if (writing) {
+    writeAgain = true;
+    return writing;
+  }
+  var handle = fileHandle;
+  var target = changeCount;
+  writing = handle
     .createWritable()
     .then(function (w) {
       return w.write(dbBlob()).then(function () { return w.close(); });
     })
-    .then(function () { markClean(); })
+    .then(function () {
+      saveError = "";
+      if (changeCount === target && fileHandle === handle) markClean();
+      else updateStatus();
+    })
     .catch(function () {
-      showNotice("warn", "Opslaan mislukt", "Controleer of het bestand niet ergens anders openstaat, en probeer Opslaan als.");
+      saveError = "Controleer of het bestand niet ergens anders openstaat (bijvoorbeeld in OneDrive) en probeer opnieuw, of kies Opslaan als.";
+      updateStatus();
+      showNotice("warn", "Opslaan mislukt", saveError);
+    })
+    .then(function () {
+      writing = null;
+      if (writeAgain) {
+        writeAgain = false;
+        return writeHandle();
+      }
     });
+  return writing;
+}
+
+// Eén keer inlezen: updateSafetyBar() draait bij elke wijziging.
+var storageRescueCache = null;
+
+function storageRescueData() {
+  if (storageRescueCache === null) {
+    try { storageRescueCache = localStorage.getItem(STORAGE_RESCUE_KEY) || ""; } catch (e) { storageRescueCache = ""; }
+  }
+  return storageRescueCache;
+}
+
+function downloadStorageRescue() {
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([storageRescueData()], { type: "application/json" }));
+  a.download = "stem-evaluaties-reservekopie-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
 }
 
 function downloadDb() {

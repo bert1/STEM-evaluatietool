@@ -573,15 +573,7 @@ function fillResultSelectors() {
   // Zelfde mapindeling als bij Evalueren: <optgroup> per map in de echte
   // (onzichtbare) <select>, en koppen in de zichtbare zoeklijst.
   $("resEval").innerHTML = "";
-  evaluationGroups(year).forEach(function (g) {
-    var parent = $("resEval");
-    if (g.label) {
-      parent = document.createElement("optgroup");
-      parent.label = g.label;
-      $("resEval").appendChild(parent);
-    }
-    g.names.forEach(function (name) { parent.appendChild(new Option(name, name)); });
-  });
+  fillGroupedEvalSelect($("resEval"), year, "");
   if (prevEval && evaluationNames(db, year).indexOf(prevEval) !== -1) {
     $("resEval").value = prevEval;
   }
@@ -1299,9 +1291,10 @@ function renderCoverage() {
       btn.addEventListener("click", function () {
         $("resEval").value = ev;
         fillResultSelectors();
-        $("resEval").value = ev;
-        fillResultSelectors();
         $("resKlas").value = klas;
+        // Zonder resultaten staat deze klas niet in de lijst: dan "Alle
+        // klassen" tonen in plaats van een leeg veld.
+        if ($("resKlas").value !== klas) $("resKlas").value = "*";
         renderResults();
         $("resultsBody").scrollIntoView({ behavior: "smooth", block: "start" });
       });

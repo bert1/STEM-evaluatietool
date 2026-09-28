@@ -13,6 +13,83 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.20.0 · 28 september 2026
+
+**Opgeruimd en automatisch getest.**
+
+- De NAS-netwerksynchronisatie is verwijderd: de school werkt enkel met
+  OneDrive (gedeelde map). Weg zijn het netwerkdeel van `js/sync.js`, de
+  netwerkstatus bovenaan, het netwerkblok in de opstartwizard en het
+  inbakken van `NETWORK_SYNC` in `build.js`. Werkbestanden blijven gewoon
+  werken; de gedeelde map verandert niet. Nog terug te vinden in de
+  git-historie (tot en met 1.19.1).
+- De ongebruikte demo-omgeving is verwijderd (`build-demo.js`, `IS_DEMO`,
+  `DEMO_SEED`, de demo-balk en bijbehorende stijlen).
+- Nieuwe testreeks in `tests/` (Playwright, 27 testen) met
+  `npm test`, en automatische controle op GitHub bij elke push
+  (`.github/workflows/controle.yml`). Het gebouwde HTML-bestand is na
+  elke geslaagde run te downloaden onder "Artifacts".
+
+## 1.19.1 · 28 september 2026
+
+**Onderhoud van de code, geen zichtbare nieuwe functies.**
+
+- `js/evaluations.js` (2500 regels) is opgesplitst volgens de bestaande
+  secties: `js/rubric-model.js` (evaluatiedefinities, mappen,
+  rubricversies, enkel gegevens), `js/evaluations.js` (Evalueren-scherm),
+  `js/rubric-editor.js` (Rubrics-scherm) en `js/ai-rubric.js` (AI-hulp).
+  Regel voor regel gecontroleerd: enkel commentaar is anders.
+- De mapindeling van de evaluatie-keuzelijsten zit op één plek:
+  `fillGroupedEvalSelect()` gebruikt `evaluationGroups()`, zowel bij
+  Evalueren als bij Resultaten.
+- Dubbele regels bij een klik in de dekkingstabel verwijderd.
+- Bugfix: een klik op een vakje zonder resultaten in de dekkingstabel
+  liet het veld "Klas" leeg; nu staat het op "Alle klassen".
+- `build.js` schrijft standaard naar `dist/` naast de broncode, in
+  plaats van naar het vaste pad `/mnt/user-data/outputs`. Een andere map
+  kan als argument (`node build.js /mnt/user-data/outputs`) of via
+  `STEM_OUT_DIR`.
+
+## 1.19.0 · 28 september 2026
+
+**Slimmer zoeken in de evaluatielijsten** (Evalueren en Resultaten).
+
+- Zoeken negeert hoofdletters en accenten: "creme" vindt "Crème"
+  (`searchKey()` in `js/ui.js`).
+- Zoeken vindt ook mapnamen: typ "september" en je ziet alle evaluaties
+  uit die map.
+- Blijft er maar één evaluatie over, dan kiest Enter die meteen, zonder
+  eerst een pijltje te moeten gebruiken.
+- De evaluatie die nu gekozen is, staat vetgedrukt met een vinkje in de
+  lijst.
+- Toegankelijk voor schermlezers: het zoekveld is een ARIA-combobox
+  (`role`, `aria-expanded`, `aria-controls`, `aria-activedescendant`),
+  het paneel een listbox met opties per map in een `role="group"`.
+  De HTML van het paneel heeft daardoor een extra laag per map
+  (`.eval-combo-section`), `.eval-combo-option` en `.eval-combo-group`
+  blijven dezelfde klassen.
+
+## 1.18.1 · 28 september 2026
+
+**Veiliger opslaan: geen stil verlies van werk meer.**
+
+- Kan de tool het werk in de browser niet meer lezen (beschadigde
+  browseropslag), dan wordt die inhoud niet langer stil gewist. Ze wordt
+  apart bewaard onder `STEM_EVAL_DB_V3_BESCHADIGD`, en een rode balk
+  bovenaan zegt wat er aan de hand is, met knoppen om het werkbestand te
+  openen of de onleesbare gegevens als reservekopie te downloaden. De balk
+  blijft staan, ook na herladen, tot je hem zelf verbergt.
+- "Opgeslagen" verschijnt pas als echt de laatste wijziging op schijf
+  staat. Voorheen kon een wijziging tijdens het schrijven als opgeslagen
+  getoond worden, en dan waarschuwde de browser niet bij het sluiten.
+  Daarnaast lopen er nooit meer twee schrijfacties tegelijk
+  (`writeHandle()` in `js/storage.js`, met `changeCount` uit
+  `js/state.js`).
+- Mislukt automatisch opslaan, dan blijft de status rood ("Niet
+  opgeslagen!") en staat er een blijvende rode balk met "Opnieuw
+  proberen" en "Opslaan als…", in plaats van één melding die snel uit
+  beeld verdwijnt.
+
 ## 1.18.0 · 28 september 2026
 
 **Resultaten: zoeken in de evaluatiekeuze, met mappen.**

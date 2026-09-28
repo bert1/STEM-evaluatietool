@@ -107,6 +107,7 @@ body {
 .status.saved   { background: var(--success-soft); color: var(--success); }
 .status.dirty   { background: var(--warning-soft); color: var(--warning); }
 .status.nofile  { background: #f1f5f9; color: var(--muted); }
+.status.error   { background: var(--danger-soft); color: var(--danger); }
 
 /* ---------- Kaarten ---------- */
 
@@ -213,7 +214,7 @@ textarea { resize: vertical; min-height: 70px; }
   color: #0f172a;
   padding: 10px 10px 5px;
 }
-.eval-combo-group:not(:first-child) {
+.eval-combo-section + .eval-combo-section {
   border-top: 1px solid var(--border);
   margin-top: 6px;
 }
@@ -224,6 +225,8 @@ textarea { resize: vertical; min-height: 70px; }
   cursor: pointer;
 }
 .eval-combo-option.in-folder { padding-left: 18px; }
+.eval-combo-option.current { font-weight: 600; }
+.eval-combo-option.current::after { content: " ✓"; color: var(--primary); }
 .eval-combo-option:hover, .eval-combo-option.highlight {
   background: var(--primary-soft);
   color: var(--primary);
@@ -803,7 +806,10 @@ td.low { color: var(--danger); font-weight: 700; }
 }
 #safetyBar .txt { color: var(--warning); font-size: 14px; line-height: 1.5; }
 #safetyBar .txt strong { display: block; color: #92400e; font-size: 15px; margin-bottom: 2px; }
-#safetyBar .btn-row { margin-left: auto; }
+#safetyBar .btn-row { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+#safetyBar.error { border-color: #fca5a5; border-left-color: var(--danger); background: var(--danger-soft); }
+#safetyBar.error .txt { color: #991b1b; }
+#safetyBar.error .txt strong { color: #7f1d1d; }
 
 @media (max-width: 620px) {
   #safetyBar .btn-row { margin-left: 0; width: 100%; }
@@ -1115,44 +1121,6 @@ table.report-table td.rubriek-row {
   border-bottom: 1px solid #94a3b8;
 }
 
-/* ---------- Testomgeving ---------- */
-
-#demoBanner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: repeating-linear-gradient(
-    135deg, #f5f3ff, #f5f3ff 14px, #ede9fe 14px, #ede9fe 28px
-  );
-  border-bottom: 2px solid #a78bfa;
-  padding: 11px 16px;
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-#demoBanner .demo-banner-text {
-  font-size: 13.5px;
-  color: #5b21b6;
-  line-height: 1.5;
-}
-#demoBanner .demo-banner-text strong {
-  display: block;
-  font-size: 14.5px;
-  margin-bottom: 2px;
-}
-#demoBanner .btn-row, #demoBanner button {
-  margin-left: auto;
-  background: #fff;
-  border-color: #c4b5fd;
-  color: #5b21b6;
-  white-space: nowrap;
-}
-#demoBanner button:hover { background: #f5f3ff; }
-
-@media (max-width: 620px) {
-  #demoBanner button { margin-left: 0; width: 100%; }
-}
 
 /* ---------- Groeigrafiek ---------- */
 
@@ -1215,10 +1183,6 @@ body.wizard-open { overflow: hidden; }
   .wizard-actions #wizardSkip { margin-right: 0; text-align: center; }
 }
 
-/* ---------- Netwerksynchronisatie ---------- */
-
-.net-status.on { background: var(--success-soft); color: var(--success); }
-.net-status.off { background: #f1f5f9; color: var(--muted); }
 </style>
     <style>
 /* ---------- Voortgang ---------- */
@@ -1689,31 +1653,11 @@ table.feedup-table td {
           <div id="wizardFolderState" style="margin-top: 10px"></div>
         </div>
 
-        <div class="form-group hidden" id="wizardNetSyncGroup">
-          <div class="notice good">
-            <strong>Automatische synchronisatie met school</strong>
-            Deze school heeft netwerksynchronisatie ingesteld. Je werk wordt automatisch
-            uitgewisseld met collega's zodra je op het schoolnetwerk bent — hier hoef je niets
-            voor te kiezen of te onthouden.
-          </div>
-        </div>
-
         <div class="wizard-actions">
           <button type="button" class="btn-ghost" id="wizardSkip">Overslaan, ik doe dit later</button>
           <button type="button" class="btn-primary" id="wizardFinish" disabled>Beginnen</button>
         </div>
       </div>
-    </div>
-
-    <div id="demoBanner" class="hidden">
-      <div class="demo-banner-text">
-        <strong>Testomgeving — fictieve gegevens</strong>
-        Alle klassen, leerlingen en resultaten hierin zijn verzonnen. Klik gerust overal op, maak
-        fouten en probeer dingen kapot te maken — dit heeft geen invloed op je echte werkbestand.
-      </div>
-      <button type="button" class="btn-ghost btn-small" id="btnDemoReset">
-        Testgegevens wissen en opnieuw beginnen
-      </button>
     </div>
 
     <div class="topbar">
@@ -1745,7 +1689,6 @@ table.feedup-table td {
         <button type="button" class="nav-btn" id="btnTeam">Team</button>
       </nav>
       <span class="status nofile" id="status">Geen bestand gekozen</span>
-      <span class="status net-status hidden" id="netSyncStatus"></span>
     </div>
 
     <div class="container">
@@ -4206,6 +4149,17 @@ function el(tag, className, text) {
   return n;
 }
 
+/* Zoeksleutel: kleine letters, zonder accenten en met enkele spaties,
+   zodat "creme" ook "Crème" vindt en "  proef" ook "Proef". */
+function searchKey(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /* Zelfgetekende zoek-vervolgkeuzelijst met mappen als koppen. Gebruikt
    door het evaluatiemoment bij Evalueren én de evaluatiekeuze bij
    Resultaten, zodat beide er exact hetzelfde uitzien en werken. De echte
@@ -4213,6 +4167,14 @@ function el(tag, className, text) {
    "change"-event, en dus ook voor tests) maar is onzichtbaar; dit paneel
    is wat een leerkracht ziet. Het paneel is absoluut gepositioneerd en
    opent dus altijd naar beneden, wat met een kale <select> niet kan.
+
+   Zoeken negeert hoofdletters en accenten, en vindt ook mapnamen: typ
+   "september" en je ziet alle evaluaties uit die map. Staat er maar één
+   resultaat, dan kiest Enter dat meteen.
+
+   Voor schermlezers volgt het het ARIA-patroon "combobox met listbox":
+   het invoerveld houdt de focus, aria-activedescendant wijst naar de
+   gemarkeerde optie.
 
    cfg: inputId, panelId, selectId, wrapId,
         groups()        -> [{label, names}], label "" = geen kop
@@ -4227,6 +4189,11 @@ function makeSearchCombo(cfg) {
   function isOpen() { return !panel().classList.contains("hidden"); }
   function options() {
     return Array.prototype.slice.call(panel().querySelectorAll(".eval-combo-option"));
+  }
+
+  function showPanel(show) {
+    panel().classList.toggle("hidden", !show);
+    input().setAttribute("aria-expanded", show ? "true" : "false");
   }
 
   function sync() {
@@ -4244,42 +4211,66 @@ function makeSearchCombo(cfg) {
     input().value = "";
     highlight = -1;
     render();
-    panel().classList.remove("hidden");
+    showPanel(true);
   }
 
   function close() {
-    panel().classList.add("hidden");
+    showPanel(false);
     highlight = -1;
+    input().removeAttribute("aria-activedescendant");
     input().value = select().value || "";
   }
 
   function render() {
     var p = panel();
     p.innerHTML = "";
-    var needle = input().value.trim().toLowerCase();
+    var needle = searchKey(input().value);
+    var current = select().value;
     var flat = [];
 
-    cfg.groups().forEach(function (g) {
-      var matches = g.names.filter(function (n) { return !needle || n.toLowerCase().indexOf(needle) !== -1; });
+    cfg.groups().forEach(function (g, gi) {
+      // Past de mapnaam zelf bij het zoekwoord, dan tonen we de hele map.
+      var folderMatch = !!(needle && g.label && searchKey(g.label).indexOf(needle) !== -1);
+      var matches = g.names.filter(function (n) {
+        return !needle || folderMatch || searchKey(n).indexOf(needle) !== -1;
+      });
       if (!matches.length) return;
-      if (g.label) p.appendChild(el("div", "eval-combo-group", g.label));
+
+      var section = el("div", "eval-combo-section");
+      var parent = section;
+      if (g.label) {
+        var headId = cfg.panelId + "-g" + gi;
+        var head = el("div", "eval-combo-group", g.label);
+        head.id = headId;
+        head.setAttribute("role", "presentation");
+        section.appendChild(head);
+        parent = el("div", "eval-combo-items");
+        parent.setAttribute("role", "group");
+        parent.setAttribute("aria-labelledby", headId);
+        section.appendChild(parent);
+      }
       matches.forEach(function (name) {
         var row = el("div", "eval-combo-option" + (g.label ? " in-folder" : ""), name);
         row.dataset.value = name;
+        row.id = cfg.panelId + "-o" + flat.length;
+        row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", name === current ? "true" : "false");
+        if (name === current) row.classList.add("current");
         row.addEventListener("mousedown", function (e) {
           e.preventDefault(); // voorkomt dat het invoerveld al "blurt" vóór de klik telt
           choose(name);
         });
-        p.appendChild(row);
+        parent.appendChild(row);
         flat.push(row);
       });
+      p.appendChild(section);
     });
 
     if (!flat.length) {
       p.appendChild(el(
         "div", "eval-combo-empty",
         needle
-          ? "Geen evaluaties gevonden voor \"" + input().value.trim() + "\"."
+          ? "Geen evaluaties of mappen gevonden voor \"" + input().value.trim() + "\"."
           : cfg.emptyText,
       ));
     }
@@ -4291,7 +4282,12 @@ function makeSearchCombo(cfg) {
   function updateHighlight(flat) {
     flat = flat || options();
     flat.forEach(function (row, i) { row.classList.toggle("highlight", i === highlight); });
-    if (highlight >= 0 && flat[highlight]) flat[highlight].scrollIntoView({ block: "nearest" });
+    if (highlight >= 0 && flat[highlight]) {
+      input().setAttribute("aria-activedescendant", flat[highlight].id);
+      flat[highlight].scrollIntoView({ block: "nearest" });
+    } else {
+      input().removeAttribute("aria-activedescendant");
+    }
   }
 
   function choose(name) {
@@ -4315,20 +4311,28 @@ function makeSearchCombo(cfg) {
       e.preventDefault();
       flat = options();
       if (highlight >= 0 && flat[highlight]) choose(flat[highlight].dataset.value);
+      else if (flat.length === 1) choose(flat[0].dataset.value);
     } else if (e.key === "Escape") {
       if (isOpen()) { e.preventDefault(); close(); }
     }
   }
 
   function init() {
-    input().addEventListener("focus", open);
-    input().addEventListener("click", open);
-    input().addEventListener("input", function () {
+    var inp = input();
+    inp.setAttribute("role", "combobox");
+    inp.setAttribute("aria-autocomplete", "list");
+    inp.setAttribute("aria-controls", cfg.panelId);
+    inp.setAttribute("aria-expanded", "false");
+    panel().setAttribute("role", "listbox");
+
+    inp.addEventListener("focus", open);
+    inp.addEventListener("click", open);
+    inp.addEventListener("input", function () {
       highlight = -1;
       render();
-      panel().classList.remove("hidden");
+      showPanel(true);
     });
-    input().addEventListener("keydown", onKeydown);
+    inp.addEventListener("keydown", onKeydown);
 
     document.addEventListener("mousedown", function (e) {
       var wrap = $(cfg.wrapId);
@@ -4347,6 +4351,10 @@ function makeSearchCombo(cfg) {
    ------------------------------------------------------------------ */
 
 var STORAGE_KEY = "STEM_EVAL_DB_V3";
+// Reservekopie van browseropslag die niet meer te lezen was. Bewust een
+// aparte sleutel: persist() overschrijft STORAGE_KEY bij de eerstvolgende
+// wijziging, en dan zou de oude inhoud anders voorgoed weg zijn.
+var STORAGE_RESCUE_KEY = "STEM_EVAL_DB_V3_BESCHADIGD";
 
 var INSTANCE_KEY = "STEM_EVAL_INSTANCE";
 
@@ -4376,6 +4384,7 @@ function loadFromStorage() {
       db = normaliseDb(JSON.parse(raw));
     } catch (e) {
       db = emptyDb();
+      try { localStorage.setItem(STORAGE_RESCUE_KEY, raw); } catch (e2) {}
     }
   } else {
     // Eerste start op dit toestel: kijk of er nog data van de vorige versie staat.
@@ -4400,10 +4409,6 @@ function loadFromStorage() {
 
   // Eerste start: neem de klaslijsten uit de tool over als vertrekpunt.
   // Daarna leven ze in het werkbestand en kan je ze plakken uit Excel.
-  if (freshStart && typeof DEMO_SEED !== "undefined") {
-    db = normaliseDb(Object.assign({}, emptyDb(), DEMO_SEED, { assessor: db.assessor }));
-  }
-
   if (!db.roster || !Object.keys(db.roster).length) {
     db.roster = seedRoster(CONFIG, STUDENTS);
   }
@@ -4412,8 +4417,6 @@ function loadFromStorage() {
   }
   if (!db.team) db.team = emptyTeam();
   if (!db.settings) db.settings = emptySettings();
-
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) initDemoBanner();
 
   try {
     instanceId = localStorage.getItem(INSTANCE_KEY) || "";
@@ -4444,7 +4447,12 @@ function persist() {
 /* Bestandsstatus                                                      */
 /* ------------------------------------------------------------------ */
 
-function markDirty() { dirty = true; updateStatus(); }
+/* changeCount telt elke wijziging. Een schrijfactie onthoudt bij de start
+   tot welke wijziging ze bewaart; enkel als er intussen niets bijkwam,
+   mag de status op "opgeslagen" (zie writeHandle() in js/storage.js). */
+var changeCount = 0;
+
+function markDirty() { dirty = true; changeCount++; updateStatus(); }
 
 function markClean() { dirty = false; updateStatus(); }
 
@@ -4461,7 +4469,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.18.0";
+var APP_VERSION = "1.20.0";
 
 var DB_VERSION = 4;
 
@@ -5094,12 +5102,22 @@ var fileName = "";
 
 var dirty = false;
 
+// Tekst van de laatste mislukte automatische opslag, "" als alles goed ging.
+// Blijft staan (rode status + balk) tot een volgende opslag wel lukt.
+var saveError = "";
+
+var writing = null;
+var writeAgain = false;
+
 var canPickFiles = typeof window.showSaveFilePicker === "function";
 
 function updateStatus() {
   var s = $("status");
   s.className = "status";
-  if (fileHandle && !dirty) {
+  if (saveError && fileHandle) {
+    s.classList.add("error");
+    s.textContent = "Niet opgeslagen!";
+  } else if (fileHandle && !dirty) {
     s.classList.add("saved");
     s.textContent = "Opgeslagen in " + fileName;
   } else if (dirty && fileHandle) {
@@ -5130,23 +5148,62 @@ function updateSafetyBar() {
     return n + db.sessions[key].length;
   }, 0);
 
+  var rescued = storageRescueData();
+  var failed = !!(saveError && fileHandle);
   var needsFolder = pendingFolder && !folderHandle;
   // Zonder opgeslagen werk valt er niets te verliezen; dan is een
   // waarschuwing alleen maar ruis bij het eerste gebruik.
   var needsFile = !fileHandle && !(!canPickFiles && fileName) && rowCount > 0;
 
-  if (!needsFolder && !needsFile) {
+  if (!rescued && !failed && !needsFolder && !needsFile) {
     bar.classList.add("hidden");
     return;
   }
 
   bar.classList.remove("hidden");
+  bar.classList.toggle("error", !!(rescued || failed));
   bar.innerHTML = "";
 
   var txt = el("div", "txt");
   var btns = el("div", "btn-row");
 
-  if (needsFolder) {
+  if (rescued) {
+    txt.appendChild(el("strong", null, "Je werk in deze browser kon niet gelezen worden"));
+    txt.appendChild(document.createTextNode(
+      "De tool is leeg gestart. Open je laatste werkbestand (bijvoorbeeld uit OneDrive) om verder te werken. " +
+      "De onleesbare gegevens zijn apart bewaard; download ze als reservekopie voor je deze melding verbergt.",
+    ));
+    var open = el("button", "btn-primary", "Werkbestand openen…");
+    open.type = "button";
+    open.addEventListener("click", function () { pickFile("open"); });
+    var dl = el("button", "btn-ghost", "Reservekopie downloaden");
+    dl.type = "button";
+    dl.addEventListener("click", downloadStorageRescue);
+    var hide = el("button", "btn-ghost", "Verbergen");
+    hide.type = "button";
+    hide.addEventListener("click", function () {
+      if (!confirm("De apart bewaarde, onleesbare gegevens worden gewist. Heb je je werk terug of de reservekopie gedownload?")) return;
+      try { localStorage.removeItem(STORAGE_RESCUE_KEY); } catch (e) {}
+      storageRescueCache = "";
+      updateSafetyBar();
+    });
+    btns.appendChild(open);
+    btns.appendChild(dl);
+    btns.appendChild(hide);
+  } else if (failed) {
+    txt.appendChild(el("strong", null, "Automatisch opslaan naar " + fileName + " is mislukt"));
+    txt.appendChild(document.createTextNode(
+      "Je laatste wijzigingen staan enkel in deze browser. " + saveError,
+    ));
+    var retry = el("button", "btn-primary", "Opnieuw proberen");
+    retry.type = "button";
+    retry.addEventListener("click", function () { writeHandle(); });
+    var saveAsBtn = el("button", "btn-ghost", "Opslaan als…");
+    saveAsBtn.type = "button";
+    saveAsBtn.addEventListener("click", function () { saveToFile(true); });
+    btns.appendChild(retry);
+    btns.appendChild(saveAsBtn);
+  } else if (needsFolder) {
     txt.appendChild(el("strong", null, "Gedeelde map niet verbonden"));
     txt.appendChild(document.createTextNode(
       "Je werk wordt bewaard in deze browser, maar komt niet in " + pendingFolder.name +
@@ -5289,17 +5346,60 @@ function saveToFile(forceNew) {
   downloadDb();
 }
 
+/* Schrijft naar het werkbestand. Nooit twee schrijfacties tegelijk: loopt
+   er al een, dan volgt er na afloop nog precies één met de nieuwste
+   stand. De status gaat pas op "opgeslagen" als er tijdens het schrijven
+   niets meer veranderd is, anders zou het tabblad sluiten zonder
+   waarschuwing terwijl de laatste wijziging nog niet op schijf staat. */
 function writeHandle() {
-  if (!fileHandle) return;
-  return fileHandle
+  if (!fileHandle) return Promise.resolve();
+  if (writing) {
+    writeAgain = true;
+    return writing;
+  }
+  var handle = fileHandle;
+  var target = changeCount;
+  writing = handle
     .createWritable()
     .then(function (w) {
       return w.write(dbBlob()).then(function () { return w.close(); });
     })
-    .then(function () { markClean(); })
+    .then(function () {
+      saveError = "";
+      if (changeCount === target && fileHandle === handle) markClean();
+      else updateStatus();
+    })
     .catch(function () {
-      showNotice("warn", "Opslaan mislukt", "Controleer of het bestand niet ergens anders openstaat, en probeer Opslaan als.");
+      saveError = "Controleer of het bestand niet ergens anders openstaat (bijvoorbeeld in OneDrive) en probeer opnieuw, of kies Opslaan als.";
+      updateStatus();
+      showNotice("warn", "Opslaan mislukt", saveError);
+    })
+    .then(function () {
+      writing = null;
+      if (writeAgain) {
+        writeAgain = false;
+        return writeHandle();
+      }
     });
+  return writing;
+}
+
+// Eén keer inlezen: updateSafetyBar() draait bij elke wijziging.
+var storageRescueCache = null;
+
+function storageRescueData() {
+  if (storageRescueCache === null) {
+    try { storageRescueCache = localStorage.getItem(STORAGE_RESCUE_KEY) || ""; } catch (e) { storageRescueCache = ""; }
+  }
+  return storageRescueCache;
+}
+
+function downloadStorageRescue() {
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([storageRescueData()], { type: "application/json" }));
+  a.download = "stem-evaluaties-reservekopie-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
 }
 
 function downloadDb() {
@@ -6857,6 +6957,471 @@ function sheetToClass(sheet) {
 }
 
 
+/* Evaluatiedefinities: rubrics, open vragen, mappen en rubricversies.
+   Enkel gegevenslogica, geen schermopbouw. Afgesplitst uit
+   js/evaluations.js (1.19.1). */
+
+/* ------------------------------------------------------------------
+   EVALUATIES (rubrics en open vragen)
+   Staan in het werkbestand, niet in de HTML. Zo maak je een nieuw
+   project aan zonder de tool te bewerken.
+
+   evaluations = { "1ste jaar": { "Challenge windei": {
+     rubrics: [{ id, name, description, options: [{score,label,desc}] }],
+     questions: [{ id, label, hint }],
+     updatedAt
+   } } }
+   ------------------------------------------------------------------ */
+
+function seedEvaluations(config) {
+  var out = {};
+  Object.keys(config).forEach(function (year) {
+    out[year] = {};
+    Object.keys(config[year].evaluations).forEach(function (name) {
+      out[year][name] = {
+        rubrics: JSON.parse(JSON.stringify(config[year].evaluations[name])),
+        questions: [],
+        version: 1,
+        history: {},
+        updatedAt: 0,
+      };
+    });
+  });
+  return out;
+}
+
+function evaluationNames(db, year) {
+  if (db.evaluations && db.evaluations[year]) {
+    return Object.keys(db.evaluations[year]).sort(function (a, b) {
+      return a.localeCompare(b, "nl");
+    });
+  }
+  return [];
+}
+
+function getEvaluation(db, year, name) {
+  if (db.evaluations && db.evaluations[year] && db.evaluations[year][name]) {
+    return db.evaluations[year][name];
+  }
+  return null;
+}
+
+function rubricsFor(db, year, name) {
+  var ev = getEvaluation(db, year, name);
+  return ev ? ev.rubrics || [] : [];
+}
+
+function questionsFor(db, year, name) {
+  var ev = getEvaluation(db, year, name);
+  return ev ? ev.questions || [] : [];
+}
+
+
+
+/* Sleutels moeten stabiel blijven: ze koppelen opgeslagen scores aan
+   het juiste criterium. Alleen nieuwe krijgen een nieuwe sleutel. */
+function slugify(text) {
+  return String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .split("-")
+    .slice(0, 4)
+    .join("-");
+}
+
+function uniqueId(base, taken) {
+  var id = slugify(base) || "criterium";
+  if (taken.indexOf(id) === -1) return id;
+  var n = 2;
+  while (taken.indexOf(id + "-" + n) !== -1) n++;
+  return id + "-" + n;
+}
+
+
+
+/* Standaardniveaus, zodat een nieuw criterium meteen de juiste vorm heeft. */
+var LEVEL_TEMPLATES = {
+  3: ["Onvoldoende", "Voldoende", "Goed"],
+  4: ["Onvoldoende", "Matig", "Goed", "Zeer Goed"],
+  5: ["Onvoldoende", "Matig", "Voldoende", "Goed", "Zeer Goed"],
+}
+
+
+
+/* Staan de punten op 1, 2, 3 … zonder gaten? Dan wil de leerkracht bijna
+   zeker dat het zo blijft wanneer er een niveau bijkomt of wegvalt. */
+function isSequentialScores(options) {
+  if (!options || !options.length) return false;
+  var scores = options.map(function (o) { return Number(o.score); });
+  if (scores.some(function (s) { return !isFinite(s); })) return false;
+  var sorted = scores.slice().sort(function (a, b) { return a - b; });
+  return sorted.every(function (s, i) { return s === i + 1; });
+}
+
+
+
+/* Hernummert in de volgorde waarin de niveaus op het scherm staan. */
+function renumberScores(options) {
+  options.forEach(function (o, i) { o.score = i + 1; });
+  return options;
+}
+
+function blankRubric(count, taken) {
+  var labels = LEVEL_TEMPLATES[count] || LEVEL_TEMPLATES[5];
+  return {
+    id: uniqueId("nieuw-criterium", taken || []),
+    name: "",
+    description: "",
+    options: labels.map(function (label, i) {
+      return { score: i + 1, label: label, desc: "" };
+    }),
+  };
+}
+
+function blankQuestion(taken) {
+  return { id: uniqueId("open-vraag", taken || []), label: "", hint: "" };
+}
+
+
+
+/* Controle vóór opslaan. Levert een lijst met leesbare problemen op. */
+function validateEvaluation(draft, db, originalName) {
+  var problems = [];
+  var name = String(draft.name || "").trim();
+
+  if (!name) problems.push("Geef de evaluatie een naam.");
+  if (name.indexOf("|") !== -1) problems.push("De naam mag geen | bevatten.");
+
+  var existing = evaluationNames(db, draft.year);
+  if (name && name !== originalName && existing.indexOf(name) !== -1) {
+    problems.push('Er bestaat al een evaluatie "' + name + '" in ' + draft.year + ".");
+  }
+
+  if (!draft.rubrics.length) problems.push("Voeg minstens één criterium toe.");
+
+  var seenIds = [];
+  draft.rubrics.forEach(function (r, i) {
+    var nr = "Criterium " + (i + 1);
+    if (!String(r.name || "").trim()) problems.push(nr + " heeft nog geen naam.");
+    if (seenIds.indexOf(r.id) !== -1) problems.push(nr + " heeft een dubbele sleutel.");
+    seenIds.push(r.id);
+
+    if (!r.options || r.options.length < 2) {
+      problems.push(nr + " heeft minstens twee niveaus nodig.");
+      return;
+    }
+    var scores = [];
+    r.options.forEach(function (o, j) {
+      if (!String(o.label || "").trim()) {
+        problems.push(nr + ", niveau " + (j + 1) + " heeft geen naam.");
+      }
+      var s = Number(o.score);
+      if (!isFinite(s)) problems.push(nr + ", niveau " + (j + 1) + " heeft geen geldige score.");
+      else if (scores.indexOf(s) !== -1) problems.push(nr + " heeft twee keer de score " + s + ".");
+      else scores.push(s);
+    });
+  });
+
+  (draft.questions || []).forEach(function (q, i) {
+    if (!String(q.label || "").trim()) {
+      problems.push("Open vraag " + (i + 1) + " heeft nog geen tekst.");
+    }
+  });
+
+  return problems;
+}
+
+
+
+/* Hoeveel resultaten hangen er aan deze evaluatie? */
+function resultCount(db, year, name) {
+  var n = 0;
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year === year && p.evaluation === name) n += db.sessions[key].length;
+  });
+  return n;
+}
+
+
+
+/* Bij hernoemen moeten de opgeslagen resultaten mee, anders raken ze zoek. */
+function renameEvaluation(db, year, oldName, newName) {
+  if (oldName === newName) return 0;
+  var moved = 0;
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year !== year || p.evaluation !== oldName) return;
+    var target = sessionKey(year, p.klas, newName);
+    if (!db.sessions[target]) db.sessions[target] = [];
+    db.sessions[target] = db.sessions[target].concat(db.sessions[key]);
+    moved += db.sessions[key].length;
+    delete db.sessions[key];
+  });
+  return moved;
+}
+
+
+
+/* Wat gaat er stuk als je deze wijziging opslaat? */
+function impactOfEdit(original, draft) {
+  if (!original) return [];
+  var warnings = [];
+  var oldIds = (original.rubrics || []).map(function (r) { return r.id; });
+  var newIds = draft.rubrics.map(function (r) { return r.id; });
+
+  var removed = oldIds.filter(function (id) { return newIds.indexOf(id) === -1; });
+  if (removed.length) {
+    warnings.push(
+      removed.length +
+        " criterium/criteria verdwijnen. De punten die daarvoor gegeven zijn, tellen niet meer mee in het totaal.",
+    );
+  }
+
+  (original.rubrics || []).forEach(function (oldR) {
+    var newR = draft.rubrics.filter(function (r) { return r.id === oldR.id; })[0];
+    if (!newR) return;
+    var oldMax = Math.max.apply(null, oldR.options.map(function (o) { return o.score; }));
+    var newMax = Math.max.apply(null, newR.options.map(function (o) { return Number(o.score); }));
+    if (oldMax !== newMax) {
+      warnings.push('"' + (newR.name || oldR.name) + '" gaat van maximum ' + oldMax + " naar " + newMax + ". Bestaande percentages verschuiven.");
+    }
+  });
+
+  return warnings;
+}
+
+
+
+/* Nieuwere definitie wint, net als bij klaslijsten — tenzij een
+   tombstone zegt dat dit item verwijderd is en de inkomende versie niet
+   nieuwer is dan dat verwijdermoment. */
+function mergeEvaluations(target, incoming) {
+  var changed = [];
+  if (!target.evaluations) target.evaluations = {};
+
+  if (incoming) {
+    Object.keys(incoming).forEach(function (year) {
+      if (!target.evaluations[year]) target.evaluations[year] = {};
+      Object.keys(incoming[year]).forEach(function (name) {
+        var inc = incoming[year][name];
+        var key = year + "||" + name;
+        if (isTombstoned("evaluations", key, inc.updatedAt)) return; // blijft verwijderd
+
+        var cur = target.evaluations[year][name];
+        if (!cur) {
+          target.evaluations[year][name] = JSON.parse(JSON.stringify(inc));
+          changed.push(name + " (nieuw)");
+        } else if ((inc.updatedAt || 0) > (cur.updatedAt || 0)) {
+          target.evaluations[year][name] = JSON.parse(JSON.stringify(inc));
+          changed.push(name + " (bijgewerkt)");
+        }
+      });
+    });
+  }
+
+  // Zelf ook toepassen: een "voor iedereen" tombstone die net binnenkwam
+  // ruimt onze eigen, oudere kopie meteen mee op.
+  Object.keys(target.evaluations).forEach(function (year) {
+    Object.keys(target.evaluations[year]).forEach(function (name) {
+      var key = year + "||" + name;
+      if (isTombstoned("evaluations", key, target.evaluations[year][name].updatedAt)) {
+        delete target.evaluations[year][name];
+      }
+    });
+  });
+
+  return changed;
+}
+
+/* Mappen zijn een vrije indeling. Elke map heeft nu een eigen updatedAt
+   (nodig om tegen een verwijder-tombstone te kunnen vergelijken, zie
+   hieronder) — daarom een lijst van {name, updatedAt}-objecten, niet
+   langer platte tekst. De volgorde in de lijst blijft wel de
+   weergavevolgorde, voor het verplaatsen met de pijltjes. */
+function mergeEvaluationFolders(target, incoming) {
+  var added = [];
+  if (!target.evaluationFolders) target.evaluationFolders = {};
+
+  if (incoming) {
+    Object.keys(incoming).forEach(function (year) {
+      if (!target.evaluationFolders[year]) target.evaluationFolders[year] = [];
+      (incoming[year] || []).forEach(function (f) {
+        if (!f || !f.name) return;
+        var key = year + "||" + f.name;
+        if (isTombstoned("folders", key, f.updatedAt)) return; // blijft verwijderd
+
+        var list = target.evaluationFolders[year];
+        var existing = list.filter(function (x) { return x.name === f.name; })[0];
+        if (!existing) {
+          list.push({ name: f.name, updatedAt: f.updatedAt || 0 });
+          added.push(f.name + " [" + year + "]");
+        } else if ((f.updatedAt || 0) > (existing.updatedAt || 0)) {
+          existing.updatedAt = f.updatedAt;
+        }
+      });
+    });
+  }
+
+  // Tombstones toepassen op wat we zelf al hadden — als een collega deze
+  // map "voor iedereen" verwijderde ná onze laatste wijziging eraan,
+  // verdwijnt hij nu ook bij ons.
+  Object.keys(target.evaluationFolders).forEach(function (year) {
+    target.evaluationFolders[year] = target.evaluationFolders[year].filter(function (f) {
+      return !isTombstoned("folders", year + "||" + f.name, f.updatedAt);
+    });
+  });
+
+  return added;
+}
+
+/* --- mappen: aanmaken, hernoemen, verwijderen, toewijzen --- */
+
+function evaluationFoldersFor(db, year) {
+  var registry = (db.evaluationFolders && db.evaluationFolders[year]) || [];
+  // De opgeslagen volgorde is de echte volgorde — een leerkracht kan die
+  // zelf met de pijltjes aanpassen. Enkel mappen die wél in gebruik zijn
+  // maar om een of andere reden niet in de registry staan (bv. een ouder
+  // bestand) komen er zonder vaste volgorde alfabetisch achteraan bij.
+  var names = registry.map(function (f) { return f.name; });
+  var extra = [];
+  Object.keys((db.evaluations && db.evaluations[year]) || {}).forEach(function (name) {
+    var f = db.evaluations[year][name].folder;
+    if (f && names.indexOf(f) === -1 && extra.indexOf(f) === -1) extra.push(f);
+  });
+  extra.sort(function (a, b) { return a.localeCompare(b, "nl"); });
+  return names.concat(extra);
+}
+
+function moveEvaluationFolder(db, year, folderName, delta) {
+  if (!db.evaluationFolders || !db.evaluationFolders[year]) return false;
+  var list = db.evaluationFolders[year];
+  var index = list.findIndex(function (f) { return f.name === folderName; });
+  var target = index + delta;
+  if (index === -1 || target < 0 || target >= list.length) return false;
+  var tmp = list[index];
+  list[index] = list[target];
+  list[target] = tmp;
+  return true;
+}
+
+function addEvaluationFolder(db, year, name) {
+  var clean = String(name || "").trim();
+  if (!clean) return false;
+  if (!db.evaluationFolders) db.evaluationFolders = {};
+  if (!db.evaluationFolders[year]) db.evaluationFolders[year] = [];
+  if (db.evaluationFolders[year].some(function (f) { return f.name === clean; })) return false;
+  db.evaluationFolders[year].push({ name: clean, updatedAt: Date.now() });
+  return true;
+}
+
+/* De map verdwijnt, de evaluaties die erin zaten nooit — die komen
+   gewoon terug bij "Geen map". "scope" bepaalt of dit ook bij collega's
+   moet verdwijnen ("iedereen") of enkel lokaal blijft ("mezelf"), zie
+   recordDeletion() verderop. */
+function deleteEvaluationFolder(db, year, name, scope) {
+  var key = year + "||" + name;
+  if (db.evaluationFolders && db.evaluationFolders[year]) {
+    db.evaluationFolders[year] = db.evaluationFolders[year].filter(function (f) { return f.name !== name; });
+  }
+  Object.keys((db.evaluations && db.evaluations[year]) || {}).forEach(function (evName) {
+    if (db.evaluations[year][evName].folder === name) {
+      db.evaluations[year][evName].folder = "";
+      db.evaluations[year][evName].updatedAt = Date.now();
+    }
+  });
+  recordDeletion("folders", key, scope);
+}
+
+function setEvaluationFolder(db, year, evalName, folder) {
+  var ev = getEvaluation(db, year, evalName);
+  if (!ev) return;
+  ev.folder = folder || "";
+  ev.updatedAt = Date.now();
+}
+
+
+
+/* ------------------------------------------------------------------
+   RUBRICVERSIES
+
+   Pas je een niveaubeschrijving aan nadat er al beoordeeld is, dan zou
+   een oude evaluatie ineens met de nieuwe tekst getoond worden. Op de
+   vraag "waarop is deze leerling in september beoordeeld?" klopt het
+   antwoord dan niet meer.
+
+   Daarom: de oude tekst verhuist naar history[] en elke rij onthoudt
+   met welke versie hij beoordeeld is. Alleen wijzigingen ná gebruik
+   maken een nieuwe versie; anders zou je bij elk typfoutje een versie
+   bijhouden.
+   ------------------------------------------------------------------ */
+
+function evaluationVersion(db, year, name) {
+  var ev = getEvaluation(db, year, name);
+  return ev && ev.version ? ev.version : 1;
+}
+
+
+
+/* De rubric zoals hij was op het moment van beoordelen. */
+function rubricsForVersion(db, year, name, version) {
+  var ev = getEvaluation(db, year, name);
+  if (!ev) return [];
+  if (!version || version === (ev.version || 1)) return ev.rubrics || [];
+  var old = (ev.history || {})[String(version)];
+  return old && old.rubrics ? old.rubrics : ev.rubrics || [];
+}
+
+function questionsForVersion(db, year, name, version) {
+  var ev = getEvaluation(db, year, name);
+  if (!ev) return [];
+  if (!version || version === (ev.version || 1)) return ev.questions || [];
+  var old = (ev.history || {})[String(version)];
+  return old && old.questions ? old.questions : ev.questions || [];
+}
+
+
+
+/* Is er inhoudelijk iets veranderd? Volgorde telt niet mee. */
+function rubricsDiffer(a, b) {
+  function normalise(list) {
+    return (list || [])
+      .map(function (r) {
+        return {
+          id: r.id,
+          name: String(r.name || "").trim(),
+          description: String(r.description || "").trim(),
+          options: (r.options || [])
+            .map(function (o) {
+              return Number(o.score) + "|" + String(o.label || "").trim() + "|" + String(o.desc || "").trim();
+            })
+            .sort(),
+        };
+      })
+      .sort(function (x, y) { return x.id.localeCompare(y.id); });
+  }
+  return JSON.stringify(normalise(a)) !== JSON.stringify(normalise(b));
+}
+
+
+
+/* Bewaart de huidige tekst als oude versie en verhoogt het nummer. */
+function archiveVersion(evaluationObj) {
+  var version = evaluationObj.version || 1;
+  if (!evaluationObj.history) evaluationObj.history = {};
+  evaluationObj.history[String(version)] = {
+    rubrics: JSON.parse(JSON.stringify(evaluationObj.rubrics || [])),
+    questions: JSON.parse(JSON.stringify(evaluationObj.questions || [])),
+    archivedAt: Date.now(),
+  };
+  evaluationObj.version = version + 1;
+  return evaluationObj.version;
+}
+
+
 /* ---- overgenomen uit ui.js ---- */
 
 
@@ -6880,30 +7445,7 @@ function fillClassAndEvalOptions(year) {
       $("classSelect").appendChild(new Option(c, c));
     });
 
-    var folders = evaluationFoldersFor(db, year);
-    var byFolder = {};
-    folders.forEach(function (f) { byFolder[f] = []; });
-    var ongeordend = [];
-    evaluationNames(db, year).forEach(function (name) {
-      var ev = getEvaluation(db, year, name);
-      var f = ev && ev.folder;
-      if (f && byFolder[f]) byFolder[f].push(name);
-      else ongeordend.push(name);
-    });
-
-    folders.forEach(function (f) {
-      if (!byFolder[f].length) return;
-      var group = document.createElement("optgroup");
-      group.label = f;
-      byFolder[f].forEach(function (name) { group.appendChild(new Option(name, name)); });
-      $("evalSelect").appendChild(group);
-    });
-    if (ongeordend.length) {
-      var restGroup = document.createElement("optgroup");
-      restGroup.label = folders.length ? "Geen map" : "Evaluaties";
-      ongeordend.forEach(function (name) { restGroup.appendChild(new Option(name, name)); });
-      $("evalSelect").appendChild(restGroup);
-    }
+    fillGroupedEvalSelect($("evalSelect"), year, "Evaluaties");
 
     $("classSelect").disabled = false;
     $("evalSelect").disabled = false;
@@ -6952,6 +7494,23 @@ function evaluationGroups(year) {
     groups.push({ label: folders.length ? "Geen map" : "", names: ongeordend });
   }
   return groups;
+}
+
+/* Vult een (onzichtbare) <select> met één <optgroup> per map, in dezelfde
+   indeling als de zoeklijst. Evaluaties zonder map krijgen de kop
+   "Geen map"; zijn er helemaal geen mappen, dan fallbackLabel (of geen
+   <optgroup> als die leeg is). Bestaande opties blijven staan. */
+function fillGroupedEvalSelect(select, year, fallbackLabel) {
+  evaluationGroups(year).forEach(function (g) {
+    var label = g.label || fallbackLabel;
+    var parent = select;
+    if (label) {
+      parent = document.createElement("optgroup");
+      parent.label = label;
+      select.appendChild(parent);
+    }
+    g.names.forEach(function (name) { parent.appendChild(new Option(name, name)); });
+  });
 }
 
 /* Zelfgetekende zoek-vervolgkeuzelijst voor het evaluatiemoment, zie
@@ -7799,471 +8358,48 @@ function renderConflictNotice(dupes) {
   host.appendChild(box);
 }
 
-/* ---- overgenomen uit core.js ---- */
+/* ------------------------------------------------------------------ */
+/* Open vragen in het evaluatieformulier                               */
+/* ------------------------------------------------------------------ */
 
+function renderOpenQuestions() {
+  var host = $("openQuestions");
+  host.innerHTML = "";
+  if (!cur.questions.length) return;
 
+  cur.questions.forEach(function (q) {
+    var group = el("div", "form-group");
+    group.style.marginTop = "16px";
+    group.appendChild(el("label", null, q.label));
+    var ta = document.createElement("textarea");
+    ta.id = "answer-" + q.id;
+    ta.className = "answer-field";
+    ta.dataset.question = q.id;
+    ta.placeholder = q.hint || "";
+    ta.style.minHeight = "58px";
+    group.appendChild(ta);
+    host.appendChild(group);
+  });
+}
 
-/* ------------------------------------------------------------------
-   EVALUATIES (rubrics en open vragen)
-   Staan in het werkbestand, niet in de HTML. Zo maak je een nieuw
-   project aan zonder de tool te bewerken.
-
-   evaluations = { "1ste jaar": { "Challenge windei": {
-     rubrics: [{ id, name, description, options: [{score,label,desc}] }],
-     questions: [{ id, label, hint }],
-     updatedAt
-   } } }
-   ------------------------------------------------------------------ */
-
-function seedEvaluations(config) {
+function collectAnswers() {
   var out = {};
-  Object.keys(config).forEach(function (year) {
-    out[year] = {};
-    Object.keys(config[year].evaluations).forEach(function (name) {
-      out[year][name] = {
-        rubrics: JSON.parse(JSON.stringify(config[year].evaluations[name])),
-        questions: [],
-        version: 1,
-        history: {},
-        updatedAt: 0,
-      };
-    });
+  document.querySelectorAll(".answer-field").forEach(function (ta) {
+    var v = ta.value.trim();
+    if (v) out[ta.dataset.question] = v;
   });
   return out;
 }
 
-function evaluationNames(db, year) {
-  if (db.evaluations && db.evaluations[year]) {
-    return Object.keys(db.evaluations[year]).sort(function (a, b) {
-      return a.localeCompare(b, "nl");
-    });
-  }
-  return [];
-}
-
-function getEvaluation(db, year, name) {
-  if (db.evaluations && db.evaluations[year] && db.evaluations[year][name]) {
-    return db.evaluations[year][name];
-  }
-  return null;
-}
-
-function rubricsFor(db, year, name) {
-  var ev = getEvaluation(db, year, name);
-  return ev ? ev.rubrics || [] : [];
-}
-
-function questionsFor(db, year, name) {
-  var ev = getEvaluation(db, year, name);
-  return ev ? ev.questions || [] : [];
-}
-
-
-
-/* Sleutels moeten stabiel blijven: ze koppelen opgeslagen scores aan
-   het juiste criterium. Alleen nieuwe krijgen een nieuwe sleutel. */
-function slugify(text) {
-  return String(text || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .split("-")
-    .slice(0, 4)
-    .join("-");
-}
-
-function uniqueId(base, taken) {
-  var id = slugify(base) || "criterium";
-  if (taken.indexOf(id) === -1) return id;
-  var n = 2;
-  while (taken.indexOf(id + "-" + n) !== -1) n++;
-  return id + "-" + n;
-}
-
-
-
-/* Standaardniveaus, zodat een nieuw criterium meteen de juiste vorm heeft. */
-var LEVEL_TEMPLATES = {
-  3: ["Onvoldoende", "Voldoende", "Goed"],
-  4: ["Onvoldoende", "Matig", "Goed", "Zeer Goed"],
-  5: ["Onvoldoende", "Matig", "Voldoende", "Goed", "Zeer Goed"],
-}
-
-
-
-/* Staan de punten op 1, 2, 3 … zonder gaten? Dan wil de leerkracht bijna
-   zeker dat het zo blijft wanneer er een niveau bijkomt of wegvalt. */
-function isSequentialScores(options) {
-  if (!options || !options.length) return false;
-  var scores = options.map(function (o) { return Number(o.score); });
-  if (scores.some(function (s) { return !isFinite(s); })) return false;
-  var sorted = scores.slice().sort(function (a, b) { return a - b; });
-  return sorted.every(function (s, i) { return s === i + 1; });
-}
-
-
-
-/* Hernummert in de volgorde waarin de niveaus op het scherm staan. */
-function renumberScores(options) {
-  options.forEach(function (o, i) { o.score = i + 1; });
-  return options;
-}
-
-function blankRubric(count, taken) {
-  var labels = LEVEL_TEMPLATES[count] || LEVEL_TEMPLATES[5];
-  return {
-    id: uniqueId("nieuw-criterium", taken || []),
-    name: "",
-    description: "",
-    options: labels.map(function (label, i) {
-      return { score: i + 1, label: label, desc: "" };
-    }),
-  };
-}
-
-function blankQuestion(taken) {
-  return { id: uniqueId("open-vraag", taken || []), label: "", hint: "" };
-}
-
-
-
-/* Controle vóór opslaan. Levert een lijst met leesbare problemen op. */
-function validateEvaluation(draft, db, originalName) {
-  var problems = [];
-  var name = String(draft.name || "").trim();
-
-  if (!name) problems.push("Geef de evaluatie een naam.");
-  if (name.indexOf("|") !== -1) problems.push("De naam mag geen | bevatten.");
-
-  var existing = evaluationNames(db, draft.year);
-  if (name && name !== originalName && existing.indexOf(name) !== -1) {
-    problems.push('Er bestaat al een evaluatie "' + name + '" in ' + draft.year + ".");
-  }
-
-  if (!draft.rubrics.length) problems.push("Voeg minstens één criterium toe.");
-
-  var seenIds = [];
-  draft.rubrics.forEach(function (r, i) {
-    var nr = "Criterium " + (i + 1);
-    if (!String(r.name || "").trim()) problems.push(nr + " heeft nog geen naam.");
-    if (seenIds.indexOf(r.id) !== -1) problems.push(nr + " heeft een dubbele sleutel.");
-    seenIds.push(r.id);
-
-    if (!r.options || r.options.length < 2) {
-      problems.push(nr + " heeft minstens twee niveaus nodig.");
-      return;
-    }
-    var scores = [];
-    r.options.forEach(function (o, j) {
-      if (!String(o.label || "").trim()) {
-        problems.push(nr + ", niveau " + (j + 1) + " heeft geen naam.");
-      }
-      var s = Number(o.score);
-      if (!isFinite(s)) problems.push(nr + ", niveau " + (j + 1) + " heeft geen geldige score.");
-      else if (scores.indexOf(s) !== -1) problems.push(nr + " heeft twee keer de score " + s + ".");
-      else scores.push(s);
-    });
+function fillAnswers(answers) {
+  document.querySelectorAll(".answer-field").forEach(function (ta) {
+    ta.value = (answers && answers[ta.dataset.question]) || "";
   });
-
-  (draft.questions || []).forEach(function (q, i) {
-    if (!String(q.label || "").trim()) {
-      problems.push("Open vraag " + (i + 1) + " heeft nog geen tekst.");
-    }
-  });
-
-  return problems;
 }
 
 
-
-/* Hoeveel resultaten hangen er aan deze evaluatie? */
-function resultCount(db, year, name) {
-  var n = 0;
-  Object.keys(db.sessions || {}).forEach(function (key) {
-    var p = parseSessionKey(key);
-    if (p.year === year && p.evaluation === name) n += db.sessions[key].length;
-  });
-  return n;
-}
-
-
-
-/* Bij hernoemen moeten de opgeslagen resultaten mee, anders raken ze zoek. */
-function renameEvaluation(db, year, oldName, newName) {
-  if (oldName === newName) return 0;
-  var moved = 0;
-  Object.keys(db.sessions || {}).forEach(function (key) {
-    var p = parseSessionKey(key);
-    if (p.year !== year || p.evaluation !== oldName) return;
-    var target = sessionKey(year, p.klas, newName);
-    if (!db.sessions[target]) db.sessions[target] = [];
-    db.sessions[target] = db.sessions[target].concat(db.sessions[key]);
-    moved += db.sessions[key].length;
-    delete db.sessions[key];
-  });
-  return moved;
-}
-
-
-
-/* Wat gaat er stuk als je deze wijziging opslaat? */
-function impactOfEdit(original, draft) {
-  if (!original) return [];
-  var warnings = [];
-  var oldIds = (original.rubrics || []).map(function (r) { return r.id; });
-  var newIds = draft.rubrics.map(function (r) { return r.id; });
-
-  var removed = oldIds.filter(function (id) { return newIds.indexOf(id) === -1; });
-  if (removed.length) {
-    warnings.push(
-      removed.length +
-        " criterium/criteria verdwijnen. De punten die daarvoor gegeven zijn, tellen niet meer mee in het totaal.",
-    );
-  }
-
-  (original.rubrics || []).forEach(function (oldR) {
-    var newR = draft.rubrics.filter(function (r) { return r.id === oldR.id; })[0];
-    if (!newR) return;
-    var oldMax = Math.max.apply(null, oldR.options.map(function (o) { return o.score; }));
-    var newMax = Math.max.apply(null, newR.options.map(function (o) { return Number(o.score); }));
-    if (oldMax !== newMax) {
-      warnings.push('"' + (newR.name || oldR.name) + '" gaat van maximum ' + oldMax + " naar " + newMax + ". Bestaande percentages verschuiven.");
-    }
-  });
-
-  return warnings;
-}
-
-
-
-/* Nieuwere definitie wint, net als bij klaslijsten — tenzij een
-   tombstone zegt dat dit item verwijderd is en de inkomende versie niet
-   nieuwer is dan dat verwijdermoment. */
-function mergeEvaluations(target, incoming) {
-  var changed = [];
-  if (!target.evaluations) target.evaluations = {};
-
-  if (incoming) {
-    Object.keys(incoming).forEach(function (year) {
-      if (!target.evaluations[year]) target.evaluations[year] = {};
-      Object.keys(incoming[year]).forEach(function (name) {
-        var inc = incoming[year][name];
-        var key = year + "||" + name;
-        if (isTombstoned("evaluations", key, inc.updatedAt)) return; // blijft verwijderd
-
-        var cur = target.evaluations[year][name];
-        if (!cur) {
-          target.evaluations[year][name] = JSON.parse(JSON.stringify(inc));
-          changed.push(name + " (nieuw)");
-        } else if ((inc.updatedAt || 0) > (cur.updatedAt || 0)) {
-          target.evaluations[year][name] = JSON.parse(JSON.stringify(inc));
-          changed.push(name + " (bijgewerkt)");
-        }
-      });
-    });
-  }
-
-  // Zelf ook toepassen: een "voor iedereen" tombstone die net binnenkwam
-  // ruimt onze eigen, oudere kopie meteen mee op.
-  Object.keys(target.evaluations).forEach(function (year) {
-    Object.keys(target.evaluations[year]).forEach(function (name) {
-      var key = year + "||" + name;
-      if (isTombstoned("evaluations", key, target.evaluations[year][name].updatedAt)) {
-        delete target.evaluations[year][name];
-      }
-    });
-  });
-
-  return changed;
-}
-
-/* Mappen zijn een vrije indeling. Elke map heeft nu een eigen updatedAt
-   (nodig om tegen een verwijder-tombstone te kunnen vergelijken, zie
-   hieronder) — daarom een lijst van {name, updatedAt}-objecten, niet
-   langer platte tekst. De volgorde in de lijst blijft wel de
-   weergavevolgorde, voor het verplaatsen met de pijltjes. */
-function mergeEvaluationFolders(target, incoming) {
-  var added = [];
-  if (!target.evaluationFolders) target.evaluationFolders = {};
-
-  if (incoming) {
-    Object.keys(incoming).forEach(function (year) {
-      if (!target.evaluationFolders[year]) target.evaluationFolders[year] = [];
-      (incoming[year] || []).forEach(function (f) {
-        if (!f || !f.name) return;
-        var key = year + "||" + f.name;
-        if (isTombstoned("folders", key, f.updatedAt)) return; // blijft verwijderd
-
-        var list = target.evaluationFolders[year];
-        var existing = list.filter(function (x) { return x.name === f.name; })[0];
-        if (!existing) {
-          list.push({ name: f.name, updatedAt: f.updatedAt || 0 });
-          added.push(f.name + " [" + year + "]");
-        } else if ((f.updatedAt || 0) > (existing.updatedAt || 0)) {
-          existing.updatedAt = f.updatedAt;
-        }
-      });
-    });
-  }
-
-  // Tombstones toepassen op wat we zelf al hadden — als een collega deze
-  // map "voor iedereen" verwijderde ná onze laatste wijziging eraan,
-  // verdwijnt hij nu ook bij ons.
-  Object.keys(target.evaluationFolders).forEach(function (year) {
-    target.evaluationFolders[year] = target.evaluationFolders[year].filter(function (f) {
-      return !isTombstoned("folders", year + "||" + f.name, f.updatedAt);
-    });
-  });
-
-  return added;
-}
-
-/* --- mappen: aanmaken, hernoemen, verwijderen, toewijzen --- */
-
-function evaluationFoldersFor(db, year) {
-  var registry = (db.evaluationFolders && db.evaluationFolders[year]) || [];
-  // De opgeslagen volgorde is de echte volgorde — een leerkracht kan die
-  // zelf met de pijltjes aanpassen. Enkel mappen die wél in gebruik zijn
-  // maar om een of andere reden niet in de registry staan (bv. een ouder
-  // bestand) komen er zonder vaste volgorde alfabetisch achteraan bij.
-  var names = registry.map(function (f) { return f.name; });
-  var extra = [];
-  Object.keys((db.evaluations && db.evaluations[year]) || {}).forEach(function (name) {
-    var f = db.evaluations[year][name].folder;
-    if (f && names.indexOf(f) === -1 && extra.indexOf(f) === -1) extra.push(f);
-  });
-  extra.sort(function (a, b) { return a.localeCompare(b, "nl"); });
-  return names.concat(extra);
-}
-
-function moveEvaluationFolder(db, year, folderName, delta) {
-  if (!db.evaluationFolders || !db.evaluationFolders[year]) return false;
-  var list = db.evaluationFolders[year];
-  var index = list.findIndex(function (f) { return f.name === folderName; });
-  var target = index + delta;
-  if (index === -1 || target < 0 || target >= list.length) return false;
-  var tmp = list[index];
-  list[index] = list[target];
-  list[target] = tmp;
-  return true;
-}
-
-function addEvaluationFolder(db, year, name) {
-  var clean = String(name || "").trim();
-  if (!clean) return false;
-  if (!db.evaluationFolders) db.evaluationFolders = {};
-  if (!db.evaluationFolders[year]) db.evaluationFolders[year] = [];
-  if (db.evaluationFolders[year].some(function (f) { return f.name === clean; })) return false;
-  db.evaluationFolders[year].push({ name: clean, updatedAt: Date.now() });
-  return true;
-}
-
-/* De map verdwijnt, de evaluaties die erin zaten nooit — die komen
-   gewoon terug bij "Geen map". "scope" bepaalt of dit ook bij collega's
-   moet verdwijnen ("iedereen") of enkel lokaal blijft ("mezelf"), zie
-   recordDeletion() verderop. */
-function deleteEvaluationFolder(db, year, name, scope) {
-  var key = year + "||" + name;
-  if (db.evaluationFolders && db.evaluationFolders[year]) {
-    db.evaluationFolders[year] = db.evaluationFolders[year].filter(function (f) { return f.name !== name; });
-  }
-  Object.keys((db.evaluations && db.evaluations[year]) || {}).forEach(function (evName) {
-    if (db.evaluations[year][evName].folder === name) {
-      db.evaluations[year][evName].folder = "";
-      db.evaluations[year][evName].updatedAt = Date.now();
-    }
-  });
-  recordDeletion("folders", key, scope);
-}
-
-function setEvaluationFolder(db, year, evalName, folder) {
-  var ev = getEvaluation(db, year, evalName);
-  if (!ev) return;
-  ev.folder = folder || "";
-  ev.updatedAt = Date.now();
-}
-
-
-
-/* ------------------------------------------------------------------
-   RUBRICVERSIES
-
-   Pas je een niveaubeschrijving aan nadat er al beoordeeld is, dan zou
-   een oude evaluatie ineens met de nieuwe tekst getoond worden. Op de
-   vraag "waarop is deze leerling in september beoordeeld?" klopt het
-   antwoord dan niet meer.
-
-   Daarom: de oude tekst verhuist naar history[] en elke rij onthoudt
-   met welke versie hij beoordeeld is. Alleen wijzigingen ná gebruik
-   maken een nieuwe versie; anders zou je bij elk typfoutje een versie
-   bijhouden.
-   ------------------------------------------------------------------ */
-
-function evaluationVersion(db, year, name) {
-  var ev = getEvaluation(db, year, name);
-  return ev && ev.version ? ev.version : 1;
-}
-
-
-
-/* De rubric zoals hij was op het moment van beoordelen. */
-function rubricsForVersion(db, year, name, version) {
-  var ev = getEvaluation(db, year, name);
-  if (!ev) return [];
-  if (!version || version === (ev.version || 1)) return ev.rubrics || [];
-  var old = (ev.history || {})[String(version)];
-  return old && old.rubrics ? old.rubrics : ev.rubrics || [];
-}
-
-function questionsForVersion(db, year, name, version) {
-  var ev = getEvaluation(db, year, name);
-  if (!ev) return [];
-  if (!version || version === (ev.version || 1)) return ev.questions || [];
-  var old = (ev.history || {})[String(version)];
-  return old && old.questions ? old.questions : ev.questions || [];
-}
-
-
-
-/* Is er inhoudelijk iets veranderd? Volgorde telt niet mee. */
-function rubricsDiffer(a, b) {
-  function normalise(list) {
-    return (list || [])
-      .map(function (r) {
-        return {
-          id: r.id,
-          name: String(r.name || "").trim(),
-          description: String(r.description || "").trim(),
-          options: (r.options || [])
-            .map(function (o) {
-              return Number(o.score) + "|" + String(o.label || "").trim() + "|" + String(o.desc || "").trim();
-            })
-            .sort(),
-        };
-      })
-      .sort(function (x, y) { return x.id.localeCompare(y.id); });
-  }
-  return JSON.stringify(normalise(a)) !== JSON.stringify(normalise(b));
-}
-
-
-
-/* Bewaart de huidige tekst als oude versie en verhoogt het nummer. */
-function archiveVersion(evaluationObj) {
-  var version = evaluationObj.version || 1;
-  if (!evaluationObj.history) evaluationObj.history = {};
-  evaluationObj.history[String(version)] = {
-    rubrics: JSON.parse(JSON.stringify(evaluationObj.rubrics || [])),
-    questions: JSON.parse(JSON.stringify(evaluationObj.questions || [])),
-    archivedAt: Date.now(),
-  };
-  evaluationObj.version = version + 1;
-  return evaluationObj.version;
-}
-
-/* ---- overgenomen uit editor.js ---- */
+/* Rubrics-scherm: evaluaties en criteria aanmaken en bewerken.
+   Afgesplitst uit js/evaluations.js (1.19.1). */
 
 /* ------------------------------------------------------------------
    EVALUATIE-EDITOR
@@ -9100,45 +9236,8 @@ function saveDraft() {
 }
 
 
-
-/* ------------------------------------------------------------------ */
-/* Open vragen in het evaluatieformulier                               */
-/* ------------------------------------------------------------------ */
-
-function renderOpenQuestions() {
-  var host = $("openQuestions");
-  host.innerHTML = "";
-  if (!cur.questions.length) return;
-
-  cur.questions.forEach(function (q) {
-    var group = el("div", "form-group");
-    group.style.marginTop = "16px";
-    group.appendChild(el("label", null, q.label));
-    var ta = document.createElement("textarea");
-    ta.id = "answer-" + q.id;
-    ta.className = "answer-field";
-    ta.dataset.question = q.id;
-    ta.placeholder = q.hint || "";
-    ta.style.minHeight = "58px";
-    group.appendChild(ta);
-    host.appendChild(group);
-  });
-}
-
-function collectAnswers() {
-  var out = {};
-  document.querySelectorAll(".answer-field").forEach(function (ta) {
-    var v = ta.value.trim();
-    if (v) out[ta.dataset.question] = v;
-  });
-  return out;
-}
-
-function fillAnswers(answers) {
-  document.querySelectorAll(".answer-field").forEach(function (ta) {
-    ta.value = (answers && answers[ta.dataset.question]) || "";
-  });
-}
+/* AI-hulp bij het opstellen van rubrics. Afgesplitst uit
+   js/evaluations.js (1.19.1). */
 
 /* ------------------------------------------------------------------
    AI-HULP: RUBRIC GENEREREN OP BASIS VAN EEN BESCHRIJVING
@@ -9961,15 +10060,7 @@ function fillResultSelectors() {
   // Zelfde mapindeling als bij Evalueren: <optgroup> per map in de echte
   // (onzichtbare) <select>, en koppen in de zichtbare zoeklijst.
   $("resEval").innerHTML = "";
-  evaluationGroups(year).forEach(function (g) {
-    var parent = $("resEval");
-    if (g.label) {
-      parent = document.createElement("optgroup");
-      parent.label = g.label;
-      $("resEval").appendChild(parent);
-    }
-    g.names.forEach(function (name) { parent.appendChild(new Option(name, name)); });
-  });
+  fillGroupedEvalSelect($("resEval"), year, "");
   if (prevEval && evaluationNames(db, year).indexOf(prevEval) !== -1) {
     $("resEval").value = prevEval;
   }
@@ -10687,9 +10778,10 @@ function renderCoverage() {
       btn.addEventListener("click", function () {
         $("resEval").value = ev;
         fillResultSelectors();
-        $("resEval").value = ev;
-        fillResultSelectors();
         $("resKlas").value = klas;
+        // Zonder resultaten staat deze klas niet in de lijst: dan "Alle
+        // klassen" tonen in plaats van een leeg veld.
+        if ($("resKlas").value !== klas) $("resKlas").value = "*";
         renderResults();
         $("resultsBody").scrollIntoView({ behavior: "smooth", block: "start" });
       });
@@ -12221,23 +12313,6 @@ function renderFolderSection() {
   buttons.innerHTML = "";
   state.innerHTML = "";
 
-  if (netSyncEnabled()) {
-    var box = el("div", "folder-state " + (netSyncReachable ? "" : "off"));
-    box.appendChild(document.createTextNode(
-      netSyncReachable
-        ? "Verbonden met het schoolnetwerk. Werk van collega's wordt automatisch bijgewerkt, ongeveer elke minuut."
-        : "Kan het schoolnetwerk nu niet bereiken. Dat hoort zo als je thuis werkt — je gegevens blijven bewaard " +
-          "en synchroniseren vanzelf zodra je weer op school bent.",
-    ));
-    state.appendChild(box);
-
-    var info = el("p", "hint");
-    info.style.marginTop = "8px";
-    info.textContent = "Deze school gebruikt automatische netwerksynchronisatie. Er is niets in te stellen — dit werkt vanzelf.";
-    state.appendChild(info);
-    return;
-  }
-
   if (!FOLDER_SUPPORTED) {
     var off = el("div", "folder-state off");
     off.appendChild(document.createTextNode(
@@ -12524,210 +12599,6 @@ function syncTeam(quiet) {
         (err && err.message ? err.message + ". " : "") + "Koppel de map opnieuw via het Teamscherm.",
       );
     });
-}
-
-/* ---- overgenomen uit netsync.js ---- */
-
-/* ------------------------------------------------------------------
-   NETWERKSYNCHRONISATIE (schoolnetwerk)
-
-   Voor scholen met een altijd-aan machine (meestal een NAS) op het
-   eigen netwerk. In plaats van een gedeelde map kiezen, praat de tool
-   rechtstreeks met een klein programma op die machine — automatisch,
-   op de achtergrond, zonder dat een leerkracht ooit iets hoeft te
-   kiezen of op "bijwerken" te klikken.
-
-   Werkt alleen wanneer NETWORK_SYNC is ingebakken bij het bouwen (zie
-   build.js). Is dat niet het geval, dan doet dit bestand niets en
-   blijft de gewone gedeelde-map-werking (team.js) intact.
-
-   Bereikbaarheid is vanzelf beperkt tot het schoolnetwerk: thuis kan
-   dat adres niet bereikt worden, dus valt alles automatisch terug op
-   de lokale kopie in de browser.
-   ------------------------------------------------------------------ */
-
-var netSyncTimer = null;
-
-var netSyncBusy = false;
-
-var netSyncReachable = null;
-
- // null = nog niet gecheckt
-var netSyncLastError = "";
-
-function netSyncEnabled() {
-  return typeof NETWORK_SYNC !== "undefined" && NETWORK_SYNC && NETWORK_SYNC.url;
-}
-
-function netSyncHeaders(extra) {
-  var h = { "X-Stem-Token": NETWORK_SYNC.token || "" };
-  if (extra) Object.keys(extra).forEach(function (k) { h[k] = extra[k]; });
-  return h;
-}
-
-
-
-/* Korte timeout: dit moet snel weten "ben ik op school", niet lang
-   hangen op een netwerk dat toch niet gaat antwoorden. */
-function netFetch(path, opts, timeoutMs) {
-  var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
-  var timer = controller ? setTimeout(function () { controller.abort(); }, timeoutMs || 2500) : null;
-  var init = Object.assign({}, opts || {});
-  if (controller) init.signal = controller.signal;
-
-  return fetch(NETWORK_SYNC.url.replace(/\/$/, "") + path, init).finally(function () {
-    if (timer) clearTimeout(timer);
-  });
-}
-
-function netSyncPing() {
-  return netFetch("/ping", {}, 2000)
-    .then(function (res) { return res.ok; })
-    .catch(function () { return false; });
-}
-
-
-
-/* Eigen werk naar de server sturen. */
-function netSyncPush() {
-  var initials = cleanAssessor(db.assessor);
-  if (!initials) return Promise.resolve(false);
-
-  var body = JSON.stringify({
-    format: DB_FORMAT,
-    version: DB_VERSION,
-    assessor: db.assessor,
-    instanceId: instanceId,
-    schoolYears: db.schoolYears,
-    currentSchoolYear: db.currentSchoolYear,
-    activeSchoolYear: db.activeSchoolYear,
-    evaluations: db.evaluations,
-    evaluationFolders: db.evaluationFolders,
-    tombstones: db.tombstones,
-    team: db.team,
-    settings: db.settings,
-  });
-
-  return netFetch("/file/" + encodeURIComponent(initials), {
-    method: "PUT",
-    headers: netSyncHeaders({ "Content-Type": "application/json" }),
-    body: body,
-  }, 4000)
-    .then(function (res) { return res.ok; })
-    .catch(function () { return false; });
-}
-
-
-
-/* Bestanden van collega's ophalen en samenvoegen — dezelfde
-   samenvoeglogica als bij de gedeelde map, alleen via het netwerk. */
-function netSyncPull() {
-  var initials = cleanAssessor(db.assessor);
-
-  return netFetch("/files", { headers: netSyncHeaders() }, 3000)
-    .then(function (res) { return res.ok ? res.json() : { files: [] }; })
-    .then(function (data) {
-      var others = (data.files || []).filter(function (f) { return f.id !== initials; });
-      var jobs = others.map(function (f) {
-        return netFetch("/file/" + encodeURIComponent(f.id), { headers: netSyncHeaders() }, 3000)
-          .then(function (res) { return res.ok ? res.json() : null; })
-          .catch(function () { return null; });
-      });
-      return Promise.all(jobs);
-    })
-    .then(function (results) {
-      var totals = { added: 0, updated: 0, classes: [], evaluations: [], team: false };
-      results.filter(Boolean).forEach(function (incoming) {
-        var read = readAnyFile(incoming, CONFIG);
-        if (!read) return;
-        var stats = mergeDb(db, read.db);
-        totals.added += stats.added;
-        totals.updated += stats.updated;
-        totals.classes = totals.classes.concat(stats.classes || []);
-        totals.evaluations = totals.evaluations.concat(stats.evaluations || []);
-        if (stats.team) totals.team = true;
-      });
-      return totals;
-    })
-    .catch(function () {
-      return { added: 0, updated: 0, classes: [], evaluations: [], team: false };
-    });
-}
-
-
-
-/* Eén synchronisatieronde: pushen, dan pullen, stil op de achtergrond.
-   Geeft nooit een fout op het scherm — als school niet bereikbaar is,
-   werkt de leerkracht gewoon lokaal verder, zoals de rest van de tool
-   dat ook al doet. */
-function netSyncRound(opts) {
-  if (!netSyncEnabled() || netSyncBusy) return;
-  netSyncBusy = true;
-
-  netSyncPing()
-    .then(function (reachable) {
-      var wasReachable = netSyncReachable;
-      netSyncReachable = reachable;
-      updateNetSyncIndicator();
-
-      if (!reachable) {
-        netSyncBusy = false;
-        return;
-      }
-
-      return netSyncPush()
-        .then(function () { return netSyncPull(); })
-        .then(function (totals) {
-          var changed = totals.added || totals.updated || totals.classes.length || totals.evaluations.length || totals.team;
-          if (changed) {
-            persist();
-            refreshAll();
-          }
-          // Alleen de eerste keer dat we op school verbinden een melding
-          // tonen — daarna gebeurt dit stil, zoals afgesproken.
-          if (!wasReachable && (opts && opts.announce !== false)) {
-            showNotice(
-              "good",
-              "Verbonden met school",
-              "Werk van collega's wordt vanaf nu automatisch bijgewerkt op de achtergrond." +
-                (changed ? " Er kwam meteen al iets binnen." : ""),
-            );
-          }
-          netSyncBusy = false;
-        });
-    })
-    .catch(function (err) {
-      netSyncLastError = err && err.message ? err.message : "onbekende fout";
-      netSyncBusy = false;
-    });
-}
-
-function updateNetSyncIndicator() {
-  var el2 = $("netSyncStatus");
-  if (!el2) return;
-  el2.classList.remove("hidden");
-  el2.classList.toggle("on", !!netSyncReachable);
-  el2.classList.toggle("off", !netSyncReachable);
-  el2.textContent = netSyncReachable ? "Verbonden met school" : "Niet op school — werkt lokaal";
-  el2.title = netSyncReachable
-    ? "Wordt automatisch bijgewerkt zolang je op het schoolnetwerk bent."
-    : "Kan de school niet bereiken. Je werk blijft lokaal bewaard en synchroniseert zodra je weer op school bent.";
-}
-
-function startNetSync() {
-  if (!netSyncEnabled()) return;
-  updateNetSyncIndicator();
-  netSyncRound({ announce: true });
-  netSyncTimer = setInterval(function () {
-    // Niet synchroniseren op een verborgen tabblad — geen zin, en
-    // scheelt onnodig netwerkverkeer op batterijvoeding.
-    if (document.hidden) return;
-    netSyncRound({ announce: true });
-  }, (NETWORK_SYNC.intervalSeconds || 60) * 1000);
-
-  document.addEventListener("visibilitychange", function () {
-    if (!document.hidden) netSyncRound({ announce: true });
-  });
 }
 
 /* ---- overgenomen uit core.js ---- */
@@ -13021,7 +12892,6 @@ function init() {
   resEvalCombo.init();
   initKlasMulti();
   initMoveStudent();
-  startNetSync();
 }
 
 
@@ -13031,17 +12901,13 @@ function init() {
 /* ------------------------------------------------------------------ */
 
 function initSetupWizard() {
-  if (typeof IS_DEMO !== "undefined" && IS_DEMO) return; // de testomgeving heeft haar eigen introductie
   if (!freshStart) return;
 
   $("setupWizard").classList.remove("hidden");
   document.body.classList.add("wizard-open");
   $("wizardInitials").focus();
 
-  if (netSyncEnabled()) {
-    $("wizardFolderGroup").classList.add("hidden");
-    $("wizardNetSyncGroup").classList.remove("hidden");
-  } else if (!FOLDER_SUPPORTED) {
+  if (!FOLDER_SUPPORTED) {
     $("wizardFolderGroup").classList.add("hidden");
   }
 
@@ -13116,20 +12982,6 @@ function initSetupWizard() {
   });
 }
 
-function initDemoBanner() {
-  $("demoBanner").classList.remove("hidden");
-  $("btnDemoReset").addEventListener("click", function () {
-    if (!confirm(
-      "Alle testgegevens wissen en de testomgeving herladen met de oorspronkelijke voorbeelddata?\n\n" +
-      "Eigen wijzigingen die je hier maakte, gaan verloren. Dit raakt alleen deze testomgeving, niet je echte werkbestand.",
-    )) return;
-    try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
-    // Anders vraagt de browser zelf óók nog eens of je de pagina mag
-    // verlaten, bovenop onze eigen bevestiging hierboven.
-    dirty = false;
-    location.reload();
-  });
-}
 
 
 

@@ -66,6 +66,7 @@
 .status.saved   { background: var(--success-soft); color: var(--success); }
 .status.dirty   { background: var(--warning-soft); color: var(--warning); }
 .status.nofile  { background: #f1f5f9; color: var(--muted); }
+.status.error   { background: var(--danger-soft); color: var(--danger); }
 
 /* ---------- Kaarten ---------- */
 
@@ -172,7 +173,7 @@ textarea { resize: vertical; min-height: 70px; }
   color: #0f172a;
   padding: 10px 10px 5px;
 }
-.eval-combo-group:not(:first-child) {
+.eval-combo-section + .eval-combo-section {
   border-top: 1px solid var(--border);
   margin-top: 6px;
 }
@@ -183,6 +184,8 @@ textarea { resize: vertical; min-height: 70px; }
   cursor: pointer;
 }
 .eval-combo-option.in-folder { padding-left: 18px; }
+.eval-combo-option.current { font-weight: 600; }
+.eval-combo-option.current::after { content: " ✓"; color: var(--primary); }
 .eval-combo-option:hover, .eval-combo-option.highlight {
   background: var(--primary-soft);
   color: var(--primary);
@@ -762,7 +765,10 @@ td.low { color: var(--danger); font-weight: 700; }
 }
 #safetyBar .txt { color: var(--warning); font-size: 14px; line-height: 1.5; }
 #safetyBar .txt strong { display: block; color: #92400e; font-size: 15px; margin-bottom: 2px; }
-#safetyBar .btn-row { margin-left: auto; }
+#safetyBar .btn-row { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+#safetyBar.error { border-color: #fca5a5; border-left-color: var(--danger); background: var(--danger-soft); }
+#safetyBar.error .txt { color: #991b1b; }
+#safetyBar.error .txt strong { color: #7f1d1d; }
 
 @media (max-width: 620px) {
   #safetyBar .btn-row { margin-left: 0; width: 100%; }
@@ -1074,44 +1080,6 @@ table.report-table td.rubriek-row {
   border-bottom: 1px solid #94a3b8;
 }
 
-/* ---------- Testomgeving ---------- */
-
-#demoBanner {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  background: repeating-linear-gradient(
-    135deg, #f5f3ff, #f5f3ff 14px, #ede9fe 14px, #ede9fe 28px
-  );
-  border-bottom: 2px solid #a78bfa;
-  padding: 11px 16px;
-  position: sticky;
-  top: 0;
-  z-index: 40;
-}
-#demoBanner .demo-banner-text {
-  font-size: 13.5px;
-  color: #5b21b6;
-  line-height: 1.5;
-}
-#demoBanner .demo-banner-text strong {
-  display: block;
-  font-size: 14.5px;
-  margin-bottom: 2px;
-}
-#demoBanner .btn-row, #demoBanner button {
-  margin-left: auto;
-  background: #fff;
-  border-color: #c4b5fd;
-  color: #5b21b6;
-  white-space: nowrap;
-}
-#demoBanner button:hover { background: #f5f3ff; }
-
-@media (max-width: 620px) {
-  #demoBanner button { margin-left: 0; width: 100%; }
-}
 
 /* ---------- Groeigrafiek ---------- */
 
@@ -1174,7 +1142,3 @@ body.wizard-open { overflow: hidden; }
   .wizard-actions #wizardSkip { margin-right: 0; text-align: center; }
 }
 
-/* ---------- Netwerksynchronisatie ---------- */
-
-.net-status.on { background: var(--success-soft); color: var(--success); }
-.net-status.off { background: #f1f5f9; color: var(--muted); }

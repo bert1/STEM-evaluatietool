@@ -48,31 +48,11 @@
           <div id="wizardFolderState" style="margin-top: 10px"></div>
         </div>
 
-        <div class="form-group hidden" id="wizardNetSyncGroup">
-          <div class="notice good">
-            <strong>Automatische synchronisatie met school</strong>
-            Deze school heeft netwerksynchronisatie ingesteld. Je werk wordt automatisch
-            uitgewisseld met collega's zodra je op het schoolnetwerk bent — hier hoef je niets
-            voor te kiezen of te onthouden.
-          </div>
-        </div>
-
         <div class="wizard-actions">
           <button type="button" class="btn-ghost" id="wizardSkip">Overslaan, ik doe dit later</button>
           <button type="button" class="btn-primary" id="wizardFinish" disabled>Beginnen</button>
         </div>
       </div>
-    </div>
-
-    <div id="demoBanner" class="hidden">
-      <div class="demo-banner-text">
-        <strong>Testomgeving — fictieve gegevens</strong>
-        Alle klassen, leerlingen en resultaten hierin zijn verzonnen. Klik gerust overal op, maak
-        fouten en probeer dingen kapot te maken — dit heeft geen invloed op je echte werkbestand.
-      </div>
-      <button type="button" class="btn-ghost btn-small" id="btnDemoReset">
-        Testgegevens wissen en opnieuw beginnen
-      </button>
     </div>
 
     <div class="topbar">
@@ -104,7 +84,6 @@
         <button type="button" class="nav-btn" id="btnTeam">Team</button>
       </nav>
       <span class="status nofile" id="status">Geen bestand gekozen</span>
-      <span class="status net-status hidden" id="netSyncStatus"></span>
     </div>
 
     <div class="container">
@@ -683,7 +662,10 @@
     <script src="js/state.js"></script>
     <script src="js/storage.js"></script>
     <script src="js/rosters.js"></script>
+    <script src="js/rubric-model.js"></script>
     <script src="js/evaluations.js"></script>
+    <script src="js/rubric-editor.js"></script>
+    <script src="js/ai-rubric.js"></script>
     <script src="js/results.js"></script>
     <script src="js/reports.js"></script>
     <script src="js/goals.js"></script>
