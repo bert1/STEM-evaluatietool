@@ -1299,7 +1299,16 @@ details.controle-fold { margin: 14px 0; }
 /* ---------- Rubric-editor: doelniveau en volgende stap (1.24.0) ---------- */
 .level-target { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--muted); padding-top: 8px; cursor: pointer; text-transform: none; letter-spacing: 0; font-weight: 500; margin: 0; }
 .level-target input { width: auto; margin: 0; }
-.level-row .level-next { grid-column: 3 / 4; font-size: 13px; padding: 5px 9px; color: var(--text); background: var(--bg); border-style: dashed; margin-top: -2px; }
+/* Feedbackzinnen voor leerlingen (1.25.0) */
+.feedback-sentences { margin: 10px 0 4px; border: 1px dashed var(--border); border-radius: 8px; padding: 6px 10px; }
+.feedback-sentences > summary { cursor: pointer; font-size: 13.5px; font-weight: 600; padding: 2px 0; }
+.feedback-sentences-count { font-weight: 400; font-size: 12.5px; }
+.feedback-sentences-intro { font-size: 12.5px; margin: 6px 0 8px; }
+.feedback-level { margin-bottom: 10px; }
+.feedback-level-title { font-size: 12.5px; color: var(--muted); margin-bottom: 3px; }
+.feedback-level input { font-size: 13px; padding: 5px 9px; margin-bottom: 4px; background: var(--bg); }
+.feedback-tip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.skore-th-hint { display: inline-block; margin-left: 4px; font-size: 11px; font-weight: 700; color: var(--muted); border: 1px solid var(--border); border-radius: 50%; width: 15px; height: 15px; line-height: 13px; text-align: center; cursor: help; }
 .criteria-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
 .rubric-warnings ul { margin: 4px 0 0; padding-left: 20px; }
 .rubric-warnings li { margin: 2px 0; }
@@ -2056,7 +2065,6 @@ table.feedup-table td {
               <div class="form-group ai-new-only">
                 <span class="ai-q-label">Aantal niveaus per criterium</span>
                 <div class="btn-row" id="aiLevels" role="group" aria-label="Aantal niveaus">
-                  <button type="button" class="chip-toggle" data-value="3" aria-pressed="false">3</button>
                   <button type="button" class="chip-toggle" data-value="4" aria-pressed="false">4</button>
                   <button type="button" class="chip-toggle" data-value="5" aria-pressed="true">5</button>
                 </div>
@@ -4766,7 +4774,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.24.1";
+var APP_VERSION = "1.25.0";
 
 var DB_VERSION = 4;
 
@@ -7419,7 +7427,7 @@ function blankRubric(count, taken) {
     description: "",
     targetScore: LEVEL_TARGETS[count],
     options: LEVEL_TEMPLATES[count].map(function (label, i) {
-      return { score: i + 1, label: label, desc: "", next: "" };
+      return { score: i + 1, label: label, desc: "", say: "", next: "" };
     }),
   };
 }
@@ -7462,6 +7470,72 @@ function textSimilarity(a, b) {
 
 var DASH_PATTERN = /\u2014|\s\u2013\s/;
 
+/* LEERLINGENTAAL (sinds 1.25.0). Leerlingen van 12 tot 14 jaar lezen de
+   rubric en de feedbackzinnen zelf. Deze woorden zijn te abstract voor
+   hen; de editor meldt ze (nooit blokkerend). Alle vormen staan erbij,
+   zodat de vergelijking per woord eenvoudig blijft. */
+var DIFFICULT_WORDS = [
+  "adequaat", "adequate", "coherent", "coherente", "relevant", "relevante",
+  "optimaal", "optimale", "systematisch", "systematische", "correct", "correcte",
+  "kwalitatief", "kwalitatieve", "functioneel", "functionele", "conform",
+  "specifiek", "specifieke", "gespecificeerd", "gespecificeerde",
+  "beargumenteerd", "beargumenteerde", "summier", "summiere",
+  "diepgaand", "diepgaande", "beknopt", "beknopte", "essentieel", "essentiële",
+  "significant", "significante", "consistent", "consistente",
+  "accuraat", "accurate", "efficiënt", "efficiënte", "uiterst",
+];
+
+var LONG_SENTENCE_WORDS = 20;
+
+var YOU_FORM = /(^|[^a-zà-ÿ])(je|jij|jou|jouw|jullie)([^a-zà-ÿ]|$)/i;
+
+function isYouForm(text) {
+  return YOU_FORM.test(String(text || ""));
+}
+
+/* Staat de rubric in de je-vorm? Ja als minstens de helft van de
+   ingevulde niveauomschrijvingen je, jij, jouw of jullie bevat. Een
+   rubric zonder omschrijvingen telt als ja: er valt niets te melden. */
+function rubricInPupilLanguage(rubrics) {
+  var filled = 0, you = 0;
+  (rubrics || []).forEach(function (r) {
+    (r.options || []).forEach(function (o) {
+      var d = String(o.desc || "").trim();
+      if (!d) return;
+      filled++;
+      if (isYouForm(d)) you++;
+    });
+  });
+  return filled === 0 || you * 2 >= filled;
+}
+
+/* Heeft elk niveau zijn feedbackzinnen: een feedbackzin (say) en een
+   volgende stap of, op het hoogste niveau, een uitdaging (next)? */
+function rubricHasFeedbackSentences(rubrics) {
+  return (rubrics || []).every(function (r) {
+    return (r.options || []).every(function (o) {
+      return String(o.say || "").trim() && String(o.next || "").trim();
+    });
+  });
+}
+
+function longestSentenceWords(text) {
+  return String(text || "").split(/[.!?]+/).reduce(function (m, part) {
+    return Math.max(m, textWords(part).length);
+  }, 0);
+}
+
+function difficultWordsIn(text) {
+  var found = [];
+  textWords(text).forEach(function (w) {
+    if (DIFFICULT_WORDS.indexOf(w) !== -1 && found.indexOf(w) === -1) found.push(w);
+  });
+  return found;
+}
+
+var PUPIL_LANGUAGE_WARNING = "Deze rubric is nog niet in leerlingentaal geschreven. Gebruik Laat AI deze rubric nakijken.";
+var FEEDBACK_SENTENCES_WARNING = "Nog niet elk niveau heeft feedbackzinnen voor leerlingen. Gebruik Laat AI deze rubric nakijken.";
+
 /* chosenLevels: het aantal niveaus dat in de AI-hulp gekozen werd, of
    0/undefined in de editor. Geeft een lijst met leesbare meldingen. */
 function rubricWarnings(rubrics, year, chosenLevels) {
@@ -7469,6 +7543,16 @@ function rubricWarnings(rubrics, year, chosenLevels) {
   var counts = rubrics.map(function (r) { return (r.options || []).length; });
   var most = null, freq = {};
   counts.forEach(function (c) { freq[c] = (freq[c] || 0) + 1; if (most === null || freq[c] > freq[most]) most = c; });
+
+  /* Leerlingentaal: staat de rubric nog in de derde persoon, dan één
+     melding voor de hele rubric. De meldingen over lange zinnen en
+     moeilijke woorden komen pas als hij in de je-vorm staat: het
+     nakijken door de AI lost die toch allemaal samen op. */
+  var pupil = rubricInPupilLanguage(rubrics);
+  var anyDesc = rubrics.some(function (r) {
+    return (r.options || []).some(function (o) { return String(o.desc || "").trim(); });
+  });
+  if (!pupil) out.push(PUPIL_LANGUAGE_WARNING);
 
   rubrics.forEach(function (r, ri) {
     var nr = "Criterium " + (ri + 1);
@@ -7481,13 +7565,27 @@ function rubricWarnings(rubrics, year, chosenLevels) {
     if (DASH_PATTERN.test(r.name || "") || DASH_PATTERN.test(r.description || "")) {
       out.push(nr + ": de naam of uitleg bevat een gedachtestreep.");
     }
+    if (pupil) {
+      var hardHead = difficultWordsIn((r.name || "") + " " + (r.description || ""));
+      if (hardHead.length) out.push(nr + ": moeilijk woord in de naam of uitleg (" + hardHead.join(", ") + ").");
+    }
     (r.options || []).forEach(function (o, oi) {
       var where = nr + ", niveau " + (oi + 1);
       var desc = String(o.desc || "").trim();
       if (!desc) out.push(where + ": nog geen omschrijving.");
       else if (isVagueText(desc)) out.push(where + ": enkel \"" + desc.replace(/[.!]+$/, "").toLowerCase() + "\". Wat zie je concreet?");
       else if (textWords(desc).length < 4) out.push(where + ": erg kort. Wat zie je concreet?");
-      if (DASH_PATTERN.test(desc) || DASH_PATTERN.test(o.next || "")) out.push(where + ": bevat een gedachtestreep.");
+      if (DASH_PATTERN.test(desc) || DASH_PATTERN.test(o.next || "") || DASH_PATTERN.test(o.say || "")) {
+        out.push(where + ": bevat een gedachtestreep.");
+      }
+      if (pupil) {
+        var texts = [desc, o.say, o.next];
+        if (texts.some(function (t) { return longestSentenceWords(t) > LONG_SENTENCE_WORDS; })) {
+          out.push(where + ": een zin is langer dan " + LONG_SENTENCE_WORDS + " woorden. Maak er twee korte zinnen van.");
+        }
+        var hard = difficultWordsIn(texts.join(" "));
+        if (hard.length) out.push(where + ": moeilijk woord voor leerlingen (" + hard.join(", ") + ").");
+      }
       var nextOpt = r.options[oi + 1];
       if (desc && nextOpt && String(nextOpt.desc || "").trim() && textSimilarity(desc, nextOpt.desc) >= 0.9) {
         out.push(where + ": bijna dezelfde tekst als niveau " + (oi + 2) + ".");
@@ -7495,6 +7593,7 @@ function rubricWarnings(rubrics, year, chosenLevels) {
     });
     if (yearHasGoals(year) && !(r.goals || []).length) out.push(nr + ": nog geen leerplandoel gekoppeld.");
   });
+  if (pupil && anyDesc && !rubricHasFeedbackSentences(rubrics)) out.push(FEEDBACK_SENTENCES_WARNING);
   return out;
 }
 
@@ -9279,21 +9378,10 @@ function renderDraftRubrics() {
       });
       row.appendChild(rmLevel);
 
-      // Volgende stap voor de leerling (optioneel, niet bij het hoogste
-      // niveau): gebruikt door de feedback in Skore.
-      if (Number(opt.score) !== topScore) {
-        var nx = document.createElement("input");
-        nx.type = "text";
-        nx.className = "level-next";
-        nx.value = opt.next || "";
-        nx.placeholder = "Volgende stap voor de leerling (optioneel), bv. Schrijf vooraf op wat je verwacht te meten.";
-        nx.setAttribute("aria-label", "Volgende stap bij niveau " + (oi + 1));
-        nx.addEventListener("input", function () { opt.next = this.value; renderDraftChecks(); });
-        row.appendChild(nx);
-      }
-
       card.appendChild(row);
     });
+
+    card.appendChild(renderFeedbackSentences(rubric, topScore));
 
     if (yearHasGoals(draft.year)) {
       card.appendChild(renderGoalPicker(rubric));
@@ -9318,6 +9406,68 @@ function renderDraftRubrics() {
   renderDraftChecks();
 }
 
+/* Feedbackzinnen voor leerlingen (sinds 1.25.0): per niveau een
+   feedbackzin (option.say) en een volgende stap (option.next), of op het
+   hoogste niveau een uitdaging (ook option.next). Optioneel; de feedback
+   in Skore gebruikt ze. Standaard dicht, zodat de editor overzichtelijk
+   blijft; open blijft open zolang de evaluatie openstaat. */
+var feedbackSentencesOpen = {};
+
+function renderFeedbackSentences(rubric, topScore) {
+  var box = document.createElement("details");
+  box.className = "feedback-sentences";
+  box.open = !!feedbackSentencesOpen[rubric.id];
+  box.addEventListener("toggle", function () { feedbackSentencesOpen[rubric.id] = box.open; });
+
+  var summary = el("summary", null, "Feedbackzinnen voor leerlingen");
+  var count = el("span", "muted feedback-sentences-count", "");
+  summary.appendChild(count);
+  box.appendChild(summary);
+
+  function updateCount() {
+    var filled = 0, total = 0;
+    rubric.options.forEach(function (o) {
+      total += 2;
+      if (String(o.say || "").trim()) filled++;
+      if (String(o.next || "").trim()) filled++;
+    });
+    count.textContent = " (" + filled + " van " + total + " ingevuld)";
+  }
+
+  box.appendChild(el("p", "muted feedback-sentences-intro",
+    "Korte zinnen in de je-vorm voor de feedback in Skore. Zonder naam, punten of niveaunamen."));
+
+  rubric.options.forEach(function (opt, oi) {
+    var top = Number(opt.score) === topScore;
+    var group = el("div", "feedback-level");
+    group.appendChild(el("div", "feedback-level-title", "Niveau " + (oi + 1) + (opt.label ? " (" + opt.label + ")" : "")));
+
+    var say = document.createElement("input");
+    say.type = "text";
+    say.className = "level-say";
+    say.value = opt.say || "";
+    say.placeholder = "Feedbackzin, bv. Je deed drie proeven, maar je schreef niet op wat je verwachtte.";
+    say.setAttribute("aria-label", "Feedbackzin bij niveau " + (oi + 1));
+    say.addEventListener("input", function () { opt.say = this.value; updateCount(); renderDraftChecks(); });
+    group.appendChild(say);
+
+    var nx = document.createElement("input");
+    nx.type = "text";
+    nx.className = "level-next";
+    nx.value = opt.next || "";
+    nx.placeholder = top
+      ? "Uitdaging, bv. Test je ontwerp ook met een zwaarder ei."
+      : "Volgende stap, bv. Schrijf vooraf op wat je verwacht te meten.";
+    nx.setAttribute("aria-label", (top ? "Uitdaging" : "Volgende stap") + " bij niveau " + (oi + 1));
+    nx.addEventListener("input", function () { opt.next = this.value; updateCount(); renderDraftChecks(); });
+    group.appendChild(nx);
+
+    box.appendChild(group);
+  });
+  updateCount();
+  return box;
+}
+
 /* Kwaliteitscontrole van de hele rubric, live onder de criteria. Enkel
    waarschuwingen: opslaan blijft altijd mogelijk. */
 function renderDraftChecks() {
@@ -9326,8 +9476,25 @@ function renderDraftChecks() {
   host.innerHTML = "";
   var list = draft.rubrics.filter(function (r) { return !isUntouchedRubric(r); });
   if (!list.length) return;
-  var warnings = rubricWarnings(draft.rubrics, draft.year, 0);
+  // De meldingen over leerlingentaal en feedbackzinnen staan apart, met
+  // een knop naar het nakijken door de AI (sinds 1.25.0).
+  var warnings = rubricWarnings(draft.rubrics, draft.year, 0).filter(function (w) {
+    return w !== PUPIL_LANGUAGE_WARNING && w !== FEEDBACK_SENTENCES_WARNING;
+  });
   if (warnings.length) host.appendChild(renderWarningsBox(warnings, "Nakijken"));
+
+  var pupil = rubricInPupilLanguage(list);
+  if (!pupil || !rubricHasFeedbackSentences(list)) {
+    var tip = el("div", "notice info feedback-tip");
+    tip.appendChild(el("span", null, pupil
+      ? "Nog niet elk niveau heeft feedbackzinnen voor leerlingen. Laat de AI ze aanvullen, dan wordt de feedback in Skore persoonlijker."
+      : "Deze rubric is nog niet in leerlingentaal geschreven. Laat de AI hem nakijken, dan begrijpen leerlingen hem beter en wordt de feedback in Skore persoonlijker."));
+    var go = el("button", "btn-ghost btn-small", "Laat AI deze rubric nakijken");
+    go.type = "button";
+    go.addEventListener("click", openAiReview);
+    tip.appendChild(go);
+    host.appendChild(tip);
+  }
 }
 
 
@@ -9652,13 +9819,15 @@ function saveDraft() {
       var options = r.options
         .map(function (o) {
           var opt = { score: Number(o.score), label: String(o.label).trim(), desc: String(o.desc || "").trim() };
+          // Optioneel, en telt niet mee voor een nieuwe rubricversie. Op
+          // het hoogste niveau is "next" de uitdaging (sinds 1.25.0).
+          var say = String(o.say || "").trim();
+          if (say) opt.say = say;
           var next = String(o.next || "").trim();
           if (next) opt.next = next;
           return opt;
         })
         .sort(function (a, b) { return a.score - b.score; });
-      // Het hoogste niveau heeft geen volgende stap.
-      if (options.length) delete options[options.length - 1].next;
       var out = {
         id: r.id,
         name: String(r.name).trim(),
@@ -9750,8 +9919,15 @@ function saveDraft() {
    - Een expliciete lat: het niveau "doel behaald" beschrijft het
      leerplandoel op zijn Bloom-niveau; erboven gaat verder, eronder
      toont wat ontbreekt.
-   - Kwaliteitsregels voor criteria en niveaus, een volgende stap per
-     niveau in je-vorm, en een zelfcontrole vóór het antwoord.
+   - Kwaliteitsregels voor criteria en niveaus, en een zelfcontrole vóór
+     het antwoord.
+   - Leerlingentaal (sinds 1.25.0): de leerlingen lezen de rubric zelf.
+     De prompt noemt hun leeftijd (AGE_BY_YEAR) en vraagt de je-vorm,
+     korte zinnen en alledaagse woorden.
+   - Feedbackbouwstenen per niveau (sinds 1.25.0), in je-vorm: een
+     feedbackzin (option.say), een volgende stap (option.next) en op het
+     hoogste niveau een uitdaging (ook in option.next). De feedback in
+     Skore (js/feedback.js) bouwt daarmee zijn tekst.
    - Geen enkele gedachtestreep in de prompt: modellen nemen de stijl van
      de vraag over.
    ------------------------------------------------------------------ */
@@ -9764,7 +9940,8 @@ function isUntouchedRubric(rubric) {
   if (rubric.name && rubric.name.trim()) return false;
   if (rubric.description && rubric.description.trim()) return false;
   return (rubric.options || []).every(function (o) {
-    return (!o.desc || !o.desc.trim()) && (!o.next || !String(o.next).trim());
+    return (!o.desc || !o.desc.trim()) && (!o.next || !String(o.next).trim()) &&
+      (!o.say || !String(o.say).trim());
   });
 }
 
@@ -9796,6 +9973,15 @@ function aiContextLines(ctx, mode) {
   return lines;
 }
 
+/* Leeftijd per leerjaar, voor de prompt. Een leerjaar dat hier niet in
+   staat, krijgt geen leeftijd in de prompt. */
+var AGE_BY_YEAR = { "1ste jaar": "12 tot 13 jaar", "2de jaar": "13 tot 14 jaar" };
+
+/* "een leerling van 12 tot 13 jaar", of "een leerling" zonder leeftijd. */
+function aiPupil(year) {
+  return AGE_BY_YEAR[year] ? "een leerling van " + AGE_BY_YEAR[year] : "een leerling";
+}
+
 var AI_QUALITY_RULES = [
   "Eén aspect per criterium. Een criterium meet nooit twee dingen tegelijk.",
   "Elk niveau is concreet en waarneembaar: wat zie of lees je in het werk van de leerling? Gebruik geen vage woorden zoals \"goed\", \"voldoende\" of \"correct\" zonder te zeggen wat je dan precies ziet.",
@@ -9806,6 +9992,23 @@ var AI_QUALITY_RULES = [
   "Houd elke omschrijving op 1 of 2 zinnen.",
   "Gebruik nergens een gedachtestreep. Schrijf gewone zinnen met punten en komma's.",
 ];
+
+/* Taalregels voor een rubric die leerlingen zelf lezen (sinds 1.25.0).
+   De verwijzing naar wat ze vooraf leerden staat er enkel als de
+   leerkracht dat in de context invulde. */
+function aiLanguageRules(hasPrior) {
+  return [
+    "De naam van een criterium is kort, hoogstens vijf woorden, in gewone woorden.",
+    "De beschrijving van een criterium zegt in één zin wat de leerling moet kunnen of tonen.",
+    "Schrijf elk niveau in de je-vorm: wat toont de leerling in het werk? Bijvoorbeeld: \"Je schrijft vooraf op wat je verwacht te zien en waarom.\"",
+    "Korte zinnen: hoogstens 15 woorden, één idee per zin.",
+    (hasPrior
+      ? "Gebruik alledaagse woorden. Een vakterm mag enkel als de leerlingen die in de les leerden (zie \"Wat ze vooraf al leerden of oefenden\")."
+      : "Gebruik alledaagse woorden en vermijd vaktermen.") +
+      " Geen abstracte woorden zoals \"adequaat\", \"coherent\", \"relevant\", \"optimaal\", \"systematisch\" of \"correct\".",
+    "Schrijf actief: \"je meet\", niet \"er wordt gemeten\".",
+  ];
+}
 
 /* De huidige rubric als json, voor de stand "nakijken". */
 function rubricsForAiReview(rubrics, year) {
@@ -9821,8 +10024,9 @@ function rubricsForAiReview(rubrics, year) {
         opts.forEach(function (o, i) { if (Number(o.score) === target) out.doelNiveau = i + 1; });
       }
       out.niveaus = opts.map(function (o, i) {
-        var n = { label: o.label || "", omschrijving: o.desc || "" };
+        var n = { label: o.label || "", omschrijving: o.desc || "", feedbackZin: o.say || "" };
         if (i < opts.length - 1) n.volgendeStap = o.next || "";
+        else n.uitdaging = o.next || "";
         return n;
       });
       return out;
@@ -9841,17 +10045,20 @@ function buildAiRubricPrompt(opts, legacyYear) {
   var target = LEVEL_TARGETS[levels];
   var goals = yearHasGoals(year) ? goalsForYear(year) : [];
   var description = String(opts.description || "").trim();
+  var ageNote = AGE_BY_YEAR[year] ? " (" + AGE_BY_YEAR[year] + ")" : "";
+  var pupil = aiPupil(year);
+  var hasPrior = !!String((opts.context && opts.context.prior) || "").trim();
 
   var lines = [];
   if (review) {
     lines.push(
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Kijk de beoordelingsrubric " +
-        "hieronder na, voor leerlingen uit het " + year + ", en verbeter ze volgens de regels in deze vraag.",
+        "hieronder na, voor leerlingen uit het " + year + ageNote + ", en verbeter ze volgens de regels in deze vraag.",
     );
   } else {
     lines.push(
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Help me een beoordelingsrubric " +
-        "opstellen voor leerlingen uit het " + year + ".",
+        "opstellen voor leerlingen uit het " + year + ageNote + ".",
     );
   }
 
@@ -9865,8 +10072,10 @@ function buildAiRubricPrompt(opts, legacyYear) {
     lines.push(
       "Behoud bij elk criterium het aantal niveaus en hun namen (\"label\"). Het niveau \"doel behaald\" " +
         "staat per criterium bij \"doelNiveau\" (het nummer van het niveau, van laag naar hoog).",
-      "Behoud van elk criterium het \"id\". Voeg geen criteria toe en verwijder er geen. Vul ontbrekende " +
-        "volgende stappen aan. Wat de regels hieronder al volgt, mag blijven zoals het is.",
+      "Behoud van elk criterium het \"id\". Voeg geen criteria toe en verwijder er geen.",
+      "Herschrijf namen, beschrijvingen en omschrijvingen in leerlingentaal (zie LEERLINGENTAAL). Vul ontbrekende " +
+        "feedbackzinnen, volgende stappen en uitdagingen aan (zie FEEDBACKZINNEN). Wat de regels hieronder al " +
+        "volgt, mag blijven zoals het is.",
     );
   } else {
     lines.push("Elk criterium krijgt precies " + levels + " niveaus, van laag naar hoog:");
@@ -9892,11 +10101,20 @@ function buildAiRubricPrompt(opts, legacyYear) {
   var rules = (review ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
   rules.forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
 
+  lines.push("", "LEERLINGENTAAL",
+    "De leerlingen lezen deze rubric zelf. Schrijf zo dat " + pupil + " elk niveau begrijpt zonder uitleg.");
+  aiLanguageRules(hasPrior).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+
   lines.push(
-    "", "VOLGENDE STAP",
-    "Schrijf bij elk niveau behalve het hoogste één korte zin in je-vorm, gericht tot de leerling. Die zin " +
-      "zegt concreet wat de leerling moet doen om het volgende niveau te halen. Bijvoorbeeld: \"Schrijf bij " +
-      "je hypothese vooraf op welk verschil je verwacht te meten.\"",
+    "", "FEEDBACKZINNEN",
+    "Schrijf bij elk niveau ook korte zinnen voor de leerling, in de je-vorm:",
+    "- \"feedbackZin\": wat de leerling op dit niveau toonde, concreet over de taak of de aanpak. Geen lof " +
+      "over de persoon. Bijvoorbeeld: \"Je hebt drie proeven gedaan, maar je schreef niet op wat je verwachtte.\"",
+    "- \"volgendeStap\", bij elk niveau behalve het hoogste: wat de leerling concreet moet doen om het " +
+      "volgende niveau te halen. Bijvoorbeeld: \"Schrijf bij je hypothese vooraf op welk verschil je verwacht te meten.\"",
+    "- \"uitdaging\", enkel bij het hoogste niveau: één concrete stap om nog verder te gaan.",
+    "Deze zinnen volgen dezelfde taalregels. Ze bevatten geen naam, geen tijdelijke aanduiding zoals {naam}, " +
+      "geen punten en geen namen van niveaus. Ze kloppen voor elke leerling op dat niveau.",
   );
 
   if (goals.length) {
@@ -9931,7 +10149,13 @@ function buildAiRubricPrompt(opts, legacyYear) {
       ? "Sluit het niveau \"doel behaald\" aan bij het Bloom-niveau van het gekoppelde doel?"
       : "Sluit niveau " + target + " aan bij het Bloom-niveau van het gekoppelde doel?");
   }
-  checks.push("Heeft elk niveau behalve het hoogste een volgende stap?", "Staat er nergens een gedachtestreep?");
+  checks.push(
+    "Kan " + pupil + " elk niveau lezen en zeggen: dit zie ik in mijn werk, of dit zie ik er niet in?",
+    "Staat elk niveau in de je-vorm, met korte zinnen en alledaagse woorden?",
+    "Heeft elk niveau een feedbackZin, elk niveau behalve het hoogste een volgendeStap, en het hoogste niveau een uitdaging?",
+    "Staat er in de feedbackzinnen geen naam, geen punt en geen naam van een niveau?",
+    "Staat er nergens een gedachtestreep?",
+  );
   checks.forEach(function (c) { lines.push("- " + c); });
 
   lines.push(
@@ -9948,9 +10172,11 @@ function buildAiRubricPrompt(opts, legacyYear) {
   lines.push("      \"niveaus\": [");
   var exampleCount = review ? 3 : levels;
   for (var i = 1; i <= exampleCount; i++) {
+    var level = "        { \"omschrijving\": \"Je-vorm: wat de leerling toont bij niveau " + i + "\", " +
+      "\"feedbackZin\": \"Je-vorm: wat de leerling toonde\", ";
     lines.push(i < exampleCount
-      ? "        { \"omschrijving\": \"Wat je ziet bij niveau " + i + "\", \"volgendeStap\": \"Zin in je-vorm\" },"
-      : "        { \"omschrijving\": \"Wat je ziet bij niveau " + i + "\" }");
+      ? level + "\"volgendeStap\": \"Je-vorm: wat de leerling nu doet\" },"
+      : level + "\"uitdaging\": \"Je-vorm: hoe de leerling nog verder gaat\" }");
   }
   lines.push("      ]", "    }", "  ]" + (goals.length ? "," : ""));
   if (goals.length) {
@@ -10005,8 +10231,9 @@ function aiGoalKeys(codes, year, counter) {
   return keys;
 }
 
-/* Zet het geplakte AI-antwoord om. Leest het nieuwe formaat (1.24.0:
-   volgendeStap, ookPassend, zonderDoel) en het oude (label per niveau).
+/* Zet het geplakte AI-antwoord om. Leest het nieuwe formaat (1.25.0:
+   feedbackZin en uitdaging erbij), dat van 1.24.0 (volgendeStap,
+   ookPassend, zonderDoel) en het oudste (label per niveau).
    De labels komen altijd uit de tool: de standaardreeks bij het aantal
    niveaus. Enkel voor een aantal zonder standaardreeks valt de tool
    terug op het label van de AI.
@@ -10033,7 +10260,8 @@ function parseAiRubricResponse(text, year, taken) {
         score: li + 1,
         label: template ? template[li] : String((lv && lv.label) || "Niveau " + (li + 1)).trim(),
         desc: String((lv && lv.omschrijving) || "").trim(),
-        next: li < n - 1 ? String((lv && lv.volgendeStap) || "").trim() : "",
+        say: String((lv && lv.feedbackZin) || "").trim(),
+        next: String((lv && (li < n - 1 ? lv.volgendeStap : lv.uitdaging)) || "").trim(),
       };
     });
     var r = {
@@ -10091,7 +10319,8 @@ function buildAiReview(currentRubrics, text, year) {
         score: o.score,
         label: o.label,
         desc: String(lv.omschrijving || "").trim() || o.desc || "",
-        next: i < opts.length - 1 ? (String(lv.volgendeStap || "").trim() || o.next || "") : "",
+        say: String(lv.feedbackZin || "").trim() || o.say || "",
+        next: String((i < opts.length - 1 ? lv.volgendeStap : lv.uitdaging) || "").trim() || o.next || "",
       };
     });
     if (c.naam && String(c.naam).trim()) proposed.name = String(c.naam).trim();
@@ -10105,7 +10334,8 @@ function buildAiReview(currentRubrics, text, year) {
     diff("Uitleg", cur.description, proposed.description);
     proposed.options.forEach(function (o, i) {
       diff("Niveau " + (i + 1) + " (" + o.label + ")", opts[i].desc, o.desc);
-      if (i < opts.length - 1) diff("Volgende stap bij niveau " + (i + 1), opts[i].next, o.next);
+      diff("Feedbackzin bij niveau " + (i + 1), opts[i].say, o.say);
+      diff((i < opts.length - 1 ? "Volgende stap" : "Uitdaging") + " bij niveau " + (i + 1), opts[i].next, o.next);
     });
     if (yearHasGoals(year)) {
       diff("Leerplandoelen", (cur.goals || []).join(", "), (proposed.goals || []).join(", "));
@@ -12910,14 +13140,41 @@ function progressByAssessor(rows, students) {
    één leerling, om te plakken bij het resultaat in Skore. Volledig
    offline en zonder AI: dezelfde beoordeling geeft altijd dezelfde tekst.
 
-   Steunt op Hattie en Timperley: goede feedback beantwoordt drie vragen.
-     Waar ga je naartoe?      (feed-up: opdracht en criteria)
-     Waar sta je nu?          (feedback: sterk punt en werkpunt)
-     Wat is je volgende stap? (feed-forward: één concrete stap)
-   De tool haalt enkel taak- en procesfeedback uit de rubric. Wat over
-   zelfregulatie of de leerling zelf gaat, komt alleen uit de eigen
-   tekst van de leerkracht (row.feedback en row.feedforward), die
-   letterlijk en onverkort wordt overgenomen.
+   Theorie (zie ook HANDOFF.md, "Feedback voor leerlingen van 12 tot 14"):
+   - Hattie en Timperley (2007): goede feedback beantwoordt drie vragen:
+     waar ga je naartoe, waar sta je nu, wat is je volgende stap. Sinds
+     1.25.0 met korte labels in leerlingentaal in plaats van die vragen.
+   - Kluger en DeNisi (1996): feedback die de aandacht op de persoon
+     richt, verlaagt de prestatie. Daarom enkel taak- en procesfeedback
+     uit de rubric, nooit lof over de persoon.
+   - Wisniewski, Zierer en Hattie (2020): informatierijke feedback werkt
+     het sterkst. Daarom telkens het criterium en wat de leerling toonde.
+   - Mueller en Dweck (1998): prijs de aanpak, niet het talent. De
+     feedbackzinnen van de rubric gaan over wat de leerling deed.
+   - Yeager en collega's (2014), wise feedback: leerlingen van 12 à 13
+     jaar gebruiken feedback veel vaker als de leerkracht zegt dat ze
+     hoge verwachtingen heeft en gelooft dat de leerling die haalt.
+     Daarom één vaste vertrouwenszin bij een werkpunt.
+   - Butler (1988): geen cijfer naast de commentaar.
+   - Shute (2008): kort, concreet, eenvoudige woorden. Hoogstens één
+     sterk punt, één werkpunt en één volgende stap.
+   - Ook een sterke leerling krijgt een concrete volgende stap: de
+     uitdaging van de rubric, geen "doe zo verder".
+   Wat over zelfregulatie of de leerling zelf gaat, komt alleen uit de
+   eigen tekst van de leerkracht (row.feedback en row.feedforward), die
+   letterlijk en onverkort wordt overgenomen. De tekst noemt geen naam:
+   de je-vorm maakt hem persoonlijk (namen uit Smartschool staan niet
+   betrouwbaar als voornaam in de klaslijst).
+
+   Opbouw (sinds 1.25.0):
+     Bij "opdracht" werd je beoordeeld op: criteria.
+     Dit ging goed:        Bij [criterium]: [feedbackzin]
+     Hier kan je groeien:  Bij [criterium]: [feedbackzin]
+                           vertrouwenszin, daarna de eigen feedback
+     Zo pak je het de volgende keer aan: eigen feedforward, anders de
+       volgende stap van het werkpunt, anders het niveau erboven.
+     Zonder werkpunt: "Een uitdaging voor de volgende keer:" met de
+       uitdaging van het eerste criterium dat er een heeft.
 
    Regels:
    - De rubric zoals hij was bij het beoordelen (row.rubricVersion).
@@ -12930,22 +13187,56 @@ function progressByAssessor(rows, students) {
      enkel als het hoger ligt dan het werkpunt, en enkel vanaf het niveau
      "doel behaald" (rubric.targetScore, sinds 1.24.0) of, zonder
      doelniveau, vanaf het middelste niveau. Zo komt er nooit valse lof.
-   - Volgende stap, in deze volgorde (sinds 1.24.0):
-       1. de eigen feedforward van de leerkracht;
-       2. de volgende-stapzin (option.next, in je-vorm) van het behaalde
-          niveau van het werkpunt. Ontbreekt die in de rubricversie van
-          de beoordeling, dan uit de huidige rubric (zelfde criterium en
-          score): zo'n zin aanvullen maakt bewust geen nieuwe versie;
-       3. de beschrijving van het niveau net boven het werkpunt.
+   - Feedbackzin (option.say), volgende stap en uitdaging (option.next)
+     van het behaalde niveau. Ontbreken ze in de rubricversie van de
+     beoordeling, dan uit de huidige rubric (zelfde criterium en score):
+     zo'n zin aanvullen maakt bewust geen nieuwe versie. Zonder
+     feedbackzin valt de tool terug op de omschrijving (option.desc).
    - Nooit punten, percentages of niveaulabels: Smartschool toont het
      punt al, en een cijfer naast commentaar doet de commentaar vergeten.
-   - Richtwaarde FEEDBACK_MAX_CHARS. Is het te lang, dan wordt eerst de
-     lijst met criteria korter en valt daarna het sterke punt weg (dat
-     laatste enkel als er een werkpunt is). Werkpunt, volgende stap en de
-     tekst van de leerkracht blijven altijd staan en worden nooit afgekort.
+   - Richtwaarde FEEDBACK_MAX_CHARS, zonder de eigen tekst van de
+     leerkracht. Is het te lang, dan wordt eerst de lijst met criteria
+     korter en valt daarna het sterke punt weg (dat laatste enkel als er
+     een werkpunt is). Werkpunt, volgende stap en de tekst van de
+     leerkracht blijven altijd staan en worden nooit afgekort.
    ------------------------------------------------------------------ */
 
-var FEEDBACK_MAX_CHARS = 700;
+var FEEDBACK_MAX_CHARS = 500;
+
+var FEEDBACK_LABELS = {
+  good: "Dit ging goed:",
+  grow: "Hier kan je groeien:",
+  next: "Zo pak je het de volgende keer aan:",
+  challenge: "Een uitdaging voor de volgende keer:",
+};
+
+var FEEDBACK_GROUP_NOTE = "Dit was een groepsopdracht, de feedback gaat over het werk van jullie groep.";
+
+/* Wise feedback (Yeager en collega's, 2014): hoge verwachtingen en
+   vertrouwen, in de ik-vorm van de leerkracht. Vast in de tool, niet
+   door een AI geschreven. Enkel bij een werkpunt. */
+var CONFIDENCE_SENTENCES = [
+  "Ik geef je deze tip omdat ik veel van je verwacht, en ik weet dat je het kan.",
+  "Ik verwacht veel van je, omdat ik weet dat je dit kan.",
+  "Ik leg de lat hoog, omdat ik weet dat je die kan halen.",
+  "Ik geloof dat je dit de volgende keer beter kan.",
+  "Ik ben streng voor je werk, omdat ik weet dat je dit kan leren.",
+  "Ik weet dat je hier sterker in kan worden, en ik help je daar graag bij.",
+  "Ik ben er zeker van dat je dit de volgende keer beter doet.",
+];
+
+/* Eenvoudige, vaste hash: dezelfde leerling bij dezelfde evaluatie krijgt
+   altijd dezelfde zin, klasgenoten meestal een andere. */
+function feedbackHash(text) {
+  var h = 0;
+  text = String(text || "");
+  for (var i = 0; i < text.length; i++) h = (h * 31 + text.charCodeAt(i)) % 2147483647;
+  return h;
+}
+
+function confidenceSentence(student, evaluation) {
+  return CONFIDENCE_SENTENCES[feedbackHash(student + "|" + evaluation) % CONFIDENCE_SENTENCES.length];
+}
 
 /* "a", "a en b", "a, b en c" */
 function joinNl(list) {
@@ -12953,8 +13244,39 @@ function joinNl(list) {
   return list.slice(0, -1).join(", ") + " en " + list[list.length - 1];
 }
 
+/* Na "Bij criterium:" komt altijd een kleine letter, zodat alle regels
+   er hetzelfde uitzien. Een woord met nog een hoofdletter erin (een
+   afkorting zoals LED) blijft zoals het is. */
+function feedbackSentence(text) {
+  text = String(text || "").trim();
+  if (!text) return "";
+  var first = text.split(/\s+/)[0].replace(/[^A-Za-zÀ-ÿ]/g, "");
+  if (first.length > 1 && first.slice(1) === first.slice(1).toLowerCase()) {
+    text = text.charAt(0).toLowerCase() + text.slice(1);
+  }
+  if (!/[.!?]$/.test(text)) text += ".";
+  return text;
+}
+
+/* Tekst van een veld van het behaalde niveau; ontbreekt die in de
+   rubricversie van de beoordeling, dan uit de huidige rubric (zelfde
+   criterium-id en score). */
+function levelText(option, field, rubricId, score, currentRubrics) {
+  var text = String((option && option[field]) || "").trim();
+  if (text || !currentRubrics) return text;
+  currentRubrics.forEach(function (cr) {
+    if (cr.id !== rubricId) return;
+    (cr.options || []).forEach(function (o) {
+      if (Number(o.score) === score && String(o[field] || "").trim()) text = String(o[field]).trim();
+    });
+  });
+  return text;
+}
+
 /* Per gescoord criterium: naam, behaald niveau, niveau erboven, positie,
-   en of het doelniveau gehaald is (null als er geen doelniveau is). */
+   en of het doelniveau gehaald is (null als er geen doelniveau is).
+   say: feedbackzin, anders de omschrijving. nextStep: volgende stap, of
+   op het hoogste niveau de uitdaging. */
 function scoredCriteria(rubrics, scores, currentRubrics) {
   var out = [];
   (rubrics || []).forEach(function (r) {
@@ -12966,21 +13288,14 @@ function scoredCriteria(rubrics, scores, currentRubrics) {
     opts.forEach(function (o, i) { if (Number(o.score) === v) idx = i; });
     if (idx === -1) return;
     var low = Number(opts[0].score), high = Number(opts[opts.length - 1].score);
-    var nextText = String(opts[idx].next || "").trim();
-    if (!nextText && currentRubrics) {
-      currentRubrics.forEach(function (cr) {
-        if (cr.id !== r.id) return;
-        (cr.options || []).forEach(function (o) {
-          if (Number(o.score) === v && String(o.next || "").trim()) nextText = String(o.next).trim();
-        });
-      });
-    }
     var target = typeof r.targetScore === "number" ? r.targetScore : null;
+    var say = levelText(opts[idx], "say", r.id, v, currentRubrics);
     out.push({
       name: String(r.name || "").trim(),
       level: opts[idx],
       next: opts[idx + 1] || null,
-      nextStep: nextText,
+      say: say || String(opts[idx].desc || "").trim(),
+      nextStep: levelText(opts[idx], "next", r.id, v, currentRubrics),
       pos: high > low ? (v - low) / (high - low) : 1,
       reachedTarget: target === null ? null : v >= target,
     });
@@ -12988,13 +13303,14 @@ function scoredCriteria(rubrics, scores, currentRubrics) {
   return out;
 }
 
-function criterionLine(prefix, c, option) {
-  var desc = String((option && option.desc) || "").trim();
-  return prefix + " " + c.name + (desc ? ": " + desc : ".");
+function criterionLine(c, text) {
+  var sentence = feedbackSentence(text);
+  return c.name ? "Bij " + c.name + ": " + sentence : sentence.charAt(0).toUpperCase() + sentence.slice(1);
 }
 
 /* De tekst voor één leerling bij één beoordeling (rij). Puur: leest
-   enkel dbObj en row, verandert niets. */
+   enkel dbObj en row, verandert niets. student: de naam van de leerling,
+   enkel gebruikt om de vertrouwenszin te kiezen (nooit in de tekst). */
 function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
   var rubrics = rubricsForVersion(dbObj, year, evaluation, row.rubricVersion);
   var crit = scoredCriteria(rubrics, row.scores, rubricsFor(dbObj, year, evaluation));
@@ -13012,45 +13328,78 @@ function buildSkoreFeedback(dbObj, year, evaluation, row, student) {
     var enough = sterk.reachedTarget === null ? sterk.pos >= 0.5 : sterk.reachedTarget;
     if (!(enough && (!werk || sterk.pos > werk.pos))) sterk = null;
   }
+  // Zonder werkpunt: de uitdaging van het eerste criterium dat er een heeft.
+  var challenge = null;
+  if (!werk) {
+    crit.forEach(function (c) { if (!challenge && !c.next && c.nextStep) challenge = c; });
+  }
 
-  function compose(fullList, withSterk) {
+  function compose(fullList, withSterk, withOwn) {
     var blocks = [];
+    var feedback = withOwn ? ownFeedback : "";
+    var forward = withOwn ? ownForward : "";
 
-    var up = ["Waar ga je naartoe?"];
     var names = crit.map(function (c) { return c.name; }).filter(Boolean);
+    var up;
     if (!names.length) {
-      up.push("Bij \"" + evaluation + "\" werd je beoordeeld met de rubric.");
+      up = "Bij \"" + evaluation + "\" werd je beoordeeld met de rubric.";
     } else if (fullList) {
-      up.push("Bij \"" + evaluation + "\" werd je beoordeeld op: " + joinNl(names) + ".");
+      up = "Bij \"" + evaluation + "\" werd je beoordeeld op: " + joinNl(names) + ".";
     } else {
-      up.push("Bij \"" + evaluation + "\" werd je beoordeeld op " +
-        (names.length === 1 ? "1 criterium" : "de " + names.length + " criteria") + " van de rubric.");
+      up = "Bij \"" + evaluation + "\" werd je beoordeeld op " +
+        (names.length === 1 ? "1 onderdeel." : names.length + " onderdelen.");
     }
-    if (isGroup) up.push("Dit is een groepsbeoordeling: de beschrijvingen gaan over het werk van jullie groep.");
-    blocks.push(up.join("\n"));
+    if (isGroup) up += "\n" + FEEDBACK_GROUP_NOTE;
+    blocks.push(up);
 
-    var nu = [];
-    if (sterk && withSterk) nu.push(criterionLine("Sterk punt bij", sterk, sterk.level));
-    if (werk) nu.push(criterionLine("Werkpunt bij", werk, werk.level));
-    if (ownFeedback) nu.push(ownFeedback);
-    if (nu.length) blocks.push(["Waar sta je nu?"].concat(nu).join("\n"));
+    var showSterk = sterk && withSterk;
+    if (showSterk) {
+      var good = [FEEDBACK_LABELS.good, criterionLine(sterk, sterk.say)];
+      if (!werk && feedback) good.push(feedback);
+      blocks.push(good.join("\n"));
+    }
+    if (werk) {
+      var grow = [FEEDBACK_LABELS.grow, criterionLine(werk, werk.say), confidenceSentence(student, evaluation)];
+      if (feedback) grow.push(feedback);
+      blocks.push(grow.join("\n"));
+    } else if (!showSterk && feedback) {
+      blocks.push(feedback);
+    }
 
-    if (ownForward) {
-      blocks.push("Wat is je volgende stap?\n" + ownForward);
+    if (forward) {
+      blocks.push(FEEDBACK_LABELS.next + "\n" + forward);
+    } else if (ownForward) {
+      // Enkel bij het meten: de eigen feedforward telt niet mee, en de
+      // automatische stap komt er dan toch niet.
     } else if (werk && werk.nextStep) {
-      blocks.push("Wat is je volgende stap?\nBij " + werk.name + ": " + werk.nextStep);
+      blocks.push(FEEDBACK_LABELS.next + "\n" + criterionLine(werk, werk.nextStep));
     } else if (werk && String(werk.next.desc || "").trim()) {
-      blocks.push("Wat is je volgende stap?\nOm een niveau hoger te komen bij " + werk.name + ": " + String(werk.next.desc).trim());
+      blocks.push(FEEDBACK_LABELS.next + "\nOm een niveau hoger te komen bij " + werk.name + ": " +
+        feedbackSentence(werk.next.desc));
+    } else if (challenge) {
+      blocks.push(FEEDBACK_LABELS.challenge + "\n" + criterionLine(challenge, challenge.nextStep));
     }
 
     return blocks.join("\n\n");
   }
 
-  var text = compose(true, true);
-  if (text.length <= FEEDBACK_MAX_CHARS) return text;
-  text = compose(false, true);
-  if (text.length <= FEEDBACK_MAX_CHARS || !werk) return text;
-  return compose(false, false);
+  /* Meten zonder de eigen tekst van de leerkracht: die telt niet mee en
+     wordt nooit ingekort. */
+  function fits(fullList, withSterk) {
+    return compose(fullList, withSterk, false).length <= FEEDBACK_MAX_CHARS;
+  }
+  if (fits(true, true)) return compose(true, true, true);
+  if (fits(false, true) || !werk) return compose(false, true, true);
+  return compose(false, false, true);
+}
+
+/* Heeft de huidige rubric van een evaluatie al feedbackzinnen? Zo niet,
+   dan toont Skore een klein teken in de kolomkop (sinds 1.25.0). */
+function evaluationHasFeedbackSentences(dbObj, year, evaluation) {
+  var rubrics = rubricsFor(dbObj, year, evaluation) || [];
+  return rubrics.some(function (r) {
+    return (r.options || []).some(function (o) { return String(o.say || "").trim(); });
+  });
 }
 
 
@@ -13465,6 +13814,8 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
   return wrap;
 }
 
+var SKORE_FEEDBACK_HINT = "De feedback wordt persoonlijker als je deze rubric laat nakijken door de AI.";
+
 function buildSkoreTable(data, year, klas, scale) {
   var wrap = el("div", "table-wrap");
   var table = el("table", "skore-table");
@@ -13476,6 +13827,14 @@ function buildSkoreTable(data, year, klas, scale) {
     th.title = e.name;
     th.appendChild(el("span", "skore-col-num", i + 1));
     th.appendChild(el("span", "skore-th-name", e.name));
+    // Rubric zonder feedbackzinnen: de feedback valt terug op de
+    // omschrijvingen. Een klein teken wijst op het nakijken (1.25.0).
+    if (!evaluationHasFeedbackSentences(db, year, e.name)) {
+      var hint = el("span", "skore-th-hint", "i");
+      hint.title = SKORE_FEEDBACK_HINT;
+      hint.setAttribute("aria-label", SKORE_FEEDBACK_HINT);
+      th.appendChild(hint);
+    }
     th.appendChild(el("span", "skore-th-max", "/" + (scale || e.max)));
     hr.appendChild(th);
   });

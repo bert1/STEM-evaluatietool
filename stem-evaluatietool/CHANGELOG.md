@@ -13,6 +13,54 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.25.0 · 28 september 2026
+
+**Rubrics in leerlingentaal en persoonlijkere feedback in Skore**
+
+- De AI-prompt (`buildAiRubricPrompt()`) noemt nu ook de leeftijd van het
+  leerjaar (`AGE_BY_YEAR`: 1ste jaar 12 tot 13 jaar, 2de jaar 13 tot 14
+  jaar) en heeft een nieuwe sectie LEERLINGENTAAL: naam van een criterium
+  hoogstens vijf woorden, beschrijving in één zin, niveaus in de je-vorm,
+  hoogstens 15 woorden per zin, gewone woorden, actief schrijven. De
+  zelfcontrole vraagt of een leerling van die leeftijd elk niveau begrijpt.
+- Nieuwe sectie FEEDBACKZINNEN (vervangt VOLGENDE STAP): per niveau een
+  `feedbackZin` (nieuw veld `option.say`), een `volgendeStap` en op het
+  hoogste niveau een `uitdaging` (bewaard in `option.next` van het
+  hoogste niveau). Het nakijken herschrijft een rubric in leerlingentaal
+  en vult ontbrekende zinnen aan; elke nieuwe zin is een aparte wijziging
+  om aan te vinken.
+- De AI-hulp biedt enkel nog 4 of 5 niveaus aan. Rubrics en antwoorden met
+  3 niveaus blijven werken.
+- Editor: per criterium een inklapbaar deel "Feedbackzinnen voor
+  leerlingen" met per niveau de feedbackzin en de volgende stap of de
+  uitdaging. Staat een rubric nog niet in de je-vorm of ontbreken zinnen,
+  dan één melding met de knop "Laat AI deze rubric nakijken".
+- Nieuwe tips bij het nakijken (nooit blokkerend): een rubric die nog niet
+  in de je-vorm staat (één melding per rubric), en voor een rubric in de
+  je-vorm: zinnen van meer dan 20 woorden, moeilijke woorden
+  (`DIFFICULT_WORDS`) en ontbrekende feedbackzinnen.
+- Feedbacktekst in Skore (`buildSkoreFeedback()`): nieuwe opbouw zonder
+  naam, in de je-vorm, met de labels "Dit ging goed:", "Hier kan je
+  groeien:", "Zo pak je het de volgende keer aan:" en, voor wie overal het
+  hoogste niveau haalt, "Een uitdaging voor de volgende keer:". Elke regel
+  noemt het criterium en gebruikt de feedbackzin (anders de omschrijving).
+  Bij een werkpunt komt een vaste vertrouwenszin van de leerkracht
+  (`CONFIDENCE_SENTENCES`, wise feedback). Nieuwe zin bij groepswerk.
+  `FEEDBACK_MAX_CHARS` is 500 (was 700), zonder de eigen tekst van de
+  leerkracht mee te tellen.
+- Zinnen die na een beoordeling aangevuld worden, gelden ook voor die
+  beoordeling, zonder nieuwe rubricversie.
+- Skore: een klein "i" in de kolomkop bij een rubric zonder
+  feedbackzinnen, met de uitleg dat de feedback persoonlijker wordt na het
+  nakijken door de AI.
+- Tests: bewust aangepast zijn de letterlijke feedbackteksten in
+  `tests/feedback.spec.js` (nieuwe opbouw) en de test op de ingebouwde
+  rubrics in `tests/ai-rubric.spec.js`. Die verwachtte geen enkele
+  waarschuwing, maar alle ingebouwde rubrics staan in de derde persoon en
+  krijgen nu terecht precies één melding "nog niet in leerlingentaal".
+  Nieuwe tests voor de prompt, het inlezen, de waarschuwingen, de
+  feedbacktekst, de editor, de kolomkop en de volledige flow.
+
 ## 1.24.1 · 28 september 2026
 
 **Knoppen bij Rubrics staan bovenaan**

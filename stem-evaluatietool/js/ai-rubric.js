@@ -22,8 +22,15 @@
    - Een expliciete lat: het niveau "doel behaald" beschrijft het
      leerplandoel op zijn Bloom-niveau; erboven gaat verder, eronder
      toont wat ontbreekt.
-   - Kwaliteitsregels voor criteria en niveaus, een volgende stap per
-     niveau in je-vorm, en een zelfcontrole vóór het antwoord.
+   - Kwaliteitsregels voor criteria en niveaus, en een zelfcontrole vóór
+     het antwoord.
+   - Leerlingentaal (sinds 1.25.0): de leerlingen lezen de rubric zelf.
+     De prompt noemt hun leeftijd (AGE_BY_YEAR) en vraagt de je-vorm,
+     korte zinnen en alledaagse woorden.
+   - Feedbackbouwstenen per niveau (sinds 1.25.0), in je-vorm: een
+     feedbackzin (option.say), een volgende stap (option.next) en op het
+     hoogste niveau een uitdaging (ook in option.next). De feedback in
+     Skore (js/feedback.js) bouwt daarmee zijn tekst.
    - Geen enkele gedachtestreep in de prompt: modellen nemen de stijl van
      de vraag over.
    ------------------------------------------------------------------ */
@@ -36,7 +43,8 @@ function isUntouchedRubric(rubric) {
   if (rubric.name && rubric.name.trim()) return false;
   if (rubric.description && rubric.description.trim()) return false;
   return (rubric.options || []).every(function (o) {
-    return (!o.desc || !o.desc.trim()) && (!o.next || !String(o.next).trim());
+    return (!o.desc || !o.desc.trim()) && (!o.next || !String(o.next).trim()) &&
+      (!o.say || !String(o.say).trim());
   });
 }
 
@@ -68,6 +76,15 @@ function aiContextLines(ctx, mode) {
   return lines;
 }
 
+/* Leeftijd per leerjaar, voor de prompt. Een leerjaar dat hier niet in
+   staat, krijgt geen leeftijd in de prompt. */
+var AGE_BY_YEAR = { "1ste jaar": "12 tot 13 jaar", "2de jaar": "13 tot 14 jaar" };
+
+/* "een leerling van 12 tot 13 jaar", of "een leerling" zonder leeftijd. */
+function aiPupil(year) {
+  return AGE_BY_YEAR[year] ? "een leerling van " + AGE_BY_YEAR[year] : "een leerling";
+}
+
 var AI_QUALITY_RULES = [
   "Eén aspect per criterium. Een criterium meet nooit twee dingen tegelijk.",
   "Elk niveau is concreet en waarneembaar: wat zie of lees je in het werk van de leerling? Gebruik geen vage woorden zoals \"goed\", \"voldoende\" of \"correct\" zonder te zeggen wat je dan precies ziet.",
@@ -78,6 +95,23 @@ var AI_QUALITY_RULES = [
   "Houd elke omschrijving op 1 of 2 zinnen.",
   "Gebruik nergens een gedachtestreep. Schrijf gewone zinnen met punten en komma's.",
 ];
+
+/* Taalregels voor een rubric die leerlingen zelf lezen (sinds 1.25.0).
+   De verwijzing naar wat ze vooraf leerden staat er enkel als de
+   leerkracht dat in de context invulde. */
+function aiLanguageRules(hasPrior) {
+  return [
+    "De naam van een criterium is kort, hoogstens vijf woorden, in gewone woorden.",
+    "De beschrijving van een criterium zegt in één zin wat de leerling moet kunnen of tonen.",
+    "Schrijf elk niveau in de je-vorm: wat toont de leerling in het werk? Bijvoorbeeld: \"Je schrijft vooraf op wat je verwacht te zien en waarom.\"",
+    "Korte zinnen: hoogstens 15 woorden, één idee per zin.",
+    (hasPrior
+      ? "Gebruik alledaagse woorden. Een vakterm mag enkel als de leerlingen die in de les leerden (zie \"Wat ze vooraf al leerden of oefenden\")."
+      : "Gebruik alledaagse woorden en vermijd vaktermen.") +
+      " Geen abstracte woorden zoals \"adequaat\", \"coherent\", \"relevant\", \"optimaal\", \"systematisch\" of \"correct\".",
+    "Schrijf actief: \"je meet\", niet \"er wordt gemeten\".",
+  ];
+}
 
 /* De huidige rubric als json, voor de stand "nakijken". */
 function rubricsForAiReview(rubrics, year) {
@@ -93,8 +127,9 @@ function rubricsForAiReview(rubrics, year) {
         opts.forEach(function (o, i) { if (Number(o.score) === target) out.doelNiveau = i + 1; });
       }
       out.niveaus = opts.map(function (o, i) {
-        var n = { label: o.label || "", omschrijving: o.desc || "" };
+        var n = { label: o.label || "", omschrijving: o.desc || "", feedbackZin: o.say || "" };
         if (i < opts.length - 1) n.volgendeStap = o.next || "";
+        else n.uitdaging = o.next || "";
         return n;
       });
       return out;
@@ -113,17 +148,20 @@ function buildAiRubricPrompt(opts, legacyYear) {
   var target = LEVEL_TARGETS[levels];
   var goals = yearHasGoals(year) ? goalsForYear(year) : [];
   var description = String(opts.description || "").trim();
+  var ageNote = AGE_BY_YEAR[year] ? " (" + AGE_BY_YEAR[year] + ")" : "";
+  var pupil = aiPupil(year);
+  var hasPrior = !!String((opts.context && opts.context.prior) || "").trim();
 
   var lines = [];
   if (review) {
     lines.push(
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Kijk de beoordelingsrubric " +
-        "hieronder na, voor leerlingen uit het " + year + ", en verbeter ze volgens de regels in deze vraag.",
+        "hieronder na, voor leerlingen uit het " + year + ageNote + ", en verbeter ze volgens de regels in deze vraag.",
     );
   } else {
     lines.push(
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Help me een beoordelingsrubric " +
-        "opstellen voor leerlingen uit het " + year + ".",
+        "opstellen voor leerlingen uit het " + year + ageNote + ".",
     );
   }
 
@@ -137,8 +175,10 @@ function buildAiRubricPrompt(opts, legacyYear) {
     lines.push(
       "Behoud bij elk criterium het aantal niveaus en hun namen (\"label\"). Het niveau \"doel behaald\" " +
         "staat per criterium bij \"doelNiveau\" (het nummer van het niveau, van laag naar hoog).",
-      "Behoud van elk criterium het \"id\". Voeg geen criteria toe en verwijder er geen. Vul ontbrekende " +
-        "volgende stappen aan. Wat de regels hieronder al volgt, mag blijven zoals het is.",
+      "Behoud van elk criterium het \"id\". Voeg geen criteria toe en verwijder er geen.",
+      "Herschrijf namen, beschrijvingen en omschrijvingen in leerlingentaal (zie LEERLINGENTAAL). Vul ontbrekende " +
+        "feedbackzinnen, volgende stappen en uitdagingen aan (zie FEEDBACKZINNEN). Wat de regels hieronder al " +
+        "volgt, mag blijven zoals het is.",
     );
   } else {
     lines.push("Elk criterium krijgt precies " + levels + " niveaus, van laag naar hoog:");
@@ -164,11 +204,20 @@ function buildAiRubricPrompt(opts, legacyYear) {
   var rules = (review ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
   rules.forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
 
+  lines.push("", "LEERLINGENTAAL",
+    "De leerlingen lezen deze rubric zelf. Schrijf zo dat " + pupil + " elk niveau begrijpt zonder uitleg.");
+  aiLanguageRules(hasPrior).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+
   lines.push(
-    "", "VOLGENDE STAP",
-    "Schrijf bij elk niveau behalve het hoogste één korte zin in je-vorm, gericht tot de leerling. Die zin " +
-      "zegt concreet wat de leerling moet doen om het volgende niveau te halen. Bijvoorbeeld: \"Schrijf bij " +
-      "je hypothese vooraf op welk verschil je verwacht te meten.\"",
+    "", "FEEDBACKZINNEN",
+    "Schrijf bij elk niveau ook korte zinnen voor de leerling, in de je-vorm:",
+    "- \"feedbackZin\": wat de leerling op dit niveau toonde, concreet over de taak of de aanpak. Geen lof " +
+      "over de persoon. Bijvoorbeeld: \"Je hebt drie proeven gedaan, maar je schreef niet op wat je verwachtte.\"",
+    "- \"volgendeStap\", bij elk niveau behalve het hoogste: wat de leerling concreet moet doen om het " +
+      "volgende niveau te halen. Bijvoorbeeld: \"Schrijf bij je hypothese vooraf op welk verschil je verwacht te meten.\"",
+    "- \"uitdaging\", enkel bij het hoogste niveau: één concrete stap om nog verder te gaan.",
+    "Deze zinnen volgen dezelfde taalregels. Ze bevatten geen naam, geen tijdelijke aanduiding zoals {naam}, " +
+      "geen punten en geen namen van niveaus. Ze kloppen voor elke leerling op dat niveau.",
   );
 
   if (goals.length) {
@@ -203,7 +252,13 @@ function buildAiRubricPrompt(opts, legacyYear) {
       ? "Sluit het niveau \"doel behaald\" aan bij het Bloom-niveau van het gekoppelde doel?"
       : "Sluit niveau " + target + " aan bij het Bloom-niveau van het gekoppelde doel?");
   }
-  checks.push("Heeft elk niveau behalve het hoogste een volgende stap?", "Staat er nergens een gedachtestreep?");
+  checks.push(
+    "Kan " + pupil + " elk niveau lezen en zeggen: dit zie ik in mijn werk, of dit zie ik er niet in?",
+    "Staat elk niveau in de je-vorm, met korte zinnen en alledaagse woorden?",
+    "Heeft elk niveau een feedbackZin, elk niveau behalve het hoogste een volgendeStap, en het hoogste niveau een uitdaging?",
+    "Staat er in de feedbackzinnen geen naam, geen punt en geen naam van een niveau?",
+    "Staat er nergens een gedachtestreep?",
+  );
   checks.forEach(function (c) { lines.push("- " + c); });
 
   lines.push(
@@ -220,9 +275,11 @@ function buildAiRubricPrompt(opts, legacyYear) {
   lines.push("      \"niveaus\": [");
   var exampleCount = review ? 3 : levels;
   for (var i = 1; i <= exampleCount; i++) {
+    var level = "        { \"omschrijving\": \"Je-vorm: wat de leerling toont bij niveau " + i + "\", " +
+      "\"feedbackZin\": \"Je-vorm: wat de leerling toonde\", ";
     lines.push(i < exampleCount
-      ? "        { \"omschrijving\": \"Wat je ziet bij niveau " + i + "\", \"volgendeStap\": \"Zin in je-vorm\" },"
-      : "        { \"omschrijving\": \"Wat je ziet bij niveau " + i + "\" }");
+      ? level + "\"volgendeStap\": \"Je-vorm: wat de leerling nu doet\" },"
+      : level + "\"uitdaging\": \"Je-vorm: hoe de leerling nog verder gaat\" }");
   }
   lines.push("      ]", "    }", "  ]" + (goals.length ? "," : ""));
   if (goals.length) {
@@ -277,8 +334,9 @@ function aiGoalKeys(codes, year, counter) {
   return keys;
 }
 
-/* Zet het geplakte AI-antwoord om. Leest het nieuwe formaat (1.24.0:
-   volgendeStap, ookPassend, zonderDoel) en het oude (label per niveau).
+/* Zet het geplakte AI-antwoord om. Leest het nieuwe formaat (1.25.0:
+   feedbackZin en uitdaging erbij), dat van 1.24.0 (volgendeStap,
+   ookPassend, zonderDoel) en het oudste (label per niveau).
    De labels komen altijd uit de tool: de standaardreeks bij het aantal
    niveaus. Enkel voor een aantal zonder standaardreeks valt de tool
    terug op het label van de AI.
@@ -305,7 +363,8 @@ function parseAiRubricResponse(text, year, taken) {
         score: li + 1,
         label: template ? template[li] : String((lv && lv.label) || "Niveau " + (li + 1)).trim(),
         desc: String((lv && lv.omschrijving) || "").trim(),
-        next: li < n - 1 ? String((lv && lv.volgendeStap) || "").trim() : "",
+        say: String((lv && lv.feedbackZin) || "").trim(),
+        next: String((lv && (li < n - 1 ? lv.volgendeStap : lv.uitdaging)) || "").trim(),
       };
     });
     var r = {
@@ -363,7 +422,8 @@ function buildAiReview(currentRubrics, text, year) {
         score: o.score,
         label: o.label,
         desc: String(lv.omschrijving || "").trim() || o.desc || "",
-        next: i < opts.length - 1 ? (String(lv.volgendeStap || "").trim() || o.next || "") : "",
+        say: String(lv.feedbackZin || "").trim() || o.say || "",
+        next: String((i < opts.length - 1 ? lv.volgendeStap : lv.uitdaging) || "").trim() || o.next || "",
       };
     });
     if (c.naam && String(c.naam).trim()) proposed.name = String(c.naam).trim();
@@ -377,7 +437,8 @@ function buildAiReview(currentRubrics, text, year) {
     diff("Uitleg", cur.description, proposed.description);
     proposed.options.forEach(function (o, i) {
       diff("Niveau " + (i + 1) + " (" + o.label + ")", opts[i].desc, o.desc);
-      if (i < opts.length - 1) diff("Volgende stap bij niveau " + (i + 1), opts[i].next, o.next);
+      diff("Feedbackzin bij niveau " + (i + 1), opts[i].say, o.say);
+      diff((i < opts.length - 1 ? "Volgende stap" : "Uitdaging") + " bij niveau " + (i + 1), opts[i].next, o.next);
     });
     if (yearHasGoals(year)) {
       diff("Leerplandoelen", (cur.goals || []).join(", "), (proposed.goals || []).join(", "));

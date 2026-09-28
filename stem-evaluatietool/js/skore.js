@@ -409,6 +409,8 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
   return wrap;
 }
 
+var SKORE_FEEDBACK_HINT = "De feedback wordt persoonlijker als je deze rubric laat nakijken door de AI.";
+
 function buildSkoreTable(data, year, klas, scale) {
   var wrap = el("div", "table-wrap");
   var table = el("table", "skore-table");
@@ -420,6 +422,14 @@ function buildSkoreTable(data, year, klas, scale) {
     th.title = e.name;
     th.appendChild(el("span", "skore-col-num", i + 1));
     th.appendChild(el("span", "skore-th-name", e.name));
+    // Rubric zonder feedbackzinnen: de feedback valt terug op de
+    // omschrijvingen. Een klein teken wijst op het nakijken (1.25.0).
+    if (!evaluationHasFeedbackSentences(db, year, e.name)) {
+      var hint = el("span", "skore-th-hint", "i");
+      hint.title = SKORE_FEEDBACK_HINT;
+      hint.setAttribute("aria-label", SKORE_FEEDBACK_HINT);
+      th.appendChild(hint);
+    }
     th.appendChild(el("span", "skore-th-max", "/" + (scale || e.max)));
     hr.appendChild(th);
   });

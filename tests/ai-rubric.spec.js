@@ -4,7 +4,9 @@ const { openTool } = require("./helpers");
 /* AI-rubriekhulp (1.24.0): contextvragen, vast aantal niveaus met labels
    uit de tool, de lat, kwaliteitsregels, volgende stap per niveau,
    "ook passend" en "zonder doel", controle zonder blokkeren, en de knop
-   "Laat AI deze rubric nakijken". */
+   "Laat AI deze rubric nakijken".
+   Sinds 1.25.0: leerlingentaal (leeftijd, je-vorm), feedbackzinnen,
+   uitdaging op het hoogste niveau, en de waarschuwingen daarbij. */
 
 const DASH = /—|\s–\s/;
 
@@ -56,8 +58,9 @@ test.describe("prompt", () => {
     expect(r[2]).toContain("precies 5 niveaus, van laag naar hoog:\n1. Onvoldoende\n2. Bijna\n3. Voldoende (doel behaald)\n4. Sterk\n5. Uitstekend\n");
     expect(r[1]).toContain("Niveau 3 (Voldoende) beschrijft wat je minimaal verwacht");
     expect(r[1]).toContain("- Heeft elk criterium precies 4 niveaus?");
-    // Het voorbeeld in het antwoordformaat heeft ook 4 niveaus, zonder volgende stap bij het hoogste.
-    expect(r[1]).toContain("{ \"omschrijving\": \"Wat je ziet bij niveau 4\" }");
+    // Het voorbeeld in het antwoordformaat heeft ook 4 niveaus, met een uitdaging bij het hoogste.
+    expect(r[1]).toContain("{ \"omschrijving\": \"Je-vorm: wat de leerling toont bij niveau 4\", \"feedbackZin\": \"Je-vorm: wat de leerling toonde\", \"uitdaging\": \"Je-vorm: hoe de leerling nog verder gaat\" }");
+    expect(r[1]).toContain("niveau 3\", \"feedbackZin\": \"Je-vorm: wat de leerling toonde\", \"volgendeStap\"");
     expect(r[1]).not.toContain("niveau 5");
   });
 
@@ -73,7 +76,7 @@ test.describe("prompt", () => {
     expect(r.p).toContain("\"zonderDoel\"");
     expect(r.p).toContain("- Sluit niveau 3 aan bij het Bloom-niveau van het gekoppelde doel?");
     expect(r.p).toContain("Geen criteria over de persoon");
-    expect(r.p).toContain("VOLGENDE STAP");
+    expect(r.p).toContain("FEEDBACKZINNEN");
     // 1ste jaar: geen doelen, dus ook geen doelenlijsten.
     const eerste = await page.evaluate(() => buildAiRubricPrompt({ year: "1ste jaar", description: "x", levels: 4 }));
     expect(eerste).not.toContain("ookPassend");
@@ -92,6 +95,54 @@ test.describe("prompt", () => {
       return out;
     });
     prompts.forEach((p) => expect(p).not.toMatch(DASH));
+  });
+
+  test("leerlingentaal: leeftijd per leerjaar, sectie LEERLINGENTAAL, feedbackzinnen en uitdaging, in beide standen", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const rub = rubricsFor(db, "1ste jaar", "Maken van pinkers");
+      return {
+        eerste: buildAiRubricPrompt({ year: "1ste jaar", description: "x", levels: 5 }),
+        tweede: buildAiRubricPrompt({ year: "2de jaar", description: "x", levels: 4 }),
+        ander: buildAiRubricPrompt({ year: "3de jaar", description: "x", levels: 4 }),
+        nakijken: buildAiRubricPrompt({ year: "1ste jaar", mode: "nakijken", rubrics: rub }),
+        metVooraf: buildAiRubricPrompt({ year: "1ste jaar", description: "x", levels: 5, context: { prior: "een hypothese opstellen" } }),
+      };
+    });
+    expect(r.eerste).toContain("voor leerlingen uit het 1ste jaar (12 tot 13 jaar).");
+    expect(r.tweede).toContain("voor leerlingen uit het 2de jaar (13 tot 14 jaar).");
+    expect(r.nakijken).toContain("voor leerlingen uit het 1ste jaar (12 tot 13 jaar), en verbeter ze");
+    expect(r.ander).toContain("voor leerlingen uit het 3de jaar.");
+    expect(r.ander).not.toMatch(/\d+ tot \d+ jaar/);
+    [r.eerste, r.nakijken].forEach((p) => {
+      expect(p).toContain("LEERLINGENTAAL\nDe leerlingen lezen deze rubric zelf. Schrijf zo dat een leerling van 12 tot 13 jaar elk niveau begrijpt zonder uitleg.");
+      expect(p).toContain("Schrijf elk niveau in de je-vorm");
+      expect(p).toContain("hoogstens 15 woorden");
+      expect(p).toContain("\"adequaat\", \"coherent\", \"relevant\", \"optimaal\", \"systematisch\" of \"correct\"");
+      expect(p).toContain("Schrijf actief: \"je meet\", niet \"er wordt gemeten\".");
+      expect(p).toContain("FEEDBACKZINNEN");
+      expect(p).toContain("\"feedbackZin\"");
+      expect(p).toContain("\"uitdaging\", enkel bij het hoogste niveau");
+      expect(p).toContain("geen tijdelijke aanduiding zoals {naam}");
+      expect(p).toContain("- Kan een leerling van 12 tot 13 jaar elk niveau lezen en zeggen: dit zie ik in mijn werk, of dit zie ik er niet in?");
+      expect(p).toContain("- Heeft elk niveau een feedbackZin, elk niveau behalve het hoogste een volgendeStap, en het hoogste niveau een uitdaging?");
+      expect(p).not.toMatch(DASH);
+    });
+    expect(r.tweede).toContain("Schrijf zo dat een leerling van 13 tot 14 jaar");
+    expect(r.ander).toContain("Schrijf zo dat een leerling elk niveau begrijpt");
+    // De vakterm-regel verwijst enkel naar de context als die ingevuld is.
+    expect(r.metVooraf).toContain("(zie \"Wat ze vooraf al leerden of oefenden\")");
+    expect(r.eerste).toContain("Gebruik alledaagse woorden en vermijd vaktermen.");
+    // Nakijken: herschrijven in leerlingentaal en aanvullen, id en niveaus blijven.
+    expect(r.nakijken).toContain("Herschrijf namen, beschrijvingen en omschrijvingen in leerlingentaal");
+    expect(r.nakijken).toContain("Vul ontbrekende feedbackzinnen, volgende stappen en uitdagingen aan");
+    expect(r.nakijken).toContain("Behoud bij elk criterium het aantal niveaus en hun namen");
+    // De huidige rubric: feedbackZin bij elk niveau, uitdaging bij het hoogste.
+    const json = JSON.parse(r.nakijken.split("HUIDIGE RUBRIC\n```json\n")[1].split("\n```")[0]);
+    const nv = json.criteria[0].niveaus;
+    expect(nv[0]).toHaveProperty("feedbackZin");
+    expect(nv[0]).toHaveProperty("volgendeStap");
+    expect(nv[4]).toHaveProperty("uitdaging");
+    expect(nv[4]).not.toHaveProperty("volgendeStap");
   });
 
   test("nakijkprompt: huidige rubric met id, doelniveau en de regels", async ({ page }) => {
@@ -168,6 +219,43 @@ test.describe("inlezen", () => {
     expect(r[3].problem).toBe("Geen voorstel voor dit criterium.");
   });
 
+  test("formaat 1.25.0: feedbackzin per niveau en uitdaging op het hoogste niveau", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const antwoord = JSON.stringify({ criteria: [{ naam: "Meten", beschrijving: "Je meet.", niveaus: [
+        { omschrijving: "Je meet één keer.", feedbackZin: "Je deed één meting.", volgendeStap: "Meet drie keer." },
+        { omschrijving: "Je meet drie keer.", feedbackZin: "Je deed drie metingen.", volgendeStap: "Noteer de eenheid." },
+        { omschrijving: "Je meet drie keer met eenheid.", feedbackZin: "Je noteerde de eenheid.", volgendeStap: "Bereken het gemiddelde." },
+        { omschrijving: "Je berekent het gemiddelde.", feedbackZin: "Je berekende het gemiddelde.", uitdaging: "Leg uit waarom één meting afwijkt." },
+      ] }, { naam: "Zonder zinnen", beschrijving: "b", niveaus: [{ omschrijving: "a" }, { omschrijving: "b" }, { omschrijving: "c" }, { omschrijving: "d" }] }] });
+      const p = parseAiRubricResponse(antwoord, "1ste jaar", []);
+      return { c: p.criteria, warnings: rubricWarnings(p.criteria, "1ste jaar", 4) };
+    });
+    expect(r.c[0].options.map((o) => o.say)).toEqual(["Je deed één meting.", "Je deed drie metingen.", "Je noteerde de eenheid.", "Je berekende het gemiddelde."]);
+    expect(r.c[0].options.map((o) => o.next)).toEqual(["Meet drie keer.", "Noteer de eenheid.", "Bereken het gemiddelde.", "Leg uit waarom één meting afwijkt."]);
+    // Ontbrekende zinnen: gewoon leeg, wel gemeld, en niets blokkeert.
+    expect(r.c[1].options.every((o) => o.say === "" && o.next === "")).toBe(true);
+    expect(r.c).toHaveLength(2);
+  });
+
+  test("nakijken: nieuwe feedbackzinnen en uitdaging verschijnen als aparte wijziging", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const cur = JSON.parse(JSON.stringify(rubricsFor(db, "1ste jaar", "Maken van pinkers")));
+      const antwoord = JSON.stringify({ criteria: [{
+        id: cur[0].id, naam: cur[0].name, beschrijving: cur[0].description,
+        niveaus: cur[0].options.map((o, i) => (i < 4
+          ? { omschrijving: o.desc, feedbackZin: "Zin " + i + ".", volgendeStap: "Stap " + i + "." }
+          : { omschrijving: o.desc, feedbackZin: "Zin 4.", uitdaging: "Uitdaging." })),
+      }] });
+      const x = buildAiReview(cur, antwoord, "1ste jaar")[0];
+      return { changes: x.changes.map((c) => c.what), say: x.proposed.options.map((o) => o.say), top: x.proposed.options[4].next };
+    });
+    expect(r.changes).toContain("Feedbackzin bij niveau 1");
+    expect(r.changes).toContain("Volgende stap bij niveau 4");
+    expect(r.changes).toContain("Uitdaging bij niveau 5");
+    expect(r.say).toEqual(["Zin 0.", "Zin 1.", "Zin 2.", "Zin 3.", "Zin 4."]);
+    expect(r.top).toBe("Uitdaging.");
+  });
+
   test("duidelijke fout bij een antwoord zonder json", async ({ page }) => {
     const msg = await page.evaluate(() => { try { parseAiRubricResponse("geen json hier", "1ste jaar", []); } catch (e) { return e.message; } });
     expect(msg).toContain("Geen json-blok gevonden");
@@ -197,7 +285,11 @@ test.describe("controle van een rubric", () => {
         seed,
       };
     });
+    const LEERLINGENTAAL = "Deze rubric is nog niet in leerlingentaal geschreven. Gebruik Laat AI deze rubric nakijken.";
+    // Nog in de derde persoon: één melding voor de hele rubric, niet per
+    // niveau, en (nog) geen meldingen over lange zinnen of moeilijke woorden.
     expect(r.editor).toEqual([
+      LEERLINGENTAAL,
       "Criterium 2, niveau 1: nog geen omschrijving.",
       "Criterium 2, niveau 2: enkel \"zeer goed\". Wat zie je concreet?",
       "Criterium 2, niveau 3: erg kort. Wat zie je concreet?",
@@ -208,11 +300,45 @@ test.describe("controle van een rubric", () => {
     ]);
     expect(r.ai).toContain("Criterium 3: 5 niveaus, je koos er 4.");
     expect(r.eersteJaar.some((w) => /leerplandoel/.test(w))).toBe(false);
-    expect(r.seed).toEqual([]);
+    // De ingebouwde rubrics staan allemaal in de derde persoon: bewust één
+    // melding per rubric, en verder geen enkele valse melding (1.25.0).
+    const aantal = await page.evaluate(() => evaluationNames(db, "1ste jaar").length + evaluationNames(db, "2de jaar").length);
+    expect(r.seed).toHaveLength(aantal);
+    r.seed.forEach((w) => expect(w).toMatch(/: Deze rubric is nog niet in leerlingentaal geschreven\. Gebruik Laat AI deze rubric nakijken\.$/));
+  });
+
+  test("in de je-vorm: lange zinnen, moeilijke woorden en ontbrekende feedbackzinnen, nooit blokkerend", async ({ page }) => {
+    const r = await page.evaluate(() => {
+      const opt = (desc, i, extra) => Object.assign({ score: i + 1, label: "L" + i, desc }, extra || {});
+      const descs = [
+        "Je noteert enkele metingen in een tabel.",
+        "Je noteert alle metingen in een tabel, maar je vergeet bij sommige waarden de eenheid te schrijven zodat een lezer niet weet wat je precies hebt gemeten.",
+        "Je noteert alle metingen systematisch met eenheid.",
+        "Je noteert alle metingen en je berekent het gemiddelde.",
+      ];
+      const zonder = [{ name: "Meten", description: "Je meet en noteert.", goals: [], options: descs.map((d, i) => opt(d, i)) }];
+      const met = [{ name: "Meten", description: "Je meet en noteert.", goals: [], options: ["Je noteert één meting.", "Je noteert drie metingen zonder eenheid.", "Je schrijft bij elke meting de eenheid.", "Je berekent ook het gemiddelde van alle reeksen."].map((d, i) => opt(d, i, { say: "Je deed " + i + ".", next: "Doe " + i + "." })) }];
+      const hardInName = [{ name: "Adequaat meten", description: "Je meet relevante waarden.", goals: [], options: met[0].options }];
+      return {
+        zonder: rubricWarnings(zonder, "1ste jaar", 0),
+        met: rubricWarnings(met, "1ste jaar", 0),
+        naam: rubricWarnings(hardInName, "1ste jaar", 0),
+        halfLeeg: rubricWarnings([{ name: "x", goals: [], options: [opt("Je doet het.", 0, { say: "a" }), opt("Je doet het beter.", 1, { say: "b", next: "c" })] }], "1ste jaar", 0),
+      };
+    });
+    expect(r.zonder).toEqual([
+      "Criterium 1, niveau 2: een zin is langer dan 20 woorden. Maak er twee korte zinnen van.",
+      "Criterium 1, niveau 3: moeilijk woord voor leerlingen (systematisch).",
+      "Nog niet elk niveau heeft feedbackzinnen voor leerlingen. Gebruik Laat AI deze rubric nakijken.",
+    ]);
+    expect(r.zonder.join(" ")).not.toContain("leerlingentaal geschreven");
+    expect(r.met).toEqual([]);
+    expect(r.naam).toEqual(["Criterium 1: moeilijk woord in de naam of uitleg (adequaat, relevante)."]);
+    expect(r.halfLeeg).toContain("Nog niet elk niveau heeft feedbackzinnen voor leerlingen. Gebruik Laat AI deze rubric nakijken.");
   });
 });
 
-test.describe("feedback in Skore: volgorde bij Wat is je volgende stap?", () => {
+test.describe("feedback in Skore: volgorde bij Zo pak je het de volgende keer aan", () => {
   test("eigen feedforward, dan de volgende-stapzin, dan het niveau erboven; doelniveau als drempel", async ({ page }) => {
     await openTool(page);
     const r = await page.evaluate(() => {
@@ -234,13 +360,14 @@ test.describe("feedback in Skore: volgorde bij Wat is je volgende stap?", () => 
       out.drempel = buildSkoreFeedback(db, year, ev, row({ rubricVersion: 2 }), "A");
       return out;
     });
-    expect(r.zonder).toContain("Wat is je volgende stap?\nOm een niveau hoger te komen bij Realisatie & Soldeerwerk: Functioneel gesoldeerd, maar oogt wat slordig.");
-    expect(r.metZin).toContain("Wat is je volgende stap?\nBij Realisatie & Soldeerwerk: Laat elke verbinding afkoelen voor je eraan trekt.");
+    const NEXT = "Zo pak je het de volgende keer aan:\n";
+    expect(r.zonder).toContain(NEXT + "Om een niveau hoger te komen bij Realisatie & Soldeerwerk: functioneel gesoldeerd, maar oogt wat slordig.");
+    expect(r.metZin).toContain(NEXT + "Bij Realisatie & Soldeerwerk: laat elke verbinding afkoelen voor je eraan trekt.");
     expect(r.metZin).not.toContain("Om een niveau hoger");
-    expect(r.eigen.endsWith("Wat is je volgende stap?\nEigen stap.")).toBe(true);
-    expect(r.oudeVersie).toContain("Bij Realisatie & Soldeerwerk: Laat elke verbinding afkoelen");
-    expect(r.zonder).toContain("Sterk punt bij Elektrische Schakeling");
-    expect(r.drempel).not.toContain("Sterk punt");
+    expect(r.eigen.endsWith(NEXT + "Eigen stap.")).toBe(true);
+    expect(r.oudeVersie).toContain("Bij Realisatie & Soldeerwerk: laat elke verbinding afkoelen");
+    expect(r.zonder).toContain("Dit ging goed:\nBij Elektrische Schakeling");
+    expect(r.drempel).not.toContain("Dit ging goed");
     page.expectNoErrors();
   });
 });
@@ -288,7 +415,7 @@ test("volledige flow: vragen, prompt kopiëren, antwoord plakken, ook passend ko
   await expect(page.locator("#draftRubrics .rubric-edit")).toHaveCount(2);
   const eerste = page.locator("#draftRubrics .rubric-edit").first();
   await expect(eerste.locator(".level-row input[type=text]:not(.desc-in):not(.level-next)").first()).toHaveValue("Onvoldoende");
-  await expect(eerste.locator(".level-next")).toHaveCount(3);
+  await expect(eerste.locator(".level-next")).toHaveCount(4); // ook de uitdaging bij het hoogste niveau
   await expect(eerste.locator(".level-next").first()).toHaveValue("Doe bij schets dit om niveau 2 te halen.");
   await expect(eerste.locator(".level-target input").nth(2)).toBeChecked();
 
@@ -327,8 +454,13 @@ test("de nieuwe velden overleven opslaan, opnieuw openen en een synchronisatie t
   for (let i = 0; i < 5; i++) await descs.nth(i).fill("De leerling noteert " + (i + 1) + " metingen met eenheid in de tabel.");
   await expect(kaart.locator(".level-target input").nth(2)).toBeChecked(); // standaard Voldoende
   await kaart.locator(".level-target input").nth(3).check();
+  await expect(kaart.locator(".level-next").first()).toBeHidden(); // standaard dichtgeklapt
+  await kaart.locator(".feedback-sentences summary").click();
   await kaart.locator(".level-next").nth(0).fill("Noteer bij elke meting de eenheid.");
-  await expect(kaart.locator(".level-next")).toHaveCount(4); // niet bij het hoogste niveau
+  await expect(kaart.locator(".level-next")).toHaveCount(5); // bij het hoogste niveau de uitdaging
+  await kaart.locator(".level-say").nth(1).fill("Je noteert twee metingen, zonder eenheid.");
+  await kaart.locator(".level-next").nth(4).fill("Meet ook bij een andere temperatuur.");
+  await expect(kaart.locator(".feedback-sentences summary")).toContainText("3 van 10 ingevuld");
   await page.click("#btnSaveEval");
   await expect(page.locator("#notice")).toContainText("Evaluatie aangemaakt");
 
@@ -339,6 +471,7 @@ test("de nieuwe velden overleven opslaan, opnieuw openen en een synchronisatie t
   const k2 = page.locator("#draftRubrics .rubric-edit").first();
   await expect(k2.locator(".level-target input").nth(3)).toBeChecked();
   await expect(k2.locator(".level-next").first()).toHaveValue("Noteer bij elke meting de eenheid.");
+  await expect(k2.locator(".level-say").nth(1)).toHaveValue("Je noteert twee metingen, zonder eenheid.");
 
   // Twee personen: Bert heeft de rubric, Marie nog niet. Na samenvoegen
   // via het gedeelde bestand heeft Marie dezelfde velden.
@@ -351,9 +484,12 @@ test("de nieuwe velden overleven opslaan, opnieuw openen en een synchronisatie t
     mergeDb(marie, bert);
     const opnieuw = normaliseDb(JSON.parse(JSON.stringify(marie))); // opnieuw openen bij Marie
     const r0 = opnieuw.evaluations["1ste jaar"]["Brug bouwen"].rubrics[0];
-    return { target: r0.targetScore, next: r0.options[0].next };
+    return { target: r0.targetScore, next: r0.options[0].next, say: r0.options[1].say, uitdaging: r0.options[4].next };
   });
-  expect(r).toEqual({ target: 4, next: "Noteer bij elke meting de eenheid." });
+  expect(r).toEqual({
+    target: 4, next: "Noteer bij elke meting de eenheid.",
+    say: "Je noteert twee metingen, zonder eenheid.", uitdaging: "Meet ook bij een andere temperatuur.",
+  });
   page.expectNoErrors();
 });
 
@@ -442,5 +578,120 @@ test("zichtbare teksten van de AI-hulp bevatten geen gedachtestreep", async ({ p
   expect(tekst).not.toMatch(DASH);
   const editor = await page.locator("#evalEditView").innerText();
   expect(editor).not.toMatch(DASH);
+  page.expectNoErrors();
+});
+
+test("de AI-hulp biedt enkel 4 of 5 niveaus aan; bestaande rubrics met 3 niveaus blijven werken", async ({ page }) => {
+  await openTool(page);
+  await page.click("#btnEvals");
+  await page.click("#btnNewEval");
+  await page.click("#aiRubricHelper summary");
+  await expect(page.locator("#aiLevels .chip-toggle")).toHaveText(["4", "5"]);
+  const r = await page.evaluate(() => {
+    const drie = JSON.stringify({ criteria: [{ naam: "A", niveaus: [{ omschrijving: "a" }, { omschrijving: "b" }, { omschrijving: "c", uitdaging: "u" }] }] });
+    return parseAiRubricResponse(drie, "1ste jaar", []).criteria[0];
+  });
+  expect(r.options.map((o) => o.label)).toEqual(["Onvoldoende", "Voldoende", "Sterk"]);
+  expect(r.options[2].next).toBe("u");
+  page.expectNoErrors();
+});
+
+test("feedbackzinnen in de editor: aanvullen bij een gebruikte rubric maakt geen nieuwe versie", async ({ page }) => {
+  await openTool(page);
+  page.on("dialog", (d) => d.accept());
+  const ev = "Maken van pinkers";
+  await page.evaluate((ev) => {
+    const key = sessionKey("1ste jaar", "1WM", ev);
+    const scores = {};
+    rubricsFor(db, "1ste jaar", ev).forEach((r) => { scores[r.id] = 3; });
+    db.sessions[key] = [{ id: "r1", assessor: "TST", students: ["X"], studentKlas: { X: "1WM" }, scores, rubricVersion: 1, updatedAt: 1, createdAt: 1 }];
+    persist();
+  }, ev);
+  await page.click("#btnEvals");
+  await page.selectOption("#evalListYear", "1ste jaar");
+  await page.locator(".eval-row", { hasText: ev }).getByRole("button", { name: "Bewerk" }).click();
+
+  // Nog in de derde persoon en zonder zinnen: één melding met een knop.
+  const tip = page.locator("#draftChecks .feedback-tip");
+  await expect(tip).toHaveCount(1);
+  await expect(tip).toContainText("Deze rubric is nog niet in leerlingentaal geschreven.");
+  const checks = await page.locator("#draftChecks").innerText();
+  expect(checks.split("nog niet in leerlingentaal").length - 1).toBe(1); // niet dubbel
+
+  const kaart = page.locator("#draftRubrics .rubric-edit").first();
+  await kaart.locator(".feedback-sentences summary").click();
+  await expect(kaart.locator(".feedback-level-title").first()).toHaveText("Niveau 1 (Onvoldoende)");
+  await expect(kaart.locator(".level-next").nth(4)).toHaveAttribute("aria-label", "Uitdaging bij niveau 5");
+  await kaart.locator(".level-say").nth(2).fill("Je schakeling werkt, maar soms is er slecht contact.");
+  await kaart.locator(".level-next").nth(4).fill("Teken je schakeling ook als schema.");
+  await page.click("#btnSaveEval");
+  await expect(page.locator("#notice")).not.toContainText("bewaard als versie");
+  const r = await page.evaluate((ev) => {
+    const e = db.evaluations["1ste jaar"][ev];
+    return { version: e.version || 1, say: e.rubrics[0].options[2].say, top: e.rubrics[0].options[4].next };
+  }, ev);
+  expect(r).toEqual({ version: 1, say: "Je schakeling werkt, maar soms is er slecht contact.", top: "Teken je schakeling ook als schema." });
+
+  // De knop in de melding opent het nakijken door de AI.
+  await page.locator(".eval-row", { hasText: ev }).getByRole("button", { name: "Bewerk" }).click();
+  await page.locator("#draftChecks .feedback-tip button").click();
+  await expect(page.locator("#aiRubricHelper")).toHaveAttribute("open", "");
+  await expect(page.locator("#aiModeReview")).toHaveAttribute("aria-pressed", "true");
+
+  // Dupliceren neemt de zinnen mee.
+  const kopie = await page.evaluate((ev) => {
+    duplicateEvaluation("1ste jaar", ev);
+    return draft.rubrics[0].options[2].say;
+  }, ev);
+  expect(kopie).toBe("Je schakeling werkt, maar soms is er slecht contact.");
+  page.expectNoErrors();
+});
+
+test("volledige flow in leerlingentaal: rubric met AI-hulp, beoordelen, feedback kopiëren in Skore", async ({ page, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await openTool(page);
+  page.on("dialog", (d) => d.accept());
+  await nieuweEvaluatie(page, "1ste jaar");
+  await page.click("#aiRubricHelper summary");
+  await page.click("#aiLevels [data-value='4']");
+  await page.fill("#aiDescription", "Leerlingen maken een windei en testen het.");
+  await page.click("#btnAiGeneratePrompt");
+  expect(await page.inputValue("#aiPromptOut")).toContain("(12 tot 13 jaar)");
+
+  const niveaus = (crit) => [0, 1, 2, 3].map((i) => (i < 3
+    ? { omschrijving: `Je toont bij ${crit} stap ${i + 1} in je werk.`, feedbackZin: `Je deed bij ${crit} stap ${i + 1}.`, volgendeStap: `Zet bij ${crit} stap ${i + 2}.` }
+    : { omschrijving: `Je toont bij ${crit} alle stappen in je werk.`, feedbackZin: `Je deed bij ${crit} alle stappen.`, uitdaging: `Probeer bij ${crit} een zwaarder ei.` }));
+  await page.fill("#aiResponseIn", JSON.stringify({ criteria: [
+    { naam: "Voorspellen", beschrijving: "Je schrijft vooraf op wat je verwacht.", niveaus: niveaus("voorspellen") },
+    { naam: "Meten", beschrijving: "Je meet en noteert.", niveaus: niveaus("meten") },
+  ] }));
+  await page.click("#btnAiImport");
+  await expect(page.locator("#draftRubrics .rubric-edit")).toHaveCount(2);
+  await expect(page.locator("#draftChecks .feedback-tip")).toHaveCount(0);
+  await page.click("#btnSaveEval");
+  await expect(page.locator("#notice")).toContainText("Evaluatie aangemaakt");
+
+  // Beoordelen: meteen de rij klaarzetten zoals het Evalueren-scherm doet.
+  const naam = await page.evaluate(() => {
+    const n = studentsFor(db, "1ste jaar", "1WM")[0];
+    const ids = rubricsFor(db, "1ste jaar", "Brug bouwen").map((r) => r.id);
+    const scores = {}; scores[ids[0]] = 4; scores[ids[1]] = 2;
+    db.sessions[sessionKey("1ste jaar", "1WM", "Brug bouwen")] = [{ id: "r1", assessor: "TST", students: [n], studentKlas: { [n]: "1WM" }, scores, rubricVersion: 1, createdAt: Date.now(), updatedAt: Date.now(), corrections: {}, feedback: "", feedforward: "" }];
+    persist();
+    return n;
+  });
+  await page.click("#btnSkore");
+  await page.selectOption("#skoreYear", "1ste jaar");
+  await page.selectOption("#skoreKlas", "1WM");
+  const kop = page.locator(".skore-table th", { hasText: "Brug bouwen" });
+  await expect(kop.locator(".skore-th-hint")).toHaveCount(0); // heeft feedbackzinnen
+  await page.locator(".skore-table tbody tr").first().locator(".skore-copy").click();
+  const zin = await page.evaluate((n) => confidenceSentence(n, "Brug bouwen"), naam);
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
+    "Bij \"Brug bouwen\" werd je beoordeeld op: Voorspellen en Meten.\n\n" +
+    "Dit ging goed:\nBij Voorspellen: je deed bij voorspellen alle stappen.\n\n" +
+    "Hier kan je groeien:\nBij Meten: je deed bij meten stap 2.\n" + zin + "\n\n" +
+    "Zo pak je het de volgende keer aan:\nBij Meten: zet bij meten stap 3.",
+  );
   page.expectNoErrors();
 });
