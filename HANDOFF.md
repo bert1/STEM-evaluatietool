@@ -126,7 +126,9 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   **Bugfix meegenomen:** `collectSkore()` rekent het punt nu met
   `rubricsForVersion()`; een ander maximum in die versie wordt omgerekend
   naar het kolommaximum (`skoreCellScore()`).
-  **Gepland als 1.24.0 (akkoord gebruiker):** optioneel veld `next` per
+  **Uitgesteld, niet zelf bouwen:** de gebruiker neemt dit op in een
+  eigen, latere opdracht samen met andere aanpassingen. Achtergrond voor
+  dan: een optioneel veld `next` per
   niveau (eigen "volgende stap"-zin in je-vorm), in de rubric-editor en
   in de AI-rubriekhulp (prompt en omzetting). Belangrijk: `next` mag NIET
   meetellen in `rubricsDiffer()`, anders maakt het aanvullen van zinnen
@@ -519,8 +521,6 @@ geen test.
 
 ## Suggesties voor een volgende sessie (niet gevraagd, enkel ter overweging)
 
-- 1.24.0: eigen "volgende stap"-zin per niveau (zie "Feedback kopiëren
-  vanuit Skore" hierboven), met akkoord van de gebruiker
 - De testreeks uitbreiden met de onderdelen onder "Nog niet gedekt"
 - Automatische reservekopie met datum in de gedeelde OneDrive-map
 - Laatst gebruikte evaluatie bovenaan in de zoeklijsten
