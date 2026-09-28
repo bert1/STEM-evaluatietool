@@ -16,7 +16,7 @@
       <div class="wizard-card">
         <h2>Welkom</h2>
         <p class="hint">
-          Voor je begint, een paar instellingen. Dit hoef je maar één keer te doen — daarna opent
+          Voor je begint, een paar instellingen. Dit hoef je maar één keer te doen. Daarna opent
           de tool voortaan meteen op het evaluatiescherm.
         </p>
 
@@ -38,7 +38,7 @@
         <div class="form-group" id="wizardFolderGroup">
           <label>Gedeelde map</label>
           <p class="hint" style="margin: 0 0 8px">
-            Werk je samen met collega's? Kies de map die jullie delen — een map op OneDrive, of een
+            Werk je samen met collega's? Kies de map die jullie delen: een map op OneDrive, of een
             netwerkschijf van de school. Ken je dit pad niet, vraag het aan je ICT-verantwoordelijke.
             Dit kan ook later nog, via het Team-scherm.
           </p>
@@ -110,7 +110,7 @@
             Kies Smartschool-bestand(en)
           </button>
           <span class="hint" style="margin: 0; align-self: center" id="xlsxHint">
-            Meerdere klassen tegelijk mag — één bestand per klas.
+            Meerdere klassen tegelijk mag, met één bestand per klas.
           </span>
         </div>
 
@@ -189,7 +189,7 @@
         </div>
         <p class="hint">
           Wist alle klassen en leerlingen uit alle leerjaren. Je opgeslagen evaluaties blijven
-          bewaard — die staan op naam en verdwijnen niet mee.
+          bewaard: die staan op naam en verdwijnen niet mee.
         </p>
 
         <details id="moveStudentSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
@@ -197,7 +197,7 @@
             Leerling van klas veranderen
           </summary>
           <p class="hint">
-            Voor wie in het begin van het schooljaar nog wisselt van klasgroep — verplaats één
+            Voor wie in het begin van het schooljaar nog wisselt van klasgroep: verplaats één
             leerling zonder de hele klaslijst opnieuw in te lezen. Opgeslagen evaluaties verhuizen
             zoveel mogelijk mee.
           </p>
@@ -284,21 +284,93 @@
           </div>
 
           <details id="aiRubricHelper" style="margin-bottom: 18px">
-            <summary class="section-toggle">AI-hulp: rubric genereren op basis van een beschrijving</summary>
+            <summary class="section-toggle">AI-hulp: rubric laten maken of nakijken</summary>
             <div style="margin-top: 12px">
               <p class="hint">
-                Geen sleutel, geen account nodig — je gebruikt gewoon een AI-gesprek dat je toch al
-                hebt (Claude, ChatGPT, Copilot, …). Beschrijf hieronder de opdracht, laat een prompt
-                genereren, plak die in je AI-gesprek, en plak het antwoord terug hier.
+                Geen sleutel, geen account nodig: je gebruikt gewoon een AI-gesprek dat je toch al
+                hebt (Claude, ChatGPT, Copilot, …). Vul hieronder in wat je weet, laat een prompt
+                maken, plak die in je AI-gesprek en plak het antwoord terug hier.
+              </p>
+
+              <div class="ai-mode btn-row" role="group" aria-label="Wat wil je doen?">
+                <button type="button" class="chip-toggle" id="aiModeNew" aria-pressed="true">Nieuwe criteria laten maken</button>
+                <button type="button" class="chip-toggle" id="aiModeReview" aria-pressed="false">Deze rubric laten nakijken</button>
+              </div>
+
+              <div class="form-group ai-new-only">
+                <span class="ai-q-label">Aantal niveaus per criterium</span>
+                <div class="btn-row" id="aiLevels" role="group" aria-label="Aantal niveaus">
+                  <button type="button" class="chip-toggle" data-value="3" aria-pressed="false">3</button>
+                  <button type="button" class="chip-toggle" data-value="4" aria-pressed="false">4</button>
+                  <button type="button" class="chip-toggle" data-value="5" aria-pressed="true">5</button>
+                </div>
+                <p class="hint" id="aiLevelLabels"></p>
+              </div>
+              <p class="hint ai-review-only hidden" style="margin-top: 0">
+                De AI verbetert de huidige criteria volgens dezelfde regels en vult ontbrekende
+                volgende stappen aan. Het aantal criteria en niveaus blijft gelijk. Je ziet eerst wat
+                er verandert voor je iets overneemt.
               </p>
 
               <div class="form-group">
-                <label for="aiDescription">Beschrijf de opdracht of les die je wil evalueren</label>
+                <label for="aiDescription">Beschrijf de opdracht <span class="ai-new-only">(verplicht)</span><span class="ai-review-only hidden">(optioneel)</span></label>
                 <textarea id="aiDescription" rows="3" placeholder="Bijvoorbeeld: leerlingen bouwen in groepjes van drie een brug van houten staafjes en testen die op draagkracht, met een verslag van hun ontwerpproces."></textarea>
               </div>
 
+              <div class="ai-questions">
+                <p class="hint" style="margin: 0 0 10px">Alle vragen hieronder zijn optioneel. Wat je openlaat, gaat niet mee in de prompt.</p>
+
+                <div class="form-group">
+                  <label for="aiEvaluate">Wat wil je evalueren? <span class="ai-recommended">aanbevolen</span></label>
+                  <textarea id="aiEvaluate" rows="2" placeholder="Bijvoorbeeld: de hypothese, de nauwkeurigheid van de metingen, de conclusie"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <span class="ai-q-label">Wat leveren de leerlingen af? (meerdere mogelijk)</span>
+                  <div class="btn-row" id="aiDeliver" role="group" aria-label="Wat leveren de leerlingen af?">
+                    <button type="button" class="chip-toggle" data-value="een product of prototype" aria-pressed="false">Product of prototype</button>
+                    <button type="button" class="chip-toggle" data-value="een verslag of werkbundel" aria-pressed="false">Verslag of werkbundel</button>
+                    <button type="button" class="chip-toggle" data-value="een presentatie" aria-pressed="false">Presentatie</button>
+                    <button type="button" class="chip-toggle" data-value="hun werkwijze of proces" aria-pressed="false">Werkwijze of proces</button>
+                    <button type="button" class="chip-toggle" data-value="een toets" aria-pressed="false">Toets</button>
+                  </div>
+                  <input type="text" id="aiDeliverOther" placeholder="Iets anders (optioneel)" style="margin-top: 8px" />
+                </div>
+
+                <div class="form-group">
+                  <span class="ai-q-label">Werken ze individueel of in groep?</span>
+                  <div class="btn-row" id="aiWorkform" data-single="1" role="group" aria-label="Individueel of in groep">
+                    <button type="button" class="chip-toggle" data-value="individueel" aria-pressed="false">Individueel</button>
+                    <button type="button" class="chip-toggle" data-value="in groep" aria-pressed="false">In groep</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <span class="ai-q-label">Hoeveel lestijd krijgen ze?</span>
+                  <div class="btn-row" id="aiTime" data-single="1" role="group" aria-label="Lestijd">
+                    <button type="button" class="chip-toggle" data-value="1 lesuur" aria-pressed="false">1 lesuur</button>
+                    <button type="button" class="chip-toggle" data-value="2 tot 3 lesuren" aria-pressed="false">2 tot 3 lesuren</button>
+                    <button type="button" class="chip-toggle" data-value="4 tot 6 lesuren" aria-pressed="false">4 tot 6 lesuren</button>
+                    <button type="button" class="chip-toggle" data-value="meer dan 6 lesuren" aria-pressed="false">Meer dan 6 lesuren</button>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label for="aiPrior">Wat hebben ze vooraf al geleerd of geoefend?</label>
+                  <textarea id="aiPrior" rows="2" placeholder="Bijvoorbeeld: een hypothese opstellen, een meetlat en een weegschaal gebruiken"></textarea>
+                </div>
+
+                <div class="form-group ai-new-only">
+                  <span class="ai-q-label">Mag de AI ook criteria voorstellen die je niet noemde?</span>
+                  <div class="btn-row" id="aiExtra" data-single="1" data-required="1" role="group" aria-label="Ook andere criteria voorstellen">
+                    <button type="button" class="chip-toggle" data-value="ja" aria-pressed="true">Ja</button>
+                    <button type="button" class="chip-toggle" data-value="nee" aria-pressed="false">Nee</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="btn-row">
-                <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt genereren</button>
+                <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt maken</button>
               </div>
 
               <div id="aiPromptBlock" class="hidden" style="margin-top: 14px">
@@ -317,11 +389,16 @@
                 <button type="button" class="btn-primary" id="btnAiImport">Criteria toevoegen aan deze evaluatie</button>
               </div>
               <div id="aiImportState" style="margin-top: 10px"></div>
+              <div id="aiImportResult"></div>
             </div>
           </details>
 
-          <label>Criteria</label>
+          <div class="criteria-head">
+            <label style="margin: 0">Criteria</label>
+            <button type="button" class="btn-ghost btn-small" id="btnAiReview">Laat AI deze rubric nakijken</button>
+          </div>
           <div id="draftRubrics"></div>
+          <div id="draftChecks"></div>
           <div class="add-block" style="margin: 10px 0 24px">
             <span class="add-label">Criterium toevoegen met</span>
             <div class="btn-row">
@@ -329,13 +406,13 @@
               <button type="button" class="btn-ghost btn-small" id="btnAddRubric4">4 niveaus</button>
               <button type="button" class="btn-ghost btn-small" id="btnAddRubric3">3 niveaus</button>
             </div>
-            <span class="add-hint">Onvoldoende tot Zeer Goed staan al klaar</span>
+            <span class="add-hint">De niveaus Onvoldoende tot Sterk staan al klaar, met Voldoende als doel behaald</span>
           </div>
 
           <label>Open vragen</label>
           <p class="hint" style="margin: 0 0 10px">
             Vrije tekstvelden die je bij elke leerling invult, naast de scores. Laat dit leeg als
-            je ze niet nodig hebt — dan verschijnen ze ook niet in het formulier.
+            je ze niet nodig hebt. Dan verschijnen ze ook niet in het formulier.
           </p>
           <div id="draftQuestions"></div>
           <div class="add-block" style="margin: 10px 0 24px">
@@ -384,7 +461,7 @@
 
         <span class="add-label">Collega's</span>
         <p class="hint" style="margin: 6px 0 12px">
-          Voeg je collega's toe met hun initialen — dezelfde die zij bovenaan invullen. Dat is wat
+          Voeg je collega's toe met hun initialen, dezelfde die zij bovenaan invullen. Dat is wat
           hun evaluaties aan hun naam koppelt.
         </p>
         <div id="memberRows"></div>
@@ -583,7 +660,7 @@
         </h2>
 
         <p class="hint" style="margin: -6px 0 14px">
-          Typ <strong>1-5</strong> om een criterium te scoren — springt automatisch naar het
+          Typ <strong>1-5</strong> om een criterium te scoren. De tool springt automatisch naar het
           volgende. Na het opslaan van één leerling schuift de tool door naar de eerstvolgende.
         </p>
 
@@ -597,7 +674,7 @@
         </div>
 
         <div class="form-group">
-          <label>Leerling(en) — vink meerdere aan voor groepswerk</label>
+          <label>Leerling(en): vink meerdere aan voor groepswerk</label>
           <div id="studentGrid" class="checkbox-grid"></div>
         </div>
 
@@ -609,11 +686,11 @@
 
         <div class="feedback-pair">
           <div class="form-group" style="margin-top: 18px">
-            <label for="feedback">Feedback — wat ging goed, wat kon beter?</label>
+            <label for="feedback">Feedback: wat ging goed, wat kon beter?</label>
             <textarea id="feedback" placeholder="Wat viel op aan dit werk…"></textarea>
           </div>
           <div class="form-group" style="margin-top: 18px">
-            <label for="feedforward">Feedforward — wat doet de leerling de volgende keer anders?</label>
+            <label for="feedforward">Feedforward: wat doet de leerling de volgende keer anders?</label>
             <textarea id="feedforward" placeholder="Eén concrete volgende stap…"></textarea>
           </div>
         </div>
@@ -666,10 +743,10 @@
         </div>
 
         <p class="hint">
-          <strong>Kopieer tabel</strong> zet de resultaten op je klembord — plak ze rechtstreeks in
+          <strong>Kopieer tabel</strong> zet de resultaten op je klembord. Plak ze rechtstreeks in
           een openstaand Excel-blad, zonder bestand en zonder gedoe met scheidingstekens. De
           Excel-export doet hetzelfde als bestand. Beide gaan alleen over de klas en het
-          evaluatiemoment die je hierboven gekozen hebt, met één rij per opgeslagen evaluatie —
+          evaluatiemoment die je hierboven gekozen hebt, met één rij per opgeslagen evaluatie:
           een groep blijft dus één regel.
         </p>
 
@@ -694,6 +771,7 @@
     <script src="js/reports.js"></script>
     <script src="js/goals.js"></script>
     <script src="js/sync.js"></script>
+    <script src="js/feedback.js"></script>
     <script src="js/skore.js"></script>
     <script src="js/controle.js"></script>
     <script src="js/app.js"></script>

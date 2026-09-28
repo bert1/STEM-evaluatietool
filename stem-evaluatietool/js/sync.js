@@ -254,7 +254,7 @@ function renderFolderSection() {
     var box = el("div", "folder-state");
     box.appendChild(document.createTextNode("Verbonden met "));
     box.appendChild(el("code", null, folderName));
-    box.appendChild(document.createTextNode(" — jouw werk gaat naar "));
+    box.appendChild(document.createTextNode(". Jouw werk gaat naar "));
     box.appendChild(el("code", null, teamFileName(db.assessor)));
     state.appendChild(box);
   } else {

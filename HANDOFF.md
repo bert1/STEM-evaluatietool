@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.22.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.24.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -58,13 +58,15 @@ Sinds 28 september 2026 staat alles in de GitHub-repository
   geen apart "shell"-sjabloon.
 
 **Modules** (`js/`, sinds 1.19.1 is `evaluations.js` opgesplitst, zie
-boven): `ui.js` ($/el-hulpfuncties en `makeSearchCombo`, moet als eerste laden),
+boven): `ui.js` ($/el-hulpfuncties, `makeSearchCombo`, klembord `copyText()`
+en `legacyCopy()`, melding `showToast()`; moet als eerste laden),
 `state.js` (db-model, opslaan/laden, mergeDb, schooljaren), `storage.js`
 (bestand openen/opslaan, File System Access API), `rosters.js` (klaslijsten,
 Excel-import), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
 `results.js` (statistieken, grafieken, kalibratie), `reports.js` (rapport,
 feed-up-blad), `goals.js` (leerplandoelen-UI, groeigrafiek), `sync.js`
-(gedeelde map, team), `app.js` (opstart, wizard,
+(gedeelde map, team), `feedback.js` (feedbacktekst voor Smartschool, sinds
+1.23.0), `skore.js`, `controle.js`, `app.js` (opstart, wizard,
 navigatie, moet als laatste laden).
 
 **Belangrijke valkuil, al één keer misgegaan:** `build.js` gebruikt
@@ -88,7 +90,103 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.22.0)
+## Volledige featurelijst (huidige stand, 1.24.0)
+
+- **AI-rubriekhulp herwerkt** (1.24.0, `js/ai-rubric.js`, controle in
+  `js/rubric-model.js`). Blijft kopiëren en plakken zonder sleutel.
+  **Scherm:** stand "nieuw" of "nakijken" (`aiMode`), aantal niveaus
+  (3/4/5, standaard `DEFAULT_LEVEL_COUNT` = 5) met labels, beschrijving
+  (enkel verplicht bij "nieuw"), zes optionele contextvragen
+  (keuzeknoppen `.chip-toggle` met `aria-pressed`; bij één keuze kan je
+  opnieuw klikken om uit te zetten). `aiContextLines()` zet enkel
+  beantwoorde vragen in de prompt; "andere criteria toegestaan" enkel als
+  "Wat wil je evalueren?" ingevuld is.
+  **Labels en lat:** `LEVEL_TEMPLATES` (3 = Onvoldoende, Voldoende, Sterk;
+  4 = Onvoldoende, Bijna, Voldoende, Sterk; 5 = Onvoldoende, Bijna,
+  Voldoende, Sterk, Uitstekend) en `LEVEL_TARGETS` (doelniveau 2, 3, 3),
+  ook voor "Criterium toevoegen" in de editor. De AI schrijft enkel
+  omschrijvingen; labels komen altijd uit de tool (ook bij het oude
+  antwoordformaat; enkel een aantal zonder reeks valt terug op het label
+  van de AI). Reden: de score is het niveaunummer, dus een gemengd aantal
+  niveaus laat criteria ongewild zwaarder wegen.
+  **Waarom de prompt zo is:** (1) het doelniveau beschrijft het gekoppelde
+  leerplandoel op zijn Bloom-niveau (staat bij elk doel in de lijst als
+  "SW01 [toepassen]: ..."), erboven gaat verder, eronder toont wat
+  ontbreekt; zonder doelen (1ste jaar) "wat je minimaal verwacht";
+  (2) kwaliteitsregels: één aspect per criterium, concreet en waarneembaar
+  (geen vage woorden zonder uitleg), elk niveau zegt wat er wél is, ook
+  het laagste, parallelle niveaus met dezelfde zinsbouw, geen criteria
+  over de persoon (inzet, houding, motivatie) maar wel over het proces,
+  minstens één procescriterium bij een ontwerp- of onderzoekscyclus,
+  1 of 2 zinnen, geen gedachtestreep; (3) een volgende stap per niveau
+  (behalve het hoogste) in je-vorm; (4) "ookPassend" (doelen die passen
+  maar door geen criterium gedekt worden, met uitleg) en "zonderDoel";
+  (5) een zelfcontrole vóór het antwoord. Geen gedachtestreep in de prompt
+  zelf: modellen nemen de stijl van de vraag over.
+  **Antwoordformaat:** `criteria[]` met `naam`, `beschrijving`,
+  `leerplandoelen`, `niveaus[]` (`omschrijving`, `volgendeStap`), en `id`
+  bij nakijken; daarnaast `ookPassend[]` (`doel`, `uitleg`) en
+  `zonderDoel[]`. `parseAiRubricResponse(text, year, takenIds)` geeft
+  `{criteria, alsoFitting, withoutGoal, goalsSkipped}`.
+  **Nakijken:** `buildAiReview()` koppelt op id (anders plaats), behoudt
+  scores, labels en aantal niveaus, en geeft per criterium de wijzigingen.
+  Niets verandert zonder "Gekozen wijzigingen overnemen"; daarna volgt
+  opslaan het gewone versiebeheer. Bewust geen criteria toevoegen of
+  schrappen (afgesproken): dat zou het maximum en bestaande beoordelingen
+  raken.
+  **Controle:** `rubricWarnings(rubrics, year, chosenLevels)`, enkel
+  waarschuwingen. Vaag = na het weglaten van vulwoorden enkel woorden uit
+  `VAGUE_WORDS`; kort = minder dan 4 woorden; bijna gelijk =
+  `textSimilarity()` van minstens 0,9 met het volgende niveau (afgesteld
+  zodat de bestaande rubrics geen valse meldingen geven, een test bewaakt
+  dat). Live onder de criteria (`#draftChecks`) en na het inlezen.
+  **Datamodel:** `rubric.targetScore` en `option.next`, optioneel.
+  `DB_VERSION` bleef 4. Geen velden op het niveau van de evaluatie:
+  `normaliseDb()` kopieert criteria volledig, maar niet onbekende velden
+  van de evaluatie. `saveDraft()` en `duplicateEvaluation()` nemen ze mee.
+  Ze tellen NIET mee in `rubricsDiffer()`, zodat zinnen aanvullen geen
+  nieuwe rubricversie maakt (anders melding "oudere rubricversie" bij
+  Controle voor alle eerdere beoordelingen).
+  **Feedback in Skore:** volgende stap = eigen feedforward, anders
+  `option.next` van het behaalde niveau van het werkpunt (valt terug op de
+  huidige rubric, zelfde id en score), anders de omschrijving van het
+  niveau erboven. Sterk punt vraagt `targetScore` als die er is.
+
+- **Feedback kopiëren vanuit Skore** (1.23.0, `js/feedback.js` en
+  `buildSkoreCopyButton()` in `js/skore.js`): naast elk punt een
+  kopieerknop die een feedbacktekst voor Smartschool op het klembord zet
+  (tekst plakken kan daar wel, punten niet).
+  **Welke beoordeling:** dezelfde als het punt. `collectSkore()` bewaart
+  de gekozen rij in `byStudent[naam].row` (recentste bij dubbel, geen
+  tussentijdse checks, binnen de periode). Er is dus één plek die bepaalt
+  welke beoordeling telt. `buildSkoreFeedback(dbObj, year, evaluation,
+  row, student)` is puur en krijgt die rij mee (bewust niet zelf zoeken).
+  **Theorie (Hattie en Timperley):** drie vragen als kopjes in je-vorm:
+  "Waar ga je naartoe?" (feed-up: opdracht en criterianamen, geen
+  leerplancodes), "Waar sta je nu?" (feedback), "Wat is je volgende
+  stap?" (feed-forward). Informatierijke taak- en procesfeedback werkt,
+  lof over de persoon en cijfers naast commentaar niet. De tool leidt
+  enkel taak en proces af uit de rubric; regulatie en persoon komen enkel
+  uit de eigen tekst van de leerkracht.
+  **Keuzes (afgesproken met de gebruiker):** positie van een niveau =
+  (score - laagste) / (hoogste - laagste). Werkpunt = laagste positie,
+  bij gelijke stand het eerste criterium van de rubric, niet als het al
+  het hoogste niveau is. Sterk punt = hoogste positie, enkel vanaf 0,5
+  ("Voldoende" telt mee) en hoger dan het werkpunt. Volgende stap = eigen
+  feedforward, anders de `desc` van het niveau boven het werkpunt ("Om een
+  niveau hoger te komen bij X: ..."). `row.feedback` komt na het sterke
+  punt en werkpunt. Niveaubeschrijvingen letterlijk (derde persoon), geen
+  omzetting naar je-vorm. Geen punten, percentages, niveaulabels.
+  Groepswerk krijgt één zin, de individuele correctie niet. Richtwaarde
+  `FEEDBACK_MAX_CHARS` = 700: te lang, dan eerst "op de N criteria van de
+  rubric" in plaats van de lijst, daarna geen sterk punt (enkel als er een
+  werkpunt is). Werkpunt, volgende stap en eigen tekst blijven altijd.
+  **Vinkje:** `skoreCopied` in het geheugen, sleutel rij-id + `updatedAt`
+  + leerling; niet in db, niet gesynchroniseerd.
+  **Bugfix meegenomen:** `collectSkore()` rekent het punt nu met
+  `rubricsForVersion()`; een ander maximum in die versie wordt omgerekend
+  naar het kolommaximum (`skoreCellScore()`).
+  De eigen volgende-stapzin per niveau kwam er in 1.24.0 (zie hierboven).
 
 - **Tabblad Controle** (1.22.0, `js/controle.js`, was Resultaten): toont
   enkel wat ontbreekt of niet klopt, zonder punten of grafieken. Interne
@@ -115,8 +213,9 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   afgedrukte overzicht.
 
 - **Tabblad Skore** (1.21.0, `js/skore.js`): per leerjaar, klas en
-  rapportperiode de punten om over te typen in Skore (Smartschool; plakken
-  kan daar niet, dus bewust geen kopieerknop).
+  rapportperiode de punten om over te typen in Skore (Smartschool; punten
+  plakken kan daar niet, dus geen kopieerknop voor punten; sinds 1.23.0
+  wel een kopieerknop voor de feedbacktekst, zie hierboven).
   Periodes per schooljaar in `db.schoolYears[label].periods`
   (`{list: [{name, start}], end, updatedAt}`, een periode loopt tot de dag
   vóór de volgende start; zonder eigen periodes geldt `defaultPeriods()`,
@@ -313,7 +412,8 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   bewerken na gebruik)
 - Leerplandoelen 2de jaar (46 unieke doelen TW+MW samengevoegd), koppeling
   per criterium
-- **AI-hulp bij rubrics opstellen** (1.5.0, uitgebreid in 1.6.0): beschrijving
+- **AI-hulp bij rubrics opstellen** (1.5.0, uitgebreid in 1.6.0, herwerkt
+  in 1.24.0, zie bovenaan): beschrijving
   → gegenereerde prompt → kopiëren naar eigen AI-gesprek (Claude/ChatGPT/…) →
   antwoord plakken → automatisch omgezet naar criteria, inclusief
   leerplandoelen-koppeling die de AI zelf meebepaalt. Bewust **geen**
@@ -390,6 +490,25 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   beoordeeld, meeverhuizen, twee-personen-synchronisatie)
 - `skore.spec.js`: periodes, overzicht per klas en periode, omrekenen,
   overgezet-vinkjes, periodes aanpassen, `createdAt`, samenvoegen
+- `feedback.spec.js`: de feedbacktekst (de drie voorbeelden uit het plan
+  letterlijk, gelijke stand, geen valse lof, eigen tekst letterlijk en
+  onverkort, lengtegrens, rubricversie, niet gescoord, groepswerk, geen
+  punten/labels/gedachtestreep), welke beoordeling telt, punt met de
+  juiste rubricversie, en de knop (enkel bij punten, klembord uitlezen,
+  melding, vinkje per sessie, terugvaloptie, mislukt kopiëren,
+  gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
+  (huidige rubric, gelijke stand, drempel): de tests faalden zoals
+  verwacht.
+- `ai-rubric.spec.js`: prompt (enkel beantwoorde vragen, labels en
+  doelniveau, Bloom, geen gedachtestreep in alle varianten, nakijkprompt),
+  inlezen (nieuw en oud formaat, labels uit de tool, volgende stappen,
+  ook passend, zonder doel), nakijken (`buildAiReview()`), elke
+  waarschuwing en geen valse meldingen bij de bestaande rubrics, volgorde
+  van de volgende stap in de feedback, de volledige flow op het scherm,
+  nakijken met bevestigen en een nieuwe versie, velden na opslaan,
+  heropenen en synchronisatie tussen twee personen, `rubricsDiffer()`.
+  Getoetst met ingebouwde fouten (opslaan vergeet de volgende stap,
+  labels van de AI, `next` telt mee voor versies): telkens rood.
 
 Elke test controleert ook dat er geen JavaScript-fouten waren
 (`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:
@@ -398,8 +517,9 @@ gecontroleerd door de fout van vóór 1.18.1 tijdelijk terug te zetten: de
 testen voor beschadigde opslag faalden toen zoals verwacht.
 
 **Nog niet gedekt** (vroeger wel, bij uitbreiden eerst hieraan denken):
-klaslijsten en Excel-import, rubric-editor, team en gedeelde map,
-de inhoud van afgedrukte rapporten, schooljaren, groepscorrectie, AI-hulp,
+klaslijsten en Excel-import, rubric-editor (behalve doelniveau en
+volgende stap), team en gedeelde map,
+de inhoud van afgedrukte rapporten, schooljaren, groepscorrectie,
 verwijderen voor iedereen/mezelf, cijfertoetsen, jaaroverzicht afdrukken.
 De groeigrafiek staat sinds 1.22.0 niet meer op het scherm en heeft dus ook
 geen test.
@@ -457,7 +577,8 @@ geen test.
 - `README.md` is de handleiding voor leerkrachten en wordt bij elke
   wijziging mee bijgewerkt (zie `CLAUDE.md`, een test bewaakt het
   versienummer erin)
-- Geen gedachtestreep in Nederlandse teksten die de gebruiker leest
+- Geen gedachtestreep in Nederlandse teksten die de gebruiker leest (in
+  1.23.0 opgeruimd in alle zichtbare teksten; lege cellen tonen "–")
 - Eenvoud voor collega's staat boven ontwikkelaarsgemak — bij twijfel dat
   toetsen
 

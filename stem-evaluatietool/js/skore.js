@@ -18,6 +18,15 @@
    beoordeling zelf (row.createdAt, sinds 1.21.0; oudere rijen vallen
    terug op row.updatedAt). Tussentijdse checks tellen niet mee.
 
+   Het punt wordt berekend met de rubric zoals hij was bij het beoordelen
+   (row.rubricVersion, sinds 1.23.0), net als het afgedrukte rapport.
+   Had die versie een ander maximum dan de huidige rubric, dan wordt het
+   punt omgerekend naar het maximum van de kolom.
+
+   Naast elk punt staat een kopieerknop voor de feedbacktekst (zie
+   js/feedback.js). Welke cellen al gekopieerd zijn, onthoudt enkel deze
+   sessie (skoreCopied), niet het werkbestand.
+
    "Overgezet naar Skore" wordt ook per schooljaar bewaard en gedeeld:
    db.schoolYears[label].skoreDone["leerjaar||klas||evaluatie||periode"]
      = { done: true/false, by: "AB", updatedAt }
@@ -139,7 +148,8 @@ function rowDateIso(row) {
 /* Verzamelt per evaluatie de punten van de leerlingen van deze klas die
    in de gekozen periode beoordeeld werden.
    Geeft { evaluations: [{ name, folder, max, dates: [iso], byStudent:
-   { naam: { total, date, duplicate } } }], students: [namen] }. */
+   { naam: { total, max, date, duplicate, row } } }], students: [namen] }.
+   "max" per leerling is het maximum van de rubricversie van die rij. */
 function collectSkore(dbObj, year, klas, periods, periodIndex) {
   var range = periodRanges(periods)[periodIndex];
   var byEval = {};
@@ -147,13 +157,14 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
   Object.keys(dbObj.sessions || {}).forEach(function (key) {
     var p = parseSessionKey(key);
     if (p.year !== year) return;
-    var rubrics = rubricsFor(dbObj, year, p.evaluation);
-    var max = maxScoreOf(rubrics);
+    var max = maxScoreOf(rubricsFor(dbObj, year, p.evaluation));
 
     (dbObj.sessions[key] || []).forEach(function (row) {
       if (row.formative) return;
       var date = rowDateIso(row);
       if (!range || date < range.start || date > range.end) return;
+      var rubrics = rubricsForVersion(dbObj, year, p.evaluation, row.rubricVersion);
+      var rowMax = maxScoreOf(rubrics);
       var groupTotal = rowTotal(row, rubrics);
 
       (row.students || []).forEach(function (name) {
@@ -166,14 +177,14 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
         }
         var entry = byEval[p.evaluation];
         var correction = (row.corrections && typeof row.corrections[name] === "number") ? row.corrections[name] : 0;
-        var total = Math.max(0, Math.min(max, groupTotal + correction));
+        var total = Math.max(0, Math.min(rowMax, groupTotal + correction));
         if (entry.dates.indexOf(date) === -1) entry.dates.push(date);
 
         var prev = entry.byStudent[name];
         // Twee beoordelingen voor dezelfde leerling: de recentste telt,
         // maar we tonen dat er iets te controleren valt.
         if (!prev || (row.updatedAt || 0) > prev.updatedAt) {
-          entry.byStudent[name] = { total: total, date: date, updatedAt: row.updatedAt || 0, duplicate: !!prev };
+          entry.byStudent[name] = { total: total, max: rowMax, date: date, updatedAt: row.updatedAt || 0, duplicate: !!prev, row: row };
         } else {
           prev.duplicate = true;
         }
@@ -206,6 +217,13 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
 function scaleScore(total, max, scale) {
   if (!scale || !max) return total;
   return Math.round((total / max) * scale * 10) / 10;
+}
+
+/* Het punt zoals het in de tabel komt: omgerekend naar de gekozen schaal,
+   of naar het kolommaximum als de rubricversie een ander maximum had. */
+function skoreCellScore(v, columnMax, scale) {
+  var target = scale || (v.max && v.max !== columnMax ? columnMax : 0);
+  return scaleScore(v.total, v.max || columnMax, target);
 }
 
 function formatScore(v) {
@@ -317,6 +335,10 @@ function renderSkore() {
   ));
 
   host.appendChild(buildSkoreEvalList(data, year, klas, range, scale));
+  host.appendChild(el(
+    "p", "hint skore-copy-hint",
+    "Klik op het kopieericoon naast een punt om de feedback te kopiëren. Plak die in Smartschool bij het resultaat.",
+  ));
   host.appendChild(buildSkoreTable(data, year, klas, scale));
 
   if (data.notInRoster.length) {
@@ -354,7 +376,7 @@ function buildSkoreEvalList(data, year, klas, range, scale) {
     tr.appendChild(nameTd);
     tr.appendChild(el("td", null, e.folder || "–"));
     var first = e.dates[0], last = e.dates[e.dates.length - 1];
-    tr.appendChild(el("td", null, first === last ? formatShortDate(first) : formatShortDate(first) + " – " + formatShortDate(last)));
+    tr.appendChild(el("td", null, first === last ? formatShortDate(first) : formatShortDate(first) + " t/m " + formatShortDate(last)));
     var n = Object.keys(e.byStudent).filter(function (s) { return data.students.indexOf(s) !== -1; }).length;
     var vrij = data.students.filter(function (s) {
       return !e.byStudent[s] && getExemption(year, e.name, klas, s);
@@ -413,11 +435,17 @@ function buildSkoreTable(data, year, klas, scale) {
       var v = e.byStudent[s];
       var td = el("td", "num");
       if (v) {
-        td.textContent = formatScore(scaleScore(v.total, e.max, scale));
+        td.appendChild(el("span", "skore-score", formatScore(skoreCellScore(v, e.max, scale))));
+        td.appendChild(buildSkoreCopyButton(td, year, e.name, v, s));
+        var notes = [];
         if (v.duplicate) {
           td.classList.add("skore-dup");
-          td.title = "Deze leerling is meer dan eens beoordeeld; de recentste beoordeling telt.";
+          notes.push("Deze leerling is meer dan eens beoordeeld; de recentste beoordeling telt.");
         }
+        if (v.max !== e.max) {
+          notes.push("Beoordeeld met een oudere rubric (op " + v.max + "), omgerekend naar " + (scale || e.max) + ".");
+        }
+        if (notes.length) td.title = notes.join(" ");
       } else if (data.notInRoster.indexOf(s) === -1 && getExemption(year, e.name, klas, s)) {
         // Vrijgesteld op het Controle-tabblad: geen punt in Skore nodig.
         var ex = getExemption(year, e.name, klas, s);
@@ -436,6 +464,55 @@ function buildSkoreTable(data, year, klas, scale) {
   table.appendChild(tbody);
   wrap.appendChild(table);
   return wrap;
+}
+
+/* ---- feedback kopiëren ---- */
+
+/* Enkel voor deze sessie: welke feedback al gekopieerd is, zodat je bij
+   het overtypen ziet waar je gebleven bent. Bewust niet in db: niet
+   bewaren, niet synchroniseren. Na een aanpassing van de beoordeling
+   verandert updatedAt en verdwijnt het vinkje vanzelf. */
+var skoreCopied = {};
+
+function skoreCopyKey(row, student) {
+  return [row.id, row.updatedAt || 0, student].join("||");
+}
+
+var SKORE_COPY_ICON =
+  '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+  '<rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15V6a2 2 0 0 1 2-2h8"></path></svg>';
+var SKORE_CHECK_ICON =
+  '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">' +
+  '<path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>';
+
+/* Kopiëren wijzigt niets, dus dit werkt ook in een gearchiveerd jaar. */
+function buildSkoreCopyButton(td, year, evaluation, v, student) {
+  var key = skoreCopyKey(v.row, student);
+  var btn = el("button", "skore-copy");
+  btn.type = "button";
+  var label = "Feedback voor " + student + " kopiëren";
+  btn.setAttribute("aria-label", label);
+  btn.title = label;
+
+  function markCopied() {
+    td.classList.add("skore-copied");
+    btn.innerHTML = SKORE_CHECK_ICON;
+    btn.title = label + " (al gekopieerd)";
+  }
+  btn.innerHTML = SKORE_COPY_ICON;
+  if (skoreCopied[key]) markCopied();
+
+  btn.addEventListener("click", function () {
+    var text = buildSkoreFeedback(db, year, evaluation, v.row, student);
+    copyText(text, function () {
+      skoreCopied[key] = true;
+      markCopied();
+      showToast("Feedback voor " + student + " gekopieerd");
+    }, function () {
+      showToast("Kopiëren lukte niet. Probeer het nog eens.", "warn");
+    });
+  });
+  return btn;
 }
 
 /* ---- periodes aanpassen ---- */

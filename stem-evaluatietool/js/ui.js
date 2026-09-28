@@ -9,6 +9,51 @@ function el(tag, className, text) {
   return n;
 }
 
+/* Klembord: eerst de moderne manier, anders de oude met een verborgen
+   tekstvak (werkt ook als de browser navigator.clipboard weigert). Eén
+   plek, gebruikt door Kopieer tabel, de AI-rubriekhulp en Skore. */
+function copyText(text, onDone, onFail) {
+  function fallback() {
+    if (legacyCopy(text)) { if (onDone) onDone(); } else if (onFail) onFail();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function () { if (onDone) onDone(); }, fallback);
+  } else {
+    fallback();
+  }
+}
+
+function legacyCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.left = "-9999px";
+  document.body.appendChild(ta);
+  ta.select();
+  var okCopy = false;
+  try { okCopy = document.execCommand("copy"); } catch (e) { okCopy = false; }
+  document.body.removeChild(ta);
+  return okCopy;
+}
+
+/* Korte bevestiging onderaan het scherm, die vanzelf verdwijnt. Handig
+   waar een melding bovenaan buiten beeld zou vallen (lange tabellen). */
+var toastTimer = null;
+function showToast(text, kind) {
+  var t = $("toast");
+  if (!t) {
+    t = el("div", "toast");
+    t.id = "toast";
+    t.setAttribute("role", "status");
+    t.setAttribute("aria-live", "polite");
+    document.body.appendChild(t);
+  }
+  t.textContent = text;
+  t.className = "toast show" + (kind ? " " + kind : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.className = "toast" + (kind ? " " + kind : ""); }, 3000);
+}
+
 /* Zoeksleutel: kleine letters, zonder accenten en met enkele spaties,
    zodat "creme" ook "Crème" vindt en "  proef" ook "Proef". */
 function searchKey(text) {

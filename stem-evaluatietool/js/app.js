@@ -8,7 +8,7 @@
 
 function init() {
   $("appVersion").textContent = "v" + APP_VERSION;
-  $("appVersion").title = "STEM Evaluatietool " + APP_VERSION + " — zie CHANGELOG.md voor wat er veranderd is";
+  $("appVersion").title = "STEM Evaluatietool " + APP_VERSION + ". Zie CHANGELOG.md voor wat er veranderd is.";
 
   Object.keys(CONFIG).forEach(function (year) {
     $("yearSelect").appendChild(new Option(year, year));
@@ -337,7 +337,7 @@ function onAddSchoolYear() {
   var suggestion = suggestNextSchoolYearLabel(db.activeSchoolYear);
   var label = prompt(
     "Naam voor het nieuwe schooljaar (bijvoorbeeld " + suggestion + "):\n\n" +
-      "De klaslijsten beginnen helemaal leeg. Rubrics en team blijven behouden — " +
+      "De klaslijsten beginnen helemaal leeg. Rubrics en team blijven behouden, en " +
       db.activeSchoolYear + " blijft gewoon bewaard en te bekijken.",
     suggestion,
   );

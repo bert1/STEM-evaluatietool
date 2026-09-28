@@ -58,7 +58,7 @@ function printReports(data, entries, single) {
     var meta = el("div", "report-meta");
     meta.appendChild(el("span", null, "Beoordeeld door " + (entry.assessor || "onbekend")));
     if (entry.formative) {
-      meta.appendChild(el("span", "flag", "Tussentijdse check — niet de eindbeoordeling"));
+      meta.appendChild(el("span", "flag", "Tussentijdse check, niet de eindbeoordeling"));
     }
     if (entry.groupSize > 1) {
       meta.appendChild(el("span", null,
@@ -105,7 +105,7 @@ function printReports(data, entries, single) {
           var g = findGoal(year, k);
           return g ? goalCodeLabel(g) : k;
         });
-        goalCell.textContent = codes.length ? codes.join(", ") : "—";
+        goalCell.textContent = codes.length ? codes.join(", ") : "–";
         if (codes.length) {
           goalCell.title = (r.goals || []).map(function (k) {
             var g = findGoal(year, k);
@@ -116,9 +116,9 @@ function printReports(data, entries, single) {
       }
 
       tr.appendChild(el("td", null, chosen ? chosen.label : "niet gescoord"));
-      tr.appendChild(el("td", "muted", chosen && chosen.desc ? chosen.desc : "—"));
+      tr.appendChild(el("td", "muted", chosen && chosen.desc ? chosen.desc : "–"));
 
-      var scoreCell = el("td", "score-cell", typeof v === "number" ? v + " / " + rMax : "—");
+      var scoreCell = el("td", "score-cell", typeof v === "number" ? v + " / " + rMax : "–");
       if (typeof v === "number" && rMax > 0 && v / rMax < 0.5) scoreCell.classList.add("low");
       tr.appendChild(scoreCell);
 
@@ -136,7 +136,7 @@ function printReports(data, entries, single) {
 
     if (entry.feedforward) {
       var ff = el("div", "report-block feedforward-block");
-      ff.appendChild(el("h2", null, "Feedforward — de volgende stap"));
+      ff.appendChild(el("h2", null, "Feedforward: de volgende stap"));
       ff.appendChild(el("p", null, entry.feedforward));
       page.appendChild(ff);
     }
@@ -323,7 +323,7 @@ function buildGoalCoverageTable(year, usage, attainment) {
     tr.appendChild(el("td", "muted", linked
       ? linked.map(function (l) { return l.evaluation; })
           .filter(function (v, i, a) { return a.indexOf(v) === i; }).join(", ")
-      : "—"));
+      : "–"));
 
     var res = el("td", "score-cell");
     if (!linked) res.textContent = "niet gekoppeld";
@@ -480,7 +480,7 @@ function printYearOverview(year) {
             });
           });
         }
-        tr.appendChild(el("td", "muted", hasGoals ? (goalCodes.length ? goalCodes.join(", ") : "—") : "n.v.t."));
+        tr.appendChild(el("td", "muted", hasGoals ? (goalCodes.length ? goalCodes.join(", ") : "–") : "n.v.t."));
         tbody.appendChild(tr);
       });
     }

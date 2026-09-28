@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.22.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.24.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -97,7 +97,9 @@ Rechtsboven zie je altijd of je werk veilig staat:
    de groep aan: ze krijgen dezelfde score.
 5. Klik per criterium op het juiste **niveau**.
 6. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
-   **feedforward** (wat doet de leerling de volgende keer anders) in.
+   **feedforward** (wat doet de leerling de volgende keer anders) in. Die
+   tekst komt later mee in de feedback die je vanuit het tabblad Skore
+   naar Smartschool kopieert.
 7. Klik op **Opslaan**. De tool vinkt meteen de volgende leerling aan.
 
 **Handig om te weten:**
@@ -145,12 +147,57 @@ Doe dit **aan het begin van het schooljaar**, of als er een klas bijkomt.
 Hier maak je de evaluaties die je bij Evalueren kan kiezen.
 
 - **Nieuwe evaluatie:** geef een naam, voeg **criteria** toe en kies per
-  criterium 3, 4 of 5 niveaus. Voeg eventueel **open vragen** toe. Klik op
-  **Evaluatie opslaan**.
-- **AI-hulp:** beschrijf de opdracht, klik op **Prompt genereren** en
-  **Kopieer prompt**. Plak die in je eigen AI-gesprek (bijvoorbeeld Claude of
-  ChatGPT), plak het antwoord terug en klik op **Criteria toevoegen aan deze
-  evaluatie**. Controleer het resultaat altijd zelf.
+  criterium 3, 4 of 5 niveaus. Geef bij voorkeur alle criteria hetzelfde
+  aantal niveaus, anders weegt het ene criterium zwaarder dan het andere.
+  Voeg eventueel **open vragen** toe. Klik op **Evaluatie opslaan**.
+- **Per niveau** vul je in:
+  - **Wat je ziet:** wat je concreet ziet of leest in het werk.
+  - **doel:** vink aan welk niveau betekent dat de leerling het doel
+    behaalt. Standaard is dat **Voldoende**.
+  - **Volgende stap** (optioneel, niet bij het hoogste niveau): één zin
+    voor de leerling, bijvoorbeeld "Schrijf vooraf op wat je verwacht te
+    meten." Die zin komt later in de feedback die je vanuit Skore kopieert.
+- **Nakijken:** onder de criteria verschijnen tips, bijvoorbeeld "Criterium
+  3, niveau 2: bijna dezelfde tekst als niveau 3". Het zijn enkel tips: je
+  kan altijd opslaan.
+
+### AI-hulp bij rubrics
+
+Open **AI-hulp: rubric laten maken of nakijken** bovenaan de evaluatie.
+
+**Nieuwe criteria laten maken:**
+
+1. Kies het **aantal niveaus** (standaard 5). Je ziet meteen de namen en
+   welk niveau "doel behaald" is.
+2. **Beschrijf de opdracht.** Dat is het enige verplichte veld.
+3. Beantwoord de **vragen** die je kan beantwoorden. Alles is optioneel;
+   wat je openlaat, gaat niet mee. **Wat wil je evalueren?** helpt het meest.
+4. Klik op **Prompt maken** en daarna op **Kopieer prompt**.
+5. Plak de prompt in je eigen AI-gesprek (bijvoorbeeld Claude of ChatGPT).
+6. Plak het antwoord terug en klik op **Criteria toevoegen aan deze
+   evaluatie**.
+7. Onder de knop zie je:
+   - welke leerplandoelen bij elk criterium gekoppeld zijn;
+   - **Ook passend:** doelen die bij de opdracht passen maar nog bij geen
+     criterium staan. Kies een criterium en klik op **Koppelen**, of klik
+     op **Negeren**;
+   - **Zonder doel:** wat je wil evalueren maar bij geen enkel doel past;
+   - tips om na te kijken.
+8. Kijk alles na en klik op **Evaluatie opslaan**.
+
+**Een bestaande rubric laten nakijken:**
+
+1. Klik boven de criteria op **Laat AI deze rubric nakijken**.
+2. Klik op **Prompt maken**, kopieer en plak in je AI-gesprek.
+3. Plak het antwoord terug en klik op **Voorstel bekijken**.
+4. Je ziet per criterium wat er zou veranderen ("Was" en "Wordt"). Vink uit
+   wat je niet wil en klik op **Gekozen wijzigingen overnemen**.
+5. Klik op **Evaluatie opslaan**. Werd de rubric al gebruikt, dan bewaart
+   de tool de vorige tekst, zodat eerdere beoordelingen kloppen.
+
+De AI verandert bij het nakijken nooit het aantal criteria of niveaus.
+Controleer het resultaat altijd zelf.
+
 - **Mappen:** met **+ Nieuwe map** orden je evaluaties, bijvoorbeeld per
   thema of per maand. Met ↑ en ↓ zet je mappen in de juiste volgorde. Die
   volgorde zie je ook in de zoeklijsten.
@@ -258,13 +305,52 @@ Je krijgt twee overzichten:
   Skore.
 
 Typ de punten kolom per kolom over in Skore. Vink daarna **Overgezet naar
-Skore** aan, dan weet je (en je collega's) wat al gebeurd is. Plakken in
-Skore kan niet.
+Skore** aan, dan weet je (en je collega's) wat al gebeurd is. Punten plakken
+in Skore kan niet, feedback wel (zie hieronder).
+
+### Feedback kopiëren voor Smartschool
+
+In Skore kan je bij elk resultaat een feedbacktekst zetten. Die tekst maakt
+de tool voor je, uit de rubric en je beoordeling.
+
+1. Klik in de tabel op het **kopieericoon** naast het punt van een
+   leerling.
+2. Onderaan verschijnt "Feedback voor ... gekopieerd". Het icoon wordt een
+   groen **vinkje**, zodat je ziet waar je gebleven bent.
+3. Ga naar Smartschool, open de feedback bij het resultaat van die leerling
+   en plak met **Ctrl+V**.
+
+Wat er in de tekst staat, in drie korte stukjes:
+
+- **Waar ga je naartoe?** De naam van de opdracht en de criteria.
+- **Waar sta je nu?** Het sterkste criterium en het criterium dat het
+  meest aandacht nodig heeft, telkens met de beschrijving uit de rubric.
+  Daarna jouw eigen **feedback**, als je die invulde bij het beoordelen.
+- **Wat is je volgende stap?** Jouw eigen **feedforward**. Vulde je die
+  niet in, dan de **volgende stap** uit de rubric bij het werkpunt. Staat
+  die er ook niet, dan wat de leerling moet doen om bij het werkpunt een
+  niveau hoger te komen.
+
+Goed om te weten:
+
+- Er staan geen punten of woorden als "Onvoldoende" in de tekst: Smartschool
+  toont het punt al.
+- Je eigen feedback en feedforward komen er letterlijk in, nooit ingekort.
+- Haalt een leerling overal het hoogste niveau, dan is de tekst kort. Schrijf
+  dan zelf een feedforward, bijvoorbeeld een extra uitdaging.
+- Bij groepswerk staat erbij dat het om een groepsbeoordeling gaat.
+- De vinkjes onthoudt de tool enkel zolang ze open staat. Pas je een
+  beoordeling aan, dan verdwijnt het vinkje van die leerling.
+- Kopiëren werkt ook in een oud schooljaar.
 
 **Goed om te weten:**
 
 - Tussentijdse checks tellen niet mee.
 - Bij groepswerk telt de individuele correctie mee.
+- Pas je een rubric aan nadat je al beoordeeld had, dan telt voor elke
+  leerling de rubric zoals hij was bij het beoordelen. Had die oude rubric
+  een ander maximum, dan rekent de tool het punt om (houd de muis op het
+  punt voor uitleg).
 - **Periodes aanpassen:** open onderaan **Periodes van dit schooljaar**. Een
   periode loopt van haar startdatum tot de dag vóór de volgende periode.
   Klik op **Periodes opslaan**. Dit hoeft maar één keer per schooljaar, en

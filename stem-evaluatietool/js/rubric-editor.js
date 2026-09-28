@@ -114,7 +114,7 @@ function renderEvalFolderGroup(year, folderName, names, folderIndex, folderCount
     delBtn.addEventListener("click", function () {
       askDeleteScope(
         'Map "' + folderName + '" verwijderen?',
-        ["De evaluaties erin blijven gewoon bestaan — ze komen terug bij \"Geen map\"."],
+        ["De evaluaties erin blijven gewoon bestaan: ze komen terug bij \"Geen map\"."],
         function (scope) {
           deleteEvaluationFolder(db, year, folderName, scope);
           persist();
@@ -123,7 +123,7 @@ function renderEvalFolderGroup(year, folderName, names, folderIndex, folderCount
             "good", 'Map "' + folderName + '" verwijderd',
             scope === "iedereen"
               ? "Komt na synchroniseren ook bij collega's niet meer terug."
-              : "Blijft enkel bij jou weg — collega's behouden hun eigen versie.",
+              : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie.",
           );
         },
       );
@@ -183,7 +183,7 @@ function renderEvalRow(year, name) {
 
   var feedup = el("button", "btn-ghost btn-small", "Voor leerlingen afdrukken");
   feedup.type = "button";
-  feedup.title = "Print de criteria en niveaus zonder scores — geef dit vooraf mee";
+  feedup.title = "Print de criteria en niveaus zonder scores. Geef dit vooraf mee.";
   feedup.addEventListener("click", function () { printFeedUp(year, name); });
   var edit = el("button", "btn-ghost btn-small", "Bewerk");
   edit.type = "button";
@@ -254,6 +254,7 @@ function duplicateEvaluation(year, name) {
         name: r.name,
         description: r.description,
         goals: (r.goals || []).slice(),
+        targetScore: r.targetScore,
         options: JSON.parse(JSON.stringify(r.options)),
       };
     }),
@@ -288,7 +289,7 @@ function deleteEvaluation(year, name) {
       '"' + name + '" staat niet meer in ' + year + ". " +
         (scope === "iedereen"
           ? "Komt na synchroniseren ook bij collega's niet meer terug."
-          : "Blijft enkel bij jou weg — collega's behouden hun eigen versie."),
+          : "Blijft enkel bij jou weg. Collega's behouden hun eigen versie."),
     );
   });
 }
@@ -305,12 +306,7 @@ function renderDraft() {
   $("draftName").value = draft.name;
   $("draftYear").value = draft.year;
 
-  $("aiDescription").value = "";
-  $("aiPromptOut").value = "";
-  $("aiPromptBlock").classList.add("hidden");
-  $("aiResponseIn").value = "";
-  $("aiImportState").innerHTML = "";
-  $("aiRubricHelper").open = false;
+  resetAiRubricHelper();
 
   renderDraftRubrics();
   renderDraftQuestions();
@@ -376,15 +372,18 @@ function renderDraftRubrics() {
     desc.placeholder = "Korte uitleg: waar kijk je naar bij dit criterium?";
     desc.style.minHeight = "48px";
     desc.style.marginBottom = "12px";
-    desc.addEventListener("input", function () { rubric.description = this.value; });
+    desc.addEventListener("input", function () { rubric.description = this.value; renderDraftChecks(); });
     card.appendChild(desc);
 
     var headRow = el("div", "level-head");
-    ["Punten", "Niveau", "Wat je ziet", ""].forEach(function (t) {
+    ["Punten", "Niveau", "Wat je ziet", "Doel", ""].forEach(function (t) {
       headRow.appendChild(el("span", null, t));
     });
     card.appendChild(headRow);
 
+    var sortedScores = rubric.options.map(function (o) { return Number(o.score); });
+    var topScore = Math.max.apply(null, sortedScores.length ? sortedScores : [0]);
+    var target = rubricTargetScore(rubric, false);
     rubric.options.forEach(function (opt, oi) {
       var row = el("div", "level-row");
 
@@ -411,8 +410,22 @@ function renderDraftRubrics() {
       d.className = "desc-in";
       d.value = opt.desc || "";
       d.placeholder = "Beschrijf wat je concreet ziet bij dit niveau";
-      d.addEventListener("input", function () { opt.desc = this.value; });
+      d.addEventListener("input", function () { opt.desc = this.value; renderDraftChecks(); });
       row.appendChild(d);
+
+      // Welk niveau "doel behaald" is: wat een leerling toont die het
+      // leerplandoel haalt. Eén per criterium.
+      var goalLbl = el("label", "level-target");
+      goalLbl.title = "Dit niveau betekent: doel behaald";
+      var radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "target-" + index;
+      radio.checked = target !== null && Number(opt.score) === target;
+      radio.setAttribute("aria-label", "Niveau " + (oi + 1) + " is doel behaald");
+      radio.addEventListener("change", function () { rubric.targetScore = Number(opt.score); });
+      goalLbl.appendChild(radio);
+      goalLbl.appendChild(el("span", null, "doel"));
+      row.appendChild(goalLbl);
 
       var rmLevel = el("button", "icon-btn danger", "×");
       rmLevel.type = "button";
@@ -427,6 +440,19 @@ function renderDraftRubrics() {
         updateDraftSummary();
       });
       row.appendChild(rmLevel);
+
+      // Volgende stap voor de leerling (optioneel, niet bij het hoogste
+      // niveau): gebruikt door de feedback in Skore.
+      if (Number(opt.score) !== topScore) {
+        var nx = document.createElement("input");
+        nx.type = "text";
+        nx.className = "level-next";
+        nx.value = opt.next || "";
+        nx.placeholder = "Volgende stap voor de leerling (optioneel), bv. Schrijf vooraf op wat je verwacht te meten.";
+        nx.setAttribute("aria-label", "Volgende stap bij niveau " + (oi + 1));
+        nx.addEventListener("input", function () { opt.next = this.value; renderDraftChecks(); });
+        row.appendChild(nx);
+      }
 
       card.appendChild(row);
     });
@@ -450,6 +476,20 @@ function renderDraftRubrics() {
 
     host.appendChild(card);
   });
+  updateAiReviewAvailability();
+  renderDraftChecks();
+}
+
+/* Kwaliteitscontrole van de hele rubric, live onder de criteria. Enkel
+   waarschuwingen: opslaan blijft altijd mogelijk. */
+function renderDraftChecks() {
+  var host = $("draftChecks");
+  if (!host || !draft) return;
+  host.innerHTML = "";
+  var list = draft.rubrics.filter(function (r) { return !isUntouchedRubric(r); });
+  if (!list.length) return;
+  var warnings = rubricWarnings(draft.rubrics, draft.year, 0);
+  if (warnings.length) host.appendChild(renderWarningsBox(warnings, "Nakijken"));
 }
 
 
@@ -657,6 +697,9 @@ function updateDraftSummary() {
     }
   });
 
+  renderDraftChecks();
+  updateAiReviewAvailability();
+
   var named = draft.rubrics.filter(function (r) { return String(r.name || "").trim(); }).length;
   var goalSet = {};
   draft.rubrics.forEach(function (r) {
@@ -768,17 +811,26 @@ function saveDraft() {
 
   var cleaned = {
     rubrics: draft.rubrics.map(function (r) {
-      return {
+      var options = r.options
+        .map(function (o) {
+          var opt = { score: Number(o.score), label: String(o.label).trim(), desc: String(o.desc || "").trim() };
+          var next = String(o.next || "").trim();
+          if (next) opt.next = next;
+          return opt;
+        })
+        .sort(function (a, b) { return a.score - b.score; });
+      // Het hoogste niveau heeft geen volgende stap.
+      if (options.length) delete options[options.length - 1].next;
+      var out = {
         id: r.id,
         name: String(r.name).trim(),
         description: String(r.description || "").trim(),
         goals: (r.goals || []).slice(),
-        options: r.options
-          .map(function (o) {
-            return { score: Number(o.score), label: String(o.label).trim(), desc: String(o.desc || "").trim() };
-          })
-          .sort(function (a, b) { return a.score - b.score; }),
+        options: options,
       };
+      var target = rubricTargetScore({ options: options, targetScore: r.targetScore }, false);
+      if (target !== null) out.targetScore = target;
+      return out;
     }),
     questions: draft.questions.map(function (q) {
       return { id: q.id, label: String(q.label).trim(), hint: String(q.hint || "").trim() };

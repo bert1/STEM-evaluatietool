@@ -13,6 +13,84 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.24.0 · 28 september 2026
+
+**De AI-rubriekhulp maakt correctere rubrics**
+
+- Nieuwe schermindeling (`js/ai-rubric.js`, `index.html`): kiezen tussen
+  "Nieuwe criteria laten maken" en "Deze rubric laten nakijken", het
+  aantal niveaus (3, 4 of 5, standaard 5) met de vaste labels en het
+  niveau "doel behaald", en zes optionele contextvragen met keuzeknoppen
+  (wat je wil evalueren, wat ze afleveren, individueel of in groep,
+  lestijd, voorkennis, andere criteria toegestaan). Enkel beantwoorde
+  vragen gaan mee in de prompt.
+- Nieuwe prompt (`buildAiRubricPrompt(opts)`): context, vast aantal
+  niveaus met labels uit de tool, de lat (doelniveau = het leerplandoel op
+  zijn Bloom-niveau, dat in de doelenlijst staat), kwaliteitsregels, een
+  volgende stap per niveau in je-vorm, "ookPassend" en "zonderDoel", en
+  een zelfcontrole. Geen gedachtestreep in de prompt.
+- Inlezen (`parseAiRubricResponse()`): nieuw formaat met `volgendeStap`,
+  `ookPassend` en `zonderDoel`; het oude formaat blijft leesbaar. Labels
+  komen altijd uit de tool. Na het inlezen: gekoppelde doelen per
+  criterium, "Ook passend" met Koppelen en Negeren, "Zonder doel" en tips.
+- Knop "Laat AI deze rubric nakijken": prompt met de huidige rubric,
+  voorstel per criterium ("Was" en "Wordt") met een vinkje, niets
+  verandert zonder bevestiging (`buildAiReview()`). Aantal criteria en
+  niveaus blijft gelijk. Opslaan volgt het bestaande versiebeheer.
+- Kwaliteitscontrole `rubricWarnings()` (`js/rubric-model.js`) na het
+  inlezen en live in de editor ("Nakijken"): ander of gemengd aantal
+  niveaus, lege of zeer korte omschrijving, enkel vage woorden, bijna
+  dezelfde tekst als het volgende niveau, geen leerplandoel, gedachtestreep.
+  Blokkeert nooit.
+- Datamodel, optioneel en achterwaarts compatibel (`DB_VERSION` blijft 4):
+  `rubric.targetScore` (niveau "doel behaald") en `option.next` (volgende
+  stap in je-vorm). Bewaard door `saveDraft()`, dupliceren, `normaliseDb()`,
+  samenvoegen en synchroniseren. Tellen bewust niet mee in
+  `rubricsDiffer()`, zodat zinnen aanvullen geen nieuwe rubricversie maakt.
+- Rubric-editor: per niveau een keuzerondje "doel" en een regel "Volgende
+  stap" (niet bij het hoogste niveau). Nieuwe standaardlabels
+  (`LEVEL_TEMPLATES`): 3 = Onvoldoende, Voldoende, Sterk; 4 = Onvoldoende,
+  Bijna, Voldoende, Sterk; 5 = Onvoldoende, Bijna, Voldoende, Sterk,
+  Uitstekend. Bestaande rubrics veranderen niet.
+- Feedback in Skore: "Wat is je volgende stap?" gebruikt eerst de eigen
+  feedforward, dan de volgende stap van het behaalde niveau (uit de huidige
+  rubric als de oude versie die zin nog niet had), dan het niveau erboven.
+  Een sterk punt vraagt het doelniveau als dat gekozen is.
+- Nieuwe tests: `tests/ai-rubric.spec.js`.
+
+## 1.23.0 · 28 september 2026
+
+**Feedback per leerling kopiëren vanuit het tabblad Skore**
+
+- Naast elk punt in de Skore-tabel staat een kopieerknop (altijd zichtbaar,
+  ook op een touchscreen). Eén klik zet een feedbacktekst op het klembord
+  om bij het resultaat in Smartschool te plakken, met een korte melding
+  onderaan (`showToast()` in `js/ui.js`) en een vinkje in de cel. Het
+  vinkje geldt enkel voor deze sessie (`skoreCopied`), wordt niet bewaard
+  of gesynchroniseerd en verdwijnt als de beoordeling daarna wijzigt.
+  Werkt ook in een gearchiveerd schooljaar. Cellen zonder punt of met
+  "vrijgesteld" krijgen geen knop.
+- De tekst komt uit `buildSkoreFeedback()` in het nieuwe `js/feedback.js`:
+  volledig offline, zonder AI, altijd dezelfde tekst voor dezelfde
+  beoordeling. Opbouw volgens Hattie en Timperley: "Waar ga je naartoe?",
+  "Waar sta je nu?" (sterk punt en werkpunt uit de rubric, daarna de eigen
+  feedback) en "Wat is je volgende stap?" (de eigen feedforward, anders
+  de beschrijving van het niveau boven het werkpunt). Geen punten,
+  percentages of niveaulabels. Richtwaarde 700 tekens; te lang, dan eerst
+  een kortere criterialijst en daarna geen sterk punt. De eigen tekst van
+  de leerkracht wordt nooit ingekort.
+- Bugfix: Skore rekende het punt met de huidige rubric in plaats van de
+  rubricversie waarmee beoordeeld werd. Nu de juiste versie, zoals het
+  rapport; had die een ander maximum, dan wordt het punt omgerekend naar
+  het maximum van de kolom (met uitleg bij de cel).
+- Eén klembordhulp `copyText()` (met `legacyCopy()` als terugvaloptie) in
+  `js/ui.js`, gebruikt door Kopieer tabel, de AI-rubriekhulp en Skore. De
+  AI-rubriekhulp meldt nu ook als kopiëren mislukt.
+- Geen gedachtestreep meer in zichtbare teksten (labels Feedback en
+  Feedforward, uitleg, meldingen, de AI-prompt, het rapport). Lege cellen
+  tonen overal "–", zoals in Skore. Een datumbereik in Skore toont "t/m".
+- Nieuwe tests: `tests/feedback.spec.js`.
+
 ## 1.22.0 · 28 september 2026
 
 **Het tabblad Resultaten is nu "Controle": wat ontbreekt er nog?**
