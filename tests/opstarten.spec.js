@@ -67,3 +67,12 @@ test("de handleiding (README.md) vermeldt de huidige versie", async () => {
   expect(m, "README.md moet 'Huidige versie: X.Y.Z.' bevatten").not.toBeNull();
   expect(m[1], "werk README.md bij voor deze versie").toBe(version);
 });
+
+test("bij Rubrics staat de knop Nieuwe evaluatie boven de lijst", async ({ page }) => {
+  await openTool(page);
+  await page.click("#btnEvals");
+  const knop = await page.locator("#btnNewEval").boundingBox();
+  const lijst = await page.locator("#evalList").boundingBox();
+  expect(knop.y).toBeLessThan(lijst.y);
+  page.expectNoErrors();
+});
