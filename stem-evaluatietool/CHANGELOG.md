@@ -13,6 +13,69 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.22.0 · 28 september 2026
+
+**Het tabblad Resultaten is nu "Controle": wat ontbreekt er nog?**
+
+- Bugfix eerst: `coverageMatrix()` telde enkel sessies met exact één
+  klas. Leerlingen uit een combinatiesessie of leerlingen die van klas
+  veranderden telden daardoor als niet beoordeeld. Nu gebruikt het de
+  echte klas per leerling (`row.studentKlas`), zoals `collectResults()`.
+- Nieuw scherm (`js/controle.js`): filters leerjaar, klas, map en periode
+  (Skore-periodes plus "Hele schooljaar"). Blok "Openstaand" per map, met
+  per evaluatie en klas wat er mis is en de namen erbij: niet beoordeeld,
+  onvolledig, enkel tussentijds, dubbel, niet in de klaslijst, vrijgesteld
+  maar toch beoordeeld, en ter info een oudere rubricversie. Knoppen "Nu
+  beoordelen" (`openEvaluationFor()` in `js/evaluations.js`, hergebruikt
+  de gewone keuzelogica) en "Details" met de klaslijst en een status per
+  leerling, plus "Rapport" en "Rapporten afdrukken". Opmerkingen per
+  evaluatie: criteria zonder leerplandoel ("Naar Rubrics") en een
+  opvallend verschil tussen beoordelaars (`calibration()`, vanaf 15
+  procentpunt) als tekst. Ingeklapte blokken "In orde", "Nog niet
+  gestart" en "Leerplandoelen". Is alles in orde, dan staat er één zin.
+- Dubbel beoordeeld telt enkel eindbeoordelingen: een tussentijdse check
+  naast een eindbeoordeling is geen dubbel.
+- Nieuw: een leerling achteraf vrijstellen van een evaluatie ("Niet te
+  beoordelen"), enkel op het Controle-tabblad, met bevestiging en een
+  optionele reden. Altijd ongedaan te maken. Gedeeld met collega's,
+  samengevoegd volgens de vaste regel (nieuwste wint, nooit verwijderen)
+  en ongedaan maken via het tombstone-patroon (`isTombstoned()`). Verhuist
+  mee bij klasverandering (`migrateStudentEvaluations()` kreeg een vierde
+  parameter `fromKlas`). Structuur:
+  `db.schoolYears[schooljaar].exemptions["leerjaar||evaluatie||klas||leerling"]
+  = { reason, by, updatedAt }` en
+  `db.tombstones.exemptions["schooljaar||leerjaar||evaluatie||klas||leerling"]`.
+  `DB_VERSION` blijft 4: de velden zijn optioneel en oude bestanden openen
+  gewoon.
+- Blok Leerplandoelen: per rubriek drie toestanden (niet gekoppeld,
+  gekoppeld maar nog niet beoordeeld, beoordeeld met de evaluaties). De
+  balkjes, stat-kaarten en de instelling van de drempels zijn weg; de
+  standaarddrempels blijven gelden voor "Overzicht afdrukken" en het
+  jaaroverzicht (`buildGoalCoverageTable()` ongewijzigd).
+- Verwijderd van dit tabblad: kerncijfers, scoretabel per leerling,
+  grafieken per criterium en spreiding, kalibratiegrafiek,
+  dekkingsmatrix, groeiblok en "Kopieer deze tabel". Verwijderde functies:
+  `renderSummary`, `renderWorkPoints`, `weakPoints`, `strugglingOn`,
+  `renderCriterionChart`, `renderDistributionChart`, `renderLegend`,
+  `renderSpreadChart`, `renderStudentTable`, `copyResultTable`,
+  `renderCalibration`, `renderCoverage`, `levelColor`, `renderThresholds`
+  en de zoeklijst `resEvalCombo`, plus hun CSS.
+- **Bewust blijven staan, maar niet meer op het scherm:** de groeigrafiek
+  (`renderGrowthPanel`, `renderGrowthWorkpoints`, `renderGrowthChart`,
+  `goalTrendSeries`, `goalTrendComparison` in `js/goals.js`) en haar CSS
+  (`.chart`, `.chart-box`, `.legend`). Om ze terug te zetten zijn de
+  elementen `#growthBody` en `#growthWorkpoints` nodig, en de velden
+  `#resYear`, `#resEval` en `#resKlas` die ze lezen.
+- `printReports()` leest leerjaar en evaluatie nu uit het resultaat van
+  `collectResults()` (dat nu ook `year`, `evaluation` en `klas` teruggeeft),
+  niet meer uit filtervelden.
+- De interne namen `btnResults`, `resultsCard2`, view `results`, `#resYear`
+  en `#resKlas` blijven: hernoemen levert niets op en raakt app.js,
+  storage.js, goals.js, reports.js en de testen.
+- Testen: `tests/controle.spec.js` (14 testen, waaronder een echte
+  twee-personen-simulatie voor de vrijstelling). De zoeklijsttesten
+  verhuisden naar de zoeklijst bij Evalueren (dezelfde code).
+
 ## 1.21.0 · 28 september 2026
 
 **Nieuw tabblad Skore: punten per rapportperiode, klaar om over te zetten

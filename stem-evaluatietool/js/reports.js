@@ -21,8 +21,10 @@ function printReports(data, entries, single) {
   var host = $("printArea");
   host.innerHTML = "";
 
-  var year = $("resYear").value;
-  var evaluation = $("resEval").value;
+  // Leerjaar en evaluatie komen uit collectResults(), niet meer uit
+  // filtervelden: het Controle-tabblad toont meerdere evaluaties tegelijk.
+  var year = data.year;
+  var evaluation = data.evaluation;
   var currentVersion = evaluationVersion(db, year, evaluation);
   var printed = new Date().toLocaleDateString("nl-BE", {
     day: "numeric", month: "long", year: "numeric",
@@ -175,7 +177,7 @@ function printReports(data, entries, single) {
     host.appendChild(page);
   });
 
-  var klasLabel = ($("resKlas").value && $("resKlas").value !== "*") ? $("resKlas").value : "Alle klassen";
+  var klasLabel = (data.klas && data.klas !== "*") ? data.klas : (single && entries.length === 1 ? entries[0].klas : "Alle klassen");
   var suggestedName = single && entries.length === 1
     ? sanitizeFilename(entries[0].name) + "_" + sanitizeFilename(klasLabel) + "_" + sanitizeFilename(evaluation)
     : sanitizeFilename(klasLabel) + "_" + sanitizeFilename(evaluation);

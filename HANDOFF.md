@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.21.0**.
+Laatst bijgewerkt: 28 september 2026, versie **1.22.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -88,7 +88,29 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.21.0)
+## Volledige featurelijst (huidige stand, 1.22.0)
+
+- **Tabblad Controle** (1.22.0, `js/controle.js`, was Resultaten): toont
+  enkel wat ontbreekt of niet klopt, zonder punten of grafieken. Interne
+  namen bleven (`btnResults`, `resultsCard2`, view `results`, `#resYear`,
+  `#resKlas`). Kern: `controleScan(year)` (één keer over alle sessies,
+  met de echte klas per leerling), `controleCheck()` (status per
+  leerling en de controlepunten), `controleEvalNotes()` (criteria zonder
+  doel, kalibratie vanaf 15 procentpunt), `collectControle()` (filters
+  klas, map, periode; een evaluatie valt in een periode als minstens één
+  beoordeling voor die klas erin valt). "Nu beoordelen" gebruikt
+  `openEvaluationFor()` in `js/evaluations.js`.
+  **Vrijstellingen:** `db.schoolYears[schooljaar].exemptions[
+  "leerjaar||evaluatie||klas||leerling"] = {reason, by, updatedAt}`;
+  ongedaan maken via `db.tombstones.exemptions["schooljaar||…"]` en
+  `isTombstoned()` (nieuwe soort in `TOMBSTONE_KINDS`). Samenvoegen in
+  `mergeExemptions()` (nieuwste wint). Verhuist mee via
+  `migrateExemptions()`, aangeroepen door `migrateStudentEvaluations(year,
+  student, toKlas, fromKlas)`. `DB_VERSION` bleef 4.
+  **Groeigrafiek** staat niet meer op het scherm, de functies in
+  `js/goals.js` bleven (zie CHANGELOG 1.22.0). De drempelinstelling voor
+  leerplandoelen is weg; de standaarddrempels gelden nog voor het
+  afgedrukte overzicht.
 
 - **Tabblad Skore** (1.21.0, `js/skore.js`): per leerjaar, klas en
   rapportperiode de punten om over te typen in Skore (Smartschool; plakken
@@ -352,13 +374,18 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
 - `opstarten.spec.js`: build, alle scriptbestanden bestaan, opstarten
   zonder fouten (gebouwd én losse `index.html`), opstartwizard, alle tabbladen
 - `evalueren.spec.js`: een leerling beoordelen, opslaan en terugzien bij
-  Resultaten; melding bij ontbrekende criteria; dekkingstabel
-- `zoeklijst.spec.js`: beide zoeklijsten (mappen, accenten, mapnaam,
-  Enter, ARIA)
+  Controle; melding bij ontbrekende criteria
+- `zoeklijst.spec.js`: de zoeklijst bij Evalueren (mappen, accenten,
+  mapnaam, Enter, ARIA)
 - `opslaan.spec.js`: beschadigde browseropslag, gelijktijdig schrijven,
   mislukte opslag
 - `samenvoegen.spec.js`: de "nooit verwijderen bij samenvoegen"-regel
   (team, tombstones, rijen)
+- `controle.spec.js`: dekkingstelling met combinatiesessies en
+  klasverandering, elk controlepunt, "+ X meer", opmerkingen per
+  evaluatie, "Nu beoordelen", "Alles in orde", periodefilter,
+  leerplandoelen, vrijstelling (reden, ongedaan maken, later toch
+  beoordeeld, meeverhuizen, twee-personen-synchronisatie)
 - `skore.spec.js`: periodes, overzicht per klas en periode, omrekenen,
   overgezet-vinkjes, periodes aanpassen, `createdAt`, samenvoegen
 
@@ -370,8 +397,10 @@ testen voor beschadigde opslag faalden toen zoals verwacht.
 
 **Nog niet gedekt** (vroeger wel, bij uitbreiden eerst hieraan denken):
 klaslijsten en Excel-import, rubric-editor, team en gedeelde map,
-leerplandoelen en groei, schooljaren, groepscorrectie, AI-hulp,
+de inhoud van afgedrukte rapporten, schooljaren, groepscorrectie, AI-hulp,
 verwijderen voor iedereen/mezelf, cijfertoetsen, jaaroverzicht afdrukken.
+De groeigrafiek staat sinds 1.22.0 niet meer op het scherm en heeft dus ook
+geen test.
 
 ## Bekende openstaande schuld
 
@@ -436,3 +465,7 @@ verwijderen voor iedereen/mezelf, cijfertoetsen, jaaroverzicht afdrukken.
 - Automatische reservekopie met datum in de gedeelde OneDrive-map
 - Laatst gebruikte evaluatie bovenaan in de zoeklijsten
 - Resultaten per map exporteren naar Excel
+- Skore: een vrijgestelde leerling tonen als "vrijgesteld" in plaats van
+  "–" in de puntentabel, en "22/24, 2 vrijgesteld" in de kolom Beoordeeld
+  (voorgesteld in 1.22.0, nog niet gebouwd: wacht op akkoord)
+- De groeigrafiek elders terugzetten (functies staan nog in js/goals.js)
