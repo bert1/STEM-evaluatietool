@@ -135,7 +135,7 @@ function blankRubric(count, taken) {
     description: "",
     targetScore: LEVEL_TARGETS[count],
     options: LEVEL_TEMPLATES[count].map(function (label, i) {
-      return { score: i + 1, label: label, desc: "", next: "" };
+      return { score: i + 1, label: label, desc: "", say: "", next: "" };
     }),
   };
 }
@@ -178,6 +178,72 @@ function textSimilarity(a, b) {
 
 var DASH_PATTERN = /\u2014|\s\u2013\s/;
 
+/* LEERLINGENTAAL (sinds 1.25.0). Leerlingen van 12 tot 14 jaar lezen de
+   rubric en de feedbackzinnen zelf. Deze woorden zijn te abstract voor
+   hen; de editor meldt ze (nooit blokkerend). Alle vormen staan erbij,
+   zodat de vergelijking per woord eenvoudig blijft. */
+var DIFFICULT_WORDS = [
+  "adequaat", "adequate", "coherent", "coherente", "relevant", "relevante",
+  "optimaal", "optimale", "systematisch", "systematische", "correct", "correcte",
+  "kwalitatief", "kwalitatieve", "functioneel", "functionele", "conform",
+  "specifiek", "specifieke", "gespecificeerd", "gespecificeerde",
+  "beargumenteerd", "beargumenteerde", "summier", "summiere",
+  "diepgaand", "diepgaande", "beknopt", "beknopte", "essentieel", "essentiële",
+  "significant", "significante", "consistent", "consistente",
+  "accuraat", "accurate", "efficiënt", "efficiënte", "uiterst",
+];
+
+var LONG_SENTENCE_WORDS = 20;
+
+var YOU_FORM = /(^|[^a-zà-ÿ])(je|jij|jou|jouw|jullie)([^a-zà-ÿ]|$)/i;
+
+function isYouForm(text) {
+  return YOU_FORM.test(String(text || ""));
+}
+
+/* Staat de rubric in de je-vorm? Ja als minstens de helft van de
+   ingevulde niveauomschrijvingen je, jij, jouw of jullie bevat. Een
+   rubric zonder omschrijvingen telt als ja: er valt niets te melden. */
+function rubricInPupilLanguage(rubrics) {
+  var filled = 0, you = 0;
+  (rubrics || []).forEach(function (r) {
+    (r.options || []).forEach(function (o) {
+      var d = String(o.desc || "").trim();
+      if (!d) return;
+      filled++;
+      if (isYouForm(d)) you++;
+    });
+  });
+  return filled === 0 || you * 2 >= filled;
+}
+
+/* Heeft elk niveau zijn feedbackzinnen: een feedbackzin (say) en een
+   volgende stap of, op het hoogste niveau, een uitdaging (next)? */
+function rubricHasFeedbackSentences(rubrics) {
+  return (rubrics || []).every(function (r) {
+    return (r.options || []).every(function (o) {
+      return String(o.say || "").trim() && String(o.next || "").trim();
+    });
+  });
+}
+
+function longestSentenceWords(text) {
+  return String(text || "").split(/[.!?]+/).reduce(function (m, part) {
+    return Math.max(m, textWords(part).length);
+  }, 0);
+}
+
+function difficultWordsIn(text) {
+  var found = [];
+  textWords(text).forEach(function (w) {
+    if (DIFFICULT_WORDS.indexOf(w) !== -1 && found.indexOf(w) === -1) found.push(w);
+  });
+  return found;
+}
+
+var PUPIL_LANGUAGE_WARNING = "Deze rubric is nog niet in leerlingentaal geschreven. Gebruik Laat AI deze rubric nakijken.";
+var FEEDBACK_SENTENCES_WARNING = "Nog niet elk niveau heeft feedbackzinnen voor leerlingen. Gebruik Laat AI deze rubric nakijken.";
+
 /* chosenLevels: het aantal niveaus dat in de AI-hulp gekozen werd, of
    0/undefined in de editor. Geeft een lijst met leesbare meldingen. */
 function rubricWarnings(rubrics, year, chosenLevels) {
@@ -185,6 +251,16 @@ function rubricWarnings(rubrics, year, chosenLevels) {
   var counts = rubrics.map(function (r) { return (r.options || []).length; });
   var most = null, freq = {};
   counts.forEach(function (c) { freq[c] = (freq[c] || 0) + 1; if (most === null || freq[c] > freq[most]) most = c; });
+
+  /* Leerlingentaal: staat de rubric nog in de derde persoon, dan één
+     melding voor de hele rubric. De meldingen over lange zinnen en
+     moeilijke woorden komen pas als hij in de je-vorm staat: het
+     nakijken door de AI lost die toch allemaal samen op. */
+  var pupil = rubricInPupilLanguage(rubrics);
+  var anyDesc = rubrics.some(function (r) {
+    return (r.options || []).some(function (o) { return String(o.desc || "").trim(); });
+  });
+  if (!pupil) out.push(PUPIL_LANGUAGE_WARNING);
 
   rubrics.forEach(function (r, ri) {
     var nr = "Criterium " + (ri + 1);
@@ -197,13 +273,27 @@ function rubricWarnings(rubrics, year, chosenLevels) {
     if (DASH_PATTERN.test(r.name || "") || DASH_PATTERN.test(r.description || "")) {
       out.push(nr + ": de naam of uitleg bevat een gedachtestreep.");
     }
+    if (pupil) {
+      var hardHead = difficultWordsIn((r.name || "") + " " + (r.description || ""));
+      if (hardHead.length) out.push(nr + ": moeilijk woord in de naam of uitleg (" + hardHead.join(", ") + ").");
+    }
     (r.options || []).forEach(function (o, oi) {
       var where = nr + ", niveau " + (oi + 1);
       var desc = String(o.desc || "").trim();
       if (!desc) out.push(where + ": nog geen omschrijving.");
       else if (isVagueText(desc)) out.push(where + ": enkel \"" + desc.replace(/[.!]+$/, "").toLowerCase() + "\". Wat zie je concreet?");
       else if (textWords(desc).length < 4) out.push(where + ": erg kort. Wat zie je concreet?");
-      if (DASH_PATTERN.test(desc) || DASH_PATTERN.test(o.next || "")) out.push(where + ": bevat een gedachtestreep.");
+      if (DASH_PATTERN.test(desc) || DASH_PATTERN.test(o.next || "") || DASH_PATTERN.test(o.say || "")) {
+        out.push(where + ": bevat een gedachtestreep.");
+      }
+      if (pupil) {
+        var texts = [desc, o.say, o.next];
+        if (texts.some(function (t) { return longestSentenceWords(t) > LONG_SENTENCE_WORDS; })) {
+          out.push(where + ": een zin is langer dan " + LONG_SENTENCE_WORDS + " woorden. Maak er twee korte zinnen van.");
+        }
+        var hard = difficultWordsIn(texts.join(" "));
+        if (hard.length) out.push(where + ": moeilijk woord voor leerlingen (" + hard.join(", ") + ").");
+      }
       var nextOpt = r.options[oi + 1];
       if (desc && nextOpt && String(nextOpt.desc || "").trim() && textSimilarity(desc, nextOpt.desc) >= 0.9) {
         out.push(where + ": bijna dezelfde tekst als niveau " + (oi + 2) + ".");
@@ -211,6 +301,7 @@ function rubricWarnings(rubrics, year, chosenLevels) {
     });
     if (yearHasGoals(year) && !(r.goals || []).length) out.push(nr + ": nog geen leerplandoel gekoppeld.");
   });
+  if (pupil && anyDesc && !rubricHasFeedbackSentences(rubrics)) out.push(FEEDBACK_SENTENCES_WARNING);
   return out;
 }
 

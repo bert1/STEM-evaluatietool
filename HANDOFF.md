@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.24.1**.
+Laatst bijgewerkt: 28 september 2026, versie **1.25.3**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,89 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.24.1)
+## Volledige featurelijst (huidige stand, 1.25.3)
+
+- **Vertrouwenszinnen zonder druk** (1.25.2). De gebruiker vond "Ik geef
+  je deze tip omdat ik veel van je verwacht" te veel druk voor 12 tot 14
+  jaar. Alle zeven zinnen in `CONFIDENCE_SENTENCES` herschreven: vertrouwen
+  dat de leerling het kan leren, hulp aanbieden, fouten horen bij leren.
+  Geen "verwacht", "lat hoog", "streng", "zeker van" of "moet" (een test
+  bewaakt dat). In 1.25.3 werd "Ik ben benieuwd naar je volgende poging"
+  vervangen door "Elke keer dat je iets probeert, leer je iets bij." (de
+  gebruiker vond die zin niet goed). Niet terugdraaien naar de oorspronkelijke formulering van
+  Yeager ("hoge verwachtingen") zonder de gebruiker te vragen.
+
+- **Feedback duidelijk zonder de rubric** (1.25.1). De gebruiker vond
+  "Bij Meten: ..." onduidelijk: een leerling weet weken later niet meer
+  wat "Meten" of "Voorspellen" betekent. Gekozen (uit twee voorstellen;
+  het andere was de beschrijving van het criterium tussen haakjes):
+  concrete namen en zinnen. De prompt vraagt nu criterianamen die zeggen
+  wat de leerling in deze opdracht maakte of deed ("Je voorspellingen
+  vooraf", "Je filmpjes van het ei") en feedbackzinnen die zonder rubric
+  duidelijk zijn, met een extra vraag in de zelfcontrole. De aanhef heeft
+  geen lijst met criterianamen meer: "Dit is je feedback bij "opdracht"."
+  De volgende stap van het werkpunt staat zonder "Bij ..." (ze hoort bij
+  het werkpunt net erboven). `criterionName()` maakt van "Je ..." na
+  "Bij" een kleine letter. Inkorten: enkel nog het sterke punt weglaten.
+
+- **Rubrics in leerlingentaal en feedbackzinnen per niveau** (1.25.0,
+  `js/ai-rubric.js`, `js/rubric-model.js`, `js/rubric-editor.js`,
+  `js/feedback.js`, `js/skore.js`). Leerlingen van 12 tot 14 jaar lezen
+  de rubric zelf (feed-up-blad, rapport, feedback in Skore).
+  **Prompt:** `AGE_BY_YEAR` (1ste jaar 12 tot 13, 2de jaar 13 tot 14;
+  een ander leerjaar krijgt geen leeftijd) in de openingszin; nieuwe
+  secties LEERLINGENTAAL (`aiLanguageRules(hasPrior)`: naam hoogstens vijf
+  woorden, beschrijving één zin, je-vorm, hoogstens 15 woorden per zin,
+  alledaagse woorden met een verwijzing naar "vooraf geleerd" enkel als
+  die contextvraag ingevuld is, actief schrijven) en FEEDBACKZINNEN (was
+  VOLGENDE STAP). Zelfcontrole met de leeftijd erin. Bij "nakijken" vraagt
+  de prompt ook herschrijven in leerlingentaal en ontbrekende zinnen
+  aanvullen; id, aantal niveaus en labels blijven vast.
+  **Velden per niveau:** `option.say` (json `feedbackZin`, nieuw,
+  optioneel): wat de leerling op dit niveau toonde, je-vorm, zonder naam,
+  punten of niveaunaam. `option.next` (json `volgendeStap`) zoals in
+  1.24.0, en **op het hoogste niveau de uitdaging** (json `uitdaging`),
+  zodat er geen extra veld nodig was. Daarvoor zijn weggehaald: het
+  wissen van `next` op het hoogste niveau in `saveDraft()`,
+  `parseAiRubricResponse()` en `buildAiReview()`, en het verbergen in de
+  editor. `rubricsForAiReview()` stuurt `feedbackZin` mee en `uitdaging`
+  in plaats van `volgendeStap` bij het hoogste niveau.
+  **Opslag en versies:** `say` en `next` tellen niet mee in
+  `rubricsDiffer()`, dus zinnen aanvullen maakt geen nieuwe rubricversie
+  en geeft geen melding "oudere versie" op Controle (die kijkt enkel naar
+  het versienummer). `scoredCriteria()` haalt ontbrekende zinnen uit de
+  huidige rubric (zelfde criterium-id en score, `levelText()`).
+  `normaliseDb()` kopieert `ev.rubrics` volledig, dus `say` overleeft
+  opslaan, samenvoegen en synchroniseren (test). `DB_VERSION` blijft 4.
+  **Editor:** per criterium een inklapbaar deel "Feedbackzinnen voor
+  leerlingen" (`renderFeedbackSentences()`, standaard dicht, open blijft
+  open via `feedbackSentencesOpen[rubric.id]`) met per niveau `.level-say`
+  en `.level-next` (aria-label "Volgende stap" of "Uitdaging"). Onder de
+  tips één melding `.feedback-tip` met de knop "Laat AI deze rubric
+  nakijken" zolang de rubric niet in de je-vorm staat of zinnen mist. De
+  editor filtert `PUPIL_LANGUAGE_WARNING` en `FEEDBACK_SENTENCES_WARNING`
+  uit de gewone tips, zodat de melding er maar één keer staat; bij het
+  inlezen van een AI-antwoord staan ze wel in de gewone tips.
+  **Waarschuwingen** (`rubricWarnings()`, nooit blokkerend):
+  `rubricInPupilLanguage()` = minstens de helft van de ingevulde
+  omschrijvingen bevat je, jij, jou, jouw of jullie. Zo niet: één melding
+  voor de hele rubric (`PUPIL_LANGUAGE_WARNING`), en dan bewust **geen**
+  meldingen over lange zinnen of moeilijke woorden (de ingebouwde rubrics
+  hebben er tientallen, en het nakijken door de AI lost ze samen op).
+  Staat ze wel in de je-vorm: zin van meer dan `LONG_SENTENCE_WORDS` (20)
+  woorden, woorden uit `DIFFICULT_WORDS` (alle vormen uitgeschreven), en
+  één melding als niet elk niveau een feedbackzin en een volgende stap of
+  uitdaging heeft (`rubricHasFeedbackSentences()`). De test op de
+  ingebouwde rubrics verwacht nu precies één je-vorm-melding per rubric.
+  **Aantal niveaus in de AI-hulp:** enkel nog 4 of 5 (knop 3 weg uit
+  `index.html`). `LEVEL_TEMPLATES[3]` blijft, zodat rubrics en antwoorden
+  met 3 niveaus blijven werken.
+  **Feedbacktekst:** zie "Feedback kopiëren vanuit Skore" hieronder.
+  **Voornaam bewust niet:** voorgesteld (aparte voornaam per leerling in
+  de klaslijst), maar de gebruiker koos ervoor de naam weg te laten. De
+  Smartschool-export heeft één naamkolom "Achternaam Voornaam", dus de
+  voornaam is niet betrouwbaar te bepalen. De tekst is persoonlijk door de
+  je-vorm. Niet opnieuw voorstellen zonder dat de gebruiker erom vraagt.
 
 - **Knoppenrij bij Rubrics bovenaan** (1.24.1, `index.html`): "Nieuwe
   evaluatie", "+ Nieuwe map" en "Jaaroverzicht afdrukken" staan boven de
@@ -99,7 +181,7 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
 - **AI-rubriekhulp herwerkt** (1.24.0, `js/ai-rubric.js`, controle in
   `js/rubric-model.js`). Blijft kopiëren en plakken zonder sleutel.
   **Scherm:** stand "nieuw" of "nakijken" (`aiMode`), aantal niveaus
-  (3/4/5, standaard `DEFAULT_LEVEL_COUNT` = 5) met labels, beschrijving
+  (sinds 1.25.0 enkel 4/5, standaard `DEFAULT_LEVEL_COUNT` = 5) met labels, beschrijving
   (enkel verplicht bij "nieuw"), zes optionele contextvragen
   (keuzeknoppen `.chip-toggle` met `aria-pressed`; bij één keuze kan je
   opnieuw klikken om uit te zetten). `aiContextLines()` zet enkel
@@ -165,26 +247,68 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   tussentijdse checks, binnen de periode). Er is dus één plek die bepaalt
   welke beoordeling telt. `buildSkoreFeedback(dbObj, year, evaluation,
   row, student)` is puur en krijgt die rij mee (bewust niet zelf zoeken).
-  **Theorie (Hattie en Timperley):** drie vragen als kopjes in je-vorm:
-  "Waar ga je naartoe?" (feed-up: opdracht en criterianamen, geen
-  leerplancodes), "Waar sta je nu?" (feedback), "Wat is je volgende
-  stap?" (feed-forward). Informatierijke taak- en procesfeedback werkt,
-  lof over de persoon en cijfers naast commentaar niet. De tool leidt
-  enkel taak en proces af uit de rubric; regulatie en persoon komen enkel
-  uit de eigen tekst van de leerkracht.
+  **Theorie: feedback voor leerlingen van 12 tot 14 jaar** (aangevuld in
+  1.25.0, ook in het commentaarblok van `js/feedback.js`):
+  - Hattie en Timperley (2007): feed-up, feedback, feed-forward. Tot
+    1.24.1 als drie vragen in de kopjes; sinds 1.25.0 korte labels in
+    leerlingentaal ("Dit ging goed:", "Hier kan je groeien:", "Zo pak je
+    het de volgende keer aan:"), omdat de vragen te abstract zijn.
+  - Kluger en DeNisi (1996): feedback die de aandacht op de persoon
+    richt, verlaagt de prestatie; taak, aanpak en zelfsturing werken.
+  - Wisniewski, Zierer en Hattie (2020): informatierijke feedback werkt
+    het sterkst. Daarom altijd het criterium erbij ("Bij X: ...").
+  - Mueller en Dweck (1998): prijs de aanpak, niet het talent.
+  - Yeager en collega's (2014), wise feedback: leerlingen van 12 à 13
+    jaar gebruiken feedback veel vaker als de leerkracht hoge
+    verwachtingen uitspreekt en zegt dat de leerling die kan halen. Sinds
+    1.25.2 enkel het vertrouwen en de hulp, zonder de hoge verwachtingen:
+    die legden volgens de gebruiker te veel druk.
+  - Butler (1988): geen cijfer naast de commentaar.
+  - Shute (2008): kort, concreet, eenvoudige woorden; hoogstens één sterk
+    punt, één werkpunt, één uitvoerbare volgende stap.
+  - Ook een sterke leerling krijgt een concrete volgende stap: de
+    uitdaging uit de rubric.
+  De tool leidt enkel taak en proces af uit de rubric; regulatie en
+  persoon komen enkel uit de eigen tekst van de leerkracht.
+  **Opbouw sinds 1.25.0:** zonder naam, in de je-vorm. Aanhef "Dit is je
+  feedback bij "opdracht"." (sinds 1.25.1, was een lijst met
+  criterianamen; plus bij groepswerk "Dit
+  was een groepsopdracht, de feedback gaat over het werk van jullie
+  groep."), dan "Dit ging goed:" (sterk punt), "Hier kan je groeien:"
+  (werkpunt, dan een vertrouwenszin, dan `row.feedback`), en "Zo pak je
+  het de volgende keer aan:" (eigen feedforward, anders `next` van het
+  werkpunt als losse zin zonder "Bij ...", anders `desc` van het niveau
+  erboven). Zonder werkpunt: "Een
+  uitdaging voor de volgende keer:" met de uitdaging van het eerste
+  criterium dat er een heeft, tenzij er een eigen feedforward is. Zonder
+  werkpunt komt `row.feedback` onder "Dit ging goed:". Per regel "Bij
+  criterium: zin", met `say` en anders `desc` als terugval; na het
+  dubbelpunt altijd een kleine letter (`feedbackSentence()`), behalve bij
+  een woord met nog een hoofdletter erin (LED).
+  **Vertrouwenszinnen:** vaste lijst `CONFIDENCE_SENTENCES` (zeven zinnen
+  in de ik-vorm van de leerkracht, niet door de AI geschreven), enkel bij
+  een werkpunt. Keuze met `feedbackHash(leerling + "|" + evaluatie)`: vast
+  voor dezelfde beoordeling, verschillend tussen klasgenoten. De naam
+  wordt enkel daarvoor gebruikt, nooit in de tekst.
+  **Kolomkop in Skore:** een klein "i" (`.skore-th-hint`) als de huidige
+  rubric nog geen enkele feedbackzin heeft
+  (`evaluationHasFeedbackSentences()`), met de uitleg "De feedback wordt
+  persoonlijker als je deze rubric laat nakijken door de AI."
+  **Keuzes van 1.23.0 die blijven:**
   **Keuzes (afgesproken met de gebruiker):** positie van een niveau =
   (score - laagste) / (hoogste - laagste). Werkpunt = laagste positie,
   bij gelijke stand het eerste criterium van de rubric, niet als het al
   het hoogste niveau is. Sterk punt = hoogste positie, enkel vanaf 0,5
   ("Voldoende" telt mee) en hoger dan het werkpunt. Volgende stap = eigen
   feedforward, anders de `desc` van het niveau boven het werkpunt ("Om een
-  niveau hoger te komen bij X: ..."). `row.feedback` komt na het sterke
-  punt en werkpunt. Niveaubeschrijvingen letterlijk (derde persoon), geen
-  omzetting naar je-vorm. Geen punten, percentages, niveaulabels.
-  Groepswerk krijgt één zin, de individuele correctie niet. Richtwaarde
-  `FEEDBACK_MAX_CHARS` = 700: te lang, dan eerst "op de N criteria van de
-  rubric" in plaats van de lijst, daarna geen sterk punt (enkel als er een
-  werkpunt is). Werkpunt, volgende stap en eigen tekst blijven altijd.
+  niveau hoger te komen bij X: ..."). Geen punten, percentages,
+  niveaulabels. De individuele correctie bij groepswerk wordt niet
+  vermeld. Richtwaarde `FEEDBACK_MAX_CHARS` = 500 sinds 1.25.0 (was 700),
+  **zonder** de eigen tekst van de leerkracht mee te tellen: te lang, dan
+  geen sterk punt (enkel als er een werkpunt is). De stap met een kortere
+  criterialijst verviel in 1.25.1, samen met de lijst. Werkpunt, volgende stap en eigen tekst
+  blijven altijd, dus bij een oude rubric met lange omschrijvingen kan de
+  tekst toch langer zijn.
   **Vinkje:** `skoreCopied` in het geheugen, sleutel rij-id + `updatedAt`
   + leerling; niet in db, niet gesynchroniseerd.
   **Bugfix meegenomen:** `collectSkore()` rekent het punt nu met
@@ -556,6 +680,11 @@ geen test.
 
 ## Bewust afgewezen aanpakken (belangrijk om niet opnieuw voor te stellen)
 
+- **De voornaam van de leerling in de feedbacktekst** (voorgesteld voor
+  1.25.0): de Smartschool-export heeft één naamkolom "Achternaam
+  Voornaam", dus de voornaam is niet betrouwbaar te bepalen. De gebruiker
+  koos voor een tekst zonder naam, persoonlijk door de je-vorm.
+
 - **Rechtstreekse AI-API-aanroep vanuit de tool**: zou een sleutel vereisen
   in het gedeelde bestand → door iedereen uit te lezen en te misbruiken.
   Gebruiker koos expliciet voor de kopieer-plak-aanpak (geen sleutel, geen
@@ -585,6 +714,11 @@ geen test.
   1.23.0 opgeruimd in alle zichtbare teksten; lege cellen tonen "–")
 - Eenvoud voor collega's staat boven ontwikkelaarsgemak — bij twijfel dat
   toetsen
+- De AI-hulp biedt enkel 4 of 5 niveaus aan (sinds 1.25.0); bestaande
+  rubrics met 3 niveaus blijven werken
+- Rubrics en feedbackzinnen in leerlingentaal (je-vorm, korte zinnen,
+  gewone woorden) voor leerlingen van 12 tot 14 jaar; de feedbacktekst
+  noemt geen naam
 
 ## Suggesties voor een volgende sessie (niet gevraagd, enkel ter overweging)
 

@@ -441,21 +441,10 @@ function renderDraftRubrics() {
       });
       row.appendChild(rmLevel);
 
-      // Volgende stap voor de leerling (optioneel, niet bij het hoogste
-      // niveau): gebruikt door de feedback in Skore.
-      if (Number(opt.score) !== topScore) {
-        var nx = document.createElement("input");
-        nx.type = "text";
-        nx.className = "level-next";
-        nx.value = opt.next || "";
-        nx.placeholder = "Volgende stap voor de leerling (optioneel), bv. Schrijf vooraf op wat je verwacht te meten.";
-        nx.setAttribute("aria-label", "Volgende stap bij niveau " + (oi + 1));
-        nx.addEventListener("input", function () { opt.next = this.value; renderDraftChecks(); });
-        row.appendChild(nx);
-      }
-
       card.appendChild(row);
     });
+
+    card.appendChild(renderFeedbackSentences(rubric, topScore));
 
     if (yearHasGoals(draft.year)) {
       card.appendChild(renderGoalPicker(rubric));
@@ -480,6 +469,68 @@ function renderDraftRubrics() {
   renderDraftChecks();
 }
 
+/* Feedbackzinnen voor leerlingen (sinds 1.25.0): per niveau een
+   feedbackzin (option.say) en een volgende stap (option.next), of op het
+   hoogste niveau een uitdaging (ook option.next). Optioneel; de feedback
+   in Skore gebruikt ze. Standaard dicht, zodat de editor overzichtelijk
+   blijft; open blijft open zolang de evaluatie openstaat. */
+var feedbackSentencesOpen = {};
+
+function renderFeedbackSentences(rubric, topScore) {
+  var box = document.createElement("details");
+  box.className = "feedback-sentences";
+  box.open = !!feedbackSentencesOpen[rubric.id];
+  box.addEventListener("toggle", function () { feedbackSentencesOpen[rubric.id] = box.open; });
+
+  var summary = el("summary", null, "Feedbackzinnen voor leerlingen");
+  var count = el("span", "muted feedback-sentences-count", "");
+  summary.appendChild(count);
+  box.appendChild(summary);
+
+  function updateCount() {
+    var filled = 0, total = 0;
+    rubric.options.forEach(function (o) {
+      total += 2;
+      if (String(o.say || "").trim()) filled++;
+      if (String(o.next || "").trim()) filled++;
+    });
+    count.textContent = " (" + filled + " van " + total + " ingevuld)";
+  }
+
+  box.appendChild(el("p", "muted feedback-sentences-intro",
+    "Korte zinnen in de je-vorm voor de feedback in Skore. Zonder naam, punten of niveaunamen."));
+
+  rubric.options.forEach(function (opt, oi) {
+    var top = Number(opt.score) === topScore;
+    var group = el("div", "feedback-level");
+    group.appendChild(el("div", "feedback-level-title", "Niveau " + (oi + 1) + (opt.label ? " (" + opt.label + ")" : "")));
+
+    var say = document.createElement("input");
+    say.type = "text";
+    say.className = "level-say";
+    say.value = opt.say || "";
+    say.placeholder = "Feedbackzin, bv. Je deed drie proeven, maar je schreef niet op wat je verwachtte.";
+    say.setAttribute("aria-label", "Feedbackzin bij niveau " + (oi + 1));
+    say.addEventListener("input", function () { opt.say = this.value; updateCount(); renderDraftChecks(); });
+    group.appendChild(say);
+
+    var nx = document.createElement("input");
+    nx.type = "text";
+    nx.className = "level-next";
+    nx.value = opt.next || "";
+    nx.placeholder = top
+      ? "Uitdaging, bv. Test je ontwerp ook met een zwaarder ei."
+      : "Volgende stap, bv. Schrijf vooraf op wat je verwacht te meten.";
+    nx.setAttribute("aria-label", (top ? "Uitdaging" : "Volgende stap") + " bij niveau " + (oi + 1));
+    nx.addEventListener("input", function () { opt.next = this.value; updateCount(); renderDraftChecks(); });
+    group.appendChild(nx);
+
+    box.appendChild(group);
+  });
+  updateCount();
+  return box;
+}
+
 /* Kwaliteitscontrole van de hele rubric, live onder de criteria. Enkel
    waarschuwingen: opslaan blijft altijd mogelijk. */
 function renderDraftChecks() {
@@ -488,8 +539,25 @@ function renderDraftChecks() {
   host.innerHTML = "";
   var list = draft.rubrics.filter(function (r) { return !isUntouchedRubric(r); });
   if (!list.length) return;
-  var warnings = rubricWarnings(draft.rubrics, draft.year, 0);
+  // De meldingen over leerlingentaal en feedbackzinnen staan apart, met
+  // een knop naar het nakijken door de AI (sinds 1.25.0).
+  var warnings = rubricWarnings(draft.rubrics, draft.year, 0).filter(function (w) {
+    return w !== PUPIL_LANGUAGE_WARNING && w !== FEEDBACK_SENTENCES_WARNING;
+  });
   if (warnings.length) host.appendChild(renderWarningsBox(warnings, "Nakijken"));
+
+  var pupil = rubricInPupilLanguage(list);
+  if (!pupil || !rubricHasFeedbackSentences(list)) {
+    var tip = el("div", "notice info feedback-tip");
+    tip.appendChild(el("span", null, pupil
+      ? "Nog niet elk niveau heeft feedbackzinnen voor leerlingen. Laat de AI ze aanvullen, dan wordt de feedback in Skore persoonlijker."
+      : "Deze rubric is nog niet in leerlingentaal geschreven. Laat de AI hem nakijken, dan begrijpen leerlingen hem beter en wordt de feedback in Skore persoonlijker."));
+    var go = el("button", "btn-ghost btn-small", "Laat AI deze rubric nakijken");
+    go.type = "button";
+    go.addEventListener("click", openAiReview);
+    tip.appendChild(go);
+    host.appendChild(tip);
+  }
 }
 
 
@@ -814,13 +882,15 @@ function saveDraft() {
       var options = r.options
         .map(function (o) {
           var opt = { score: Number(o.score), label: String(o.label).trim(), desc: String(o.desc || "").trim() };
+          // Optioneel, en telt niet mee voor een nieuwe rubricversie. Op
+          // het hoogste niveau is "next" de uitdaging (sinds 1.25.0).
+          var say = String(o.say || "").trim();
+          if (say) opt.say = say;
           var next = String(o.next || "").trim();
           if (next) opt.next = next;
           return opt;
         })
         .sort(function (a, b) { return a.score - b.score; });
-      // Het hoogste niveau heeft geen volgende stap.
-      if (options.length) delete options[options.length - 1].next;
       var out = {
         id: r.id,
         name: String(r.name).trim(),
