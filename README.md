@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.25.3.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.26.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -426,6 +426,37 @@ wie hoeveel leerlingen van een klas al beoordeeld heeft.
 > Samenvoegen verwijdert **nooit** iets: de tool voegt enkel toe, en bij twee
 > versies van dezelfde beoordeling wint de nieuwste.
 
+### Reservekopieën
+
+Als je met een gedeelde map werkt, bewaart de tool vanzelf een
+**reservekopie** van jouw werk. Je hoeft daar niets voor te doen.
+
+- De kopieën staan in de map **backups**, in jullie gedeelde OneDrive-map.
+- De naam bevat je initialen, de datum en het uur, bijvoorbeeld
+  `evaluaties-BB-2026-09-29-14u05.json`.
+- Er komt een kopie bij als je de tool opent en daarna elk uur dat je werkt.
+  Veranderde er niets, dan komt er geen nieuwe kopie.
+- Kopieën van de laatste twee weken blijven allemaal bewaard. Oudere kopieën
+  worden opgeruimd tot één per week, en na een jaar verdwijnen ze.
+
+**Iets misgegaan? Zet een vorige versie terug:**
+
+1. Open het tabblad **Team**.
+2. Zoek onder **Reservekopieën** de datum en het uur van vóór de fout.
+3. Klik op **Terugzetten** en bevestig.
+4. Klik daarna op **Team bijwerken** om nieuw werk van je collega's weer op
+   te halen.
+
+Wat je na dat tijdstip veranderde, is dan weg. Geen paniek als je de
+verkeerde kiest: de tool maakt eerst nog een kopie van hoe het was. Die staat
+bovenaan de lijst, dus je kan altijd terug.
+
+Ga je iets groots doen, zoals een klaslijst opnieuw inlezen? Klik dan eerst
+op **Nu een reservekopie maken**.
+
+> Je ziet enkel je eigen reservekopieën. Het teruggezette werk komt ook bij je
+> collega's terecht zodra zij op Team bijwerken klikken.
+
 ---
 
 ## 9. Een nieuw schooljaar
@@ -449,6 +480,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 | Oranje balk "Gedeelde map niet verbonden" | Klik op "Verbinden met …". De browser vraagt na een herstart opnieuw toestemming. |
 | Een leerling moet een evaluatie niet krijgen | Controle, Details, "Niet te beoordelen". |
 | Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes onderaan het tabblad Skore. |
+| Ik heb per ongeluk iets gewist of overschreven | Team, Reservekopieën: klik op "Terugzetten" bij een tijdstip van vóór de fout. |
 | Ik zie de evaluaties van een collega niet | Klik op "Team bijwerken", of voeg hun bestand toe met "Werk van collega toevoegen". |
 | Er staat een nieuwe versie van de tool klaar | Download het nieuwe bestand en open het. Je werkbestand blijft gewoon werken. |
 

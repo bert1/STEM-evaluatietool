@@ -56,6 +56,7 @@ function init() {
   $("btnRoster").addEventListener("click", openRoster);
   $("btnEvals").addEventListener("click", openEvals);
   $("btnTeam").addEventListener("click", openTeam);
+  $("btnBackupNow").addEventListener("click", backupNow);
   $("btnResults").addEventListener("click", openResults);
   $("btnSkore").addEventListener("click", openSkore);
   $("btnCloseResults").addEventListener("click", goHome);

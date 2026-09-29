@@ -272,6 +272,7 @@ function writeHandle() {
       saveError = "";
       if (changeCount === target && fileHandle === handle) markClean();
       else updateStatus();
+      maybeBackup();
     })
     .catch(function () {
       saveError = "Controleer of het bestand niet ergens anders openstaat (bijvoorbeeld in OneDrive) en probeer opnieuw, of kies Opslaan als.";

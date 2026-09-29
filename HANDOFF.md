@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 28 september 2026, versie **1.25.3**.
+Laatst bijgewerkt: 29 september 2026, versie **1.26.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -65,7 +65,7 @@ en `legacyCopy()`, melding `showToast()`; moet als eerste laden),
 Excel-import), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
 `results.js` (statistieken, grafieken, kalibratie), `reports.js` (rapport,
 feed-up-blad), `goals.js` (leerplandoelen-UI, groeigrafiek), `sync.js`
-(gedeelde map, team), `feedback.js` (feedbacktekst voor Smartschool, sinds
+(gedeelde map, team), `backups.js` (reservekopieën, sinds 1.26.0), `feedback.js` (feedbacktekst voor Smartschool, sinds
 1.23.0), `skore.js`, `controle.js`, `app.js` (opstart, wizard,
 navigatie, moet als laatste laden).
 
@@ -90,7 +90,51 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.25.3)
+## Volledige featurelijst (huidige stand, 1.26.0)
+
+- **Reservekopieën en terugzetten** (1.26.0, `js/backups.js`, laadt na
+  `sync.js`). Gevraagd door de gebruiker: bij een fout van een leerkracht
+  moet er een vorige versie bestaan, in een OneDrive-map "backups", met
+  datum en uur in de naam, en terug te zetten.
+  **Waar:** `folderHandle.getDirectoryHandle("backups")`, dus enkel met een
+  gedeelde map (een los werkbestand geeft via de File System Access API
+  geen toegang tot zijn map). Naam `evaluaties-BB-JJJJ-MM-DD-UUuMM.json`
+  in lokale tijd (`backupFileName()`, `parseBackupName()`). Iedereen ziet
+  en ruimt enkel zijn eigen kopieën op. `readTeamFolder()` leest enkel
+  bestanden in de hoofdmap, dus kopieën tellen nooit mee bij synchroniseren
+  (test).
+  **Wanneer:** `writeHandle()` roept na elke geslaagde opslag
+  `maybeBackup()` aan: hoogstens één per `BACKUP_INTERVAL_MS` (1 uur),
+  en geen nieuwe als de inhoud (zonder tijdstip) gelijk is aan de
+  nieuwste kopie (`lastBackupContent`, bij de eerste keer in een sessie
+  gelezen uit de nieuwste kopie op schijf). De eerste opslag van een
+  sessie is die van `attachOwnFile()` bij het verbinden, dus er is altijd
+  een kopie van vóór je iets verandert. De kopie bevat ook
+  `localTombstones` (anders dan `dbBlob()`).
+  **Opruimen:** `backupsToRemove(list, now)`, puur: alles jonger dan 14
+  dagen, daarna de nieuwste per week (maandag tot zondag), ouder dan 365
+  dagen weg, de 10 nieuwste altijd behouden.
+  **Terugzetten** (`restoreBackup()`): bevestiging met aantallen, eerst
+  `makeBackup()` van de huidige stand, dan `db` vervangen. Belangrijk:
+  `refreshRestoredTimes(restored, current, now)` geeft alles wat in de
+  kopie anders is dan nu (rijen op id, klassen, rubrics, mappen,
+  vrijstellingen, periodes, Skore-vinkjes) een tijdstip dat strikt later
+  is dan de huidige versie én dan een tombstone. Zonder dat zou "Team
+  bijwerken" de fout meteen terugbrengen uit het bestand van een collega
+  die ze al overnam (nieuwste wint). Een test bewaakt dat, en faalt als je
+  de functie uitschakelt. Rijen zonder `createdAt` krijgen eerst hun oude
+  `updatedAt` als `createdAt`, zodat de Skore-periode niet verschuift.
+  **Bewuste grens:** wat na de kopie nieuw bijkwam (ook door de fout, bv.
+  een verkeerd toegevoegde rij) komt terug bij "Team bijwerken" als een
+  collega het al heeft. Er zijn geen tombstones voor rijen, en nieuw werk
+  van collega's mag niet verdwijnen. Uitgelegd in de README.
+  **UI:** `#backupSection` op het Teamscherm (verborgen zonder map),
+  `renderBackupList()` wordt aangeroepen vanuit `renderFolderSection()`.
+  **Testen:** `tests/reservekopie.spec.js` met een nagemaakte map in het
+  geheugen (OPFS, `navigator.storage.getDirectory()`, geeft een
+  SecurityError vanaf `file://`) en `page.clock.setFixedTime()` voor de
+  uren.
+
 
 - **Vertrouwenszinnen zonder druk** (1.25.2). De gebruiker vond "Ik geef
   je deze tip omdat ik veel van je verwacht" te veel druk voor 12 tot 14
@@ -627,6 +671,12 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
   (huidige rubric, gelijke stand, drempel): de tests faalden zoals
   verwacht.
+- `reservekopie.spec.js`: naam met datum en uur, opruimregels, kopie bij
+  verbinden, hoogstens één per uur, geen dubbele kopie, enkel eigen
+  kopieën opruimen, niet ingelezen bij Team bijwerken, terugzetten via het
+  Teamscherm (en annuleren), teruggezette versie wint van een collega die
+  de fout al had, datum van de beoordeling blijft, "Nu een reservekopie
+  maken"
 - `ai-rubric.spec.js`: prompt (enkel beantwoorde vragen, labels en
   doelniveau, Bloom, geen gedachtestreep in alle varianten, nakijkprompt),
   inlezen (nieuw en oud formaat, labels uit de tool, volgende stappen,
@@ -723,7 +773,8 @@ geen test.
 ## Suggesties voor een volgende sessie (niet gevraagd, enkel ter overweging)
 
 - De testreeks uitbreiden met de onderdelen onder "Nog niet gedekt"
-- Automatische reservekopie met datum in de gedeelde OneDrive-map
+- Reservekopieën ook zonder gedeelde map (bv. een download-knop voor
+  wie enkel een los werkbestand heeft)
 - Laatst gebruikte evaluatie bovenaan in de zoeklijsten
 - Resultaten per map exporteren naar Excel
 - De groeigrafiek elders terugzetten (functies staan nog in js/goals.js)
