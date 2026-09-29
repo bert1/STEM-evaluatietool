@@ -284,7 +284,7 @@
           </div>
 
           <details id="aiRubricHelper" style="margin-bottom: 18px">
-            <summary class="section-toggle">AI-hulp: rubric laten maken of nakijken</summary>
+            <summary class="section-toggle">AI-hulp: rubric laten maken, omzetten of nakijken</summary>
             <div style="margin-top: 12px">
               <p class="hint">
                 Geen sleutel, geen account nodig: je gebruikt gewoon een AI-gesprek dat je toch al
@@ -294,10 +294,28 @@
 
               <div class="ai-mode btn-row" role="group" aria-label="Wat wil je doen?">
                 <button type="button" class="chip-toggle" id="aiModeNew" aria-pressed="true">Nieuwe criteria laten maken</button>
+                <button type="button" class="chip-toggle" id="aiModeConvert" aria-pressed="false">Bestaande evaluatie omzetten</button>
                 <button type="button" class="chip-toggle" id="aiModeReview" aria-pressed="false">Deze rubric laten nakijken</button>
               </div>
 
-              <div class="form-group ai-new-only">
+              <div class="form-group hidden" data-ai-modes="omzetten">
+                <label for="aiSource">Je bestaande evaluatie of een stuk cursus</label>
+                <p class="hint" style="margin-top: 0">
+                  Kies een of meer bestanden (Excel, Word, PowerPoint of tekst), of plak de tekst
+                  hieronder. Een PDF of een ander bestand: open het, selecteer alles (Ctrl+A),
+                  kopieer (Ctrl+C) en plak het hier. De AI zet alles om naar criteria met de niveaus
+                  van de tool, in leerlingentaal.
+                </p>
+                <div class="btn-row" style="margin-bottom: 8px">
+                  <button type="button" class="btn-ghost btn-small" id="btnAiSourceFile">Bestand kiezen</button>
+                </div>
+                <input type="file" id="aiSourceFile" multiple accept=".xlsx,.xlsm,.docx,.pptx,.txt,.csv,.tsv,.md" class="hidden" />
+                <div id="aiSourceState"></div>
+                <textarea id="aiSource" rows="8" placeholder="Of plak hier de tekst van je evaluatiefiche of cursus…"></textarea>
+                <p class="hint hidden" id="aiSourceLength"></p>
+              </div>
+
+              <div class="form-group" data-ai-modes="nieuw omzetten">
                 <span class="ai-q-label">Aantal niveaus per criterium</span>
                 <div class="btn-row" id="aiLevels" role="group" aria-label="Aantal niveaus">
                   <button type="button" class="chip-toggle" data-value="4" aria-pressed="false">4</button>
@@ -305,14 +323,14 @@
                 </div>
                 <p class="hint" id="aiLevelLabels"></p>
               </div>
-              <p class="hint ai-review-only hidden" style="margin-top: 0">
+              <p class="hint hidden" data-ai-modes="nakijken" style="margin-top: 0">
                 De AI verbetert de huidige criteria volgens dezelfde regels en vult ontbrekende
                 volgende stappen aan. Het aantal criteria en niveaus blijft gelijk. Je ziet eerst wat
                 er verandert voor je iets overneemt.
               </p>
 
               <div class="form-group">
-                <label for="aiDescription">Beschrijf de opdracht <span class="ai-new-only">(verplicht)</span><span class="ai-review-only hidden">(optioneel)</span></label>
+                <label for="aiDescription">Beschrijf de opdracht <span data-ai-modes="nieuw">(verplicht)</span><span class="hidden" data-ai-modes="omzetten nakijken">(optioneel)</span></label>
                 <textarea id="aiDescription" rows="3" placeholder="Bijvoorbeeld: leerlingen bouwen in groepjes van drie een brug van houten staafjes en testen die op draagkracht, met een verslag van hun ontwerpproces."></textarea>
               </div>
 
@@ -359,7 +377,7 @@
                   <textarea id="aiPrior" rows="2" placeholder="Bijvoorbeeld: een hypothese opstellen, een meetlat en een weegschaal gebruiken"></textarea>
                 </div>
 
-                <div class="form-group ai-new-only">
+                <div class="form-group" data-ai-modes="nieuw">
                   <span class="ai-q-label">Mag de AI ook criteria voorstellen die je niet noemde?</span>
                   <div class="btn-row" id="aiExtra" data-single="1" data-required="1" role="group" aria-label="Ook andere criteria voorstellen">
                     <button type="button" class="chip-toggle" data-value="ja" aria-pressed="true">Ja</button>
@@ -372,7 +390,7 @@
                 <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt maken</button>
               </div>
 
-              <div id="aiPromptBlock" class="hidden" style="margin-top: 14px">
+              <div id="aiPromptBlock" class="form-group hidden" style="margin-top: 14px">
                 <label for="aiPromptOut">Kopieer dit naar je AI-gesprek</label>
                 <textarea id="aiPromptOut" rows="8" readonly></textarea>
                 <div class="btn-row" style="margin-top: 8px">
@@ -781,6 +799,7 @@
     <script src="js/evaluations.js"></script>
     <script src="js/rubric-editor.js"></script>
     <script src="js/ai-rubric.js"></script>
+    <script src="js/ai-source.js"></script>
     <script src="js/results.js"></script>
     <script src="js/reports.js"></script>
     <script src="js/goals.js"></script>

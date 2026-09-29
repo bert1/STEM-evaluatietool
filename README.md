@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.26.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.27.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -184,7 +184,7 @@ bovenaan, boven de lijst.
 
 ### AI-hulp bij rubrics
 
-Open **AI-hulp: rubric laten maken of nakijken** bovenaan de evaluatie.
+Open **AI-hulp: rubric laten maken, omzetten of nakijken** bovenaan de evaluatie.
 
 **Nieuwe criteria laten maken:**
 
@@ -205,6 +205,37 @@ Open **AI-hulp: rubric laten maken of nakijken** bovenaan de evaluatie.
    - **Zonder doel:** wat je wil evalueren maar bij geen enkel doel past;
    - tips om na te kijken.
 8. Kijk alles na en klik op **Evaluatie opslaan**.
+
+**Een oude evaluatiefiche of een stuk cursus omzetten:**
+
+Heb je al een evaluatiefiche (bijvoorbeeld in Excel) of een stuk cursus of
+werkblad? Dan maakt de AI er een rubric van met de niveaus van de tool.
+
+1. Klik op **Bestaande evaluatie omzetten**.
+2. Klik op **Bestand kiezen** en kies je bestand. Dat mag een Excel-,
+   Word- of PowerPoint-bestand zijn, of een tekstbestand. Je mag er meerdere
+   kiezen. Een PDF of een ander bestand: open het, selecteer alles (Ctrl+A),
+   kopieer (Ctrl+C) en plak de tekst in het vak.
+3. De tekst verschijnt in het vak. Kijk hem na. Je mag stukken weglaten die
+   niet over deze opdracht gaan, of er zelf iets bij typen.
+4. Kies het **aantal niveaus** (4 of 5). De AI zet alle criteria om naar
+   die niveaus, ook als je fiche er meer of minder had.
+5. Beschrijf de opdracht en beantwoord de vragen als je wil. Dat is hier
+   niet verplicht.
+6. Klik op **Prompt maken** en daarna op **Kopieer prompt**. Plak de prompt
+   in je AI-gesprek.
+7. Plak het antwoord terug en klik op **Criteria toevoegen aan deze
+   evaluatie**.
+8. Onder de knop zie je, naast de gekoppelde leerplandoelen, ook **Niet
+   overgenomen**: wat in je fiche stond maar niet in de rubric kwam, met de
+   reden. Bijvoorbeeld een criterium over de persoon, zoals "werkt goed
+   samen". Wil je het toch beoordelen, voeg dan zelf een criterium toe.
+9. Kijk alles na en klik op **Evaluatie opslaan**.
+
+De AI schrijft je fiche om in de je-vorm en in leerlingentaal, ook als ze
+in de ik-vorm stond (een zelfevaluatie). Ze behoudt wat je wil beoordelen
+en de concrete details, zoals aantallen en materialen. Je bestand zelf
+verlaat je computer niet: enkel de tekst die je in je AI-gesprek plakt.
 
 **Een bestaande rubric laten nakijken:**
 
