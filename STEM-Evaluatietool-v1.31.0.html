@@ -4927,7 +4927,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.30.0";
+var APP_VERSION = "1.31.0";
 
 var DB_VERSION = 4;
 
@@ -8131,6 +8131,15 @@ function validateEvaluation(draft, db, originalName) {
     problems.push('Er bestaat al een evaluatie "' + name + '" in ' + draft.year + ".");
   }
 
+  // Sinds 1.31.0: een nieuwe evaluatie (ook een kopie) hoort altijd bij
+  // een vak. Bestaande evaluaties zonder vak blijven bewerkbaar.
+  if (!originalName && !draft.subject) {
+    problems.push(subjectNames(db, draft.year).length
+      ? "Kies bij Vak het vak waar deze evaluatie bij hoort."
+      : "Kies een vak. Er zijn nog geen vakken voor " + draft.year +
+        ": voeg ze eerst toe bij Instellingen, Vakken.");
+  }
+
   if (!draft.rubrics.length) problems.push("Voeg minstens één criterium toe.");
 
   var seenIds = [];
@@ -10480,14 +10489,20 @@ function fillEvalListSubjectOptions(year) {
 function fillDraftSubjectOptions(value) {
   var sel = $("draftSubject");
   var names = subjectNames(db, $("draftYear").value);
+  // Een nieuwe evaluatie moet een vak krijgen (zie validateEvaluation()),
+  // dus daar geen keuze "Geen vak", enkel een lege eerste regel.
+  var isNew = !draftOriginalName;
   sel.innerHTML = "";
-  sel.appendChild(new Option("Geen vak", ""));
+  sel.appendChild(new Option(isNew ? "Kies een vak" : "Geen vak", ""));
   names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
   sel.value = names.indexOf(value) !== -1 ? value : "";
   sel.disabled = !names.length;
-  $("draftSubjectHint").textContent = names.length
-    ? "Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
-    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Instellingen, Vakken.";
+  $("draftSubjectHint").textContent = !names.length
+    ? "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Instellingen, Vakken." +
+      (isNew ? " Zonder vak kan je deze evaluatie niet opslaan." : "")
+    : isNew
+      ? "Verplicht. Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
+      : "Bij Evalueren staat deze evaluatie dan enkel bij dit vak.";
 }
 
 

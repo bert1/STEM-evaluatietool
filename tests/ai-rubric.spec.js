@@ -378,9 +378,12 @@ test.describe("feedback in Skore: volgorde bij Zo pak je het de volgende keer aa
 /* ---- op het scherm ---- */
 
 async function nieuweEvaluatie(page, year) {
+  // Een nieuwe evaluatie heeft sinds 1.31.0 altijd een vak nodig.
+  await page.evaluate((y) => { addSubject(db, y, "STEM"); persist(); }, year);
   await page.click("#btnEvals");
   await page.selectOption("#evalListYear", year);
   await page.click("#btnNewEval");
+  await page.selectOption("#draftSubject", "STEM");
   await page.fill("#draftName", "Brug bouwen");
 }
 

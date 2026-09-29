@@ -178,7 +178,7 @@ test("Rubrics: vak kiezen in de editor, filteren en per evaluatie aanpassen", as
   await page.selectOption("#evalListSubject", "Techniek");
   await page.click("#btnNewEval");
   await expect(page.locator("#draftSubject")).toHaveValue("Techniek");
-  await expect(page.locator("#draftSubject option")).toHaveText(["Geen vak", "STEM", "Techniek"]);
+  await expect(page.locator("#draftSubject option")).toHaveText(["Kies een vak", "STEM", "Techniek"]);
   await page.click("#btnCancelEval");
 
   // Dupliceren neemt het vak over; een ander vak kiezen en opslaan.
@@ -252,5 +252,55 @@ test("het opgeslagen bestand bevat de vakken", async ({ page }) => {
     return JSON.parse(await dbBlob().text());
   }, JAAR);
   expect(json.subjects[JAAR].map((s) => s.name)).toEqual(["STEM"]);
+  page.expectNoErrors();
+});
+
+test("een nieuwe evaluatie kan je niet opslaan zonder vak", async ({ page }) => {
+  await openTool(page);
+  await zetVakkenKlaar(page);
+  await page.click("#btnEvals");
+  await page.selectOption("#evalListYear", JAAR);
+  await page.selectOption("#evalListSubject", "");
+
+  // Een kopie is ook nieuw: zonder vak weigert de tool.
+  const bron = await page.evaluate((y) => evaluationNames(db, y).find((n) => !getEvaluation(db, y, n).subject), JAAR);
+  await page.locator(".eval-row", { has: page.locator(".name", { hasText: bron }) }).first()
+    .locator("button", { hasText: "Dupliceer" }).click();
+  await expect(page.locator("#draftSubject")).toHaveValue("");
+  await expect(page.locator("#draftSubject option").first()).toHaveText("Kies een vak");
+  await expect(page.locator("#draftSubjectHint")).toContainText("Verplicht");
+  await page.fill("#draftName", "Zonder vak");
+  await page.click("#btnSaveEval");
+  await expect(page.locator("#evalProblems")).toContainText("Kies bij Vak het vak waar deze evaluatie bij hoort.");
+  expect(await page.evaluate((y) => getEvaluation(db, y, "Zonder vak"), JAAR)).toBeNull();
+
+  // Met een vak lukt het wel.
+  await page.selectOption("#draftSubject", "Techniek");
+  await page.click("#btnSaveEval");
+  expect(await page.evaluate((y) => getEvaluation(db, y, "Zonder vak").subject, JAAR)).toBe("Techniek");
+  page.expectNoErrors();
+});
+
+test("een bestaande evaluatie zonder vak blijft bewerkbaar", async ({ page }) => {
+  await openTool(page);
+  await zetVakkenKlaar(page);
+  await page.click("#btnEvals");
+  await page.selectOption("#evalListYear", JAAR);
+  await page.selectOption("#evalListSubject", " geen");
+  const rij = page.locator("#evalList .eval-row").first();
+  const naam = await rij.locator(".name").innerText();
+  await rij.locator("button", { hasText: "Bewerk" }).click();
+  await expect(page.locator("#draftSubject option").first()).toHaveText("Geen vak");
+  await page.click("#btnSaveEval");
+  await expect(page.locator("#evalListView")).toBeVisible();
+  expect(await page.evaluate(({ y, n }) => getEvaluation(db, y, n).subject, { y: JAAR, n: naam })).toBe("");
+  page.expectNoErrors();
+});
+
+test("zonder vakken in het leerjaar zegt de melding waar je ze toevoegt", async ({ page }) => {
+  await openTool(page);
+  const problemen = await page.evaluate(() => validateEvaluation(
+    { name: "Nieuw", year: "1ste jaar", subject: "", rubrics: [], questions: [] }, db, null));
+  expect(problemen[0]).toContain("voeg ze eerst toe bij Instellingen, Vakken");
   page.expectNoErrors();
 });
