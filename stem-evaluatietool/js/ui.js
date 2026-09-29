@@ -84,7 +84,7 @@ function searchKey(text) {
    cfg: inputId, panelId, selectId, wrapId,
         groups()        -> [{label, names}], label "" = geen kop
         isEnabled()     -> true/false
-        placeholder, disabledPlaceholder, emptyText */
+        placeholder, disabledPlaceholder, emptyText, emptyTextFn (optioneel) */
 function makeSearchCombo(cfg) {
   var highlight = -1;
 
@@ -176,7 +176,7 @@ function makeSearchCombo(cfg) {
         "div", "eval-combo-empty",
         needle
           ? "Geen evaluaties of mappen gevonden voor \"" + input().value.trim() + "\"."
-          : cfg.emptyText,
+          : (cfg.emptyTextFn ? cfg.emptyTextFn() : cfg.emptyText),
       ));
     }
 

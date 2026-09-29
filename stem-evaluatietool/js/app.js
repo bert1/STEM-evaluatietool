@@ -53,7 +53,12 @@ function init() {
   $("btnCopy").addEventListener("click", copyTable);
   $("btnClearSession").addEventListener("click", clearSession);
 
+  $("btnSettings").addEventListener("click", openSettings);
+  $("btnSettingsGeneral").addEventListener("click", openGeneral);
+  $("btnCloseGeneral").addEventListener("click", goHome);
   $("btnRoster").addEventListener("click", openRoster);
+  $("btnSubjects").addEventListener("click", openSubjects);
+  $("btnCloseSubjects").addEventListener("click", goHome);
   $("btnEvals").addEventListener("click", openEvals);
   $("btnTeam").addEventListener("click", openTeam);
   $("btnBackupNow").addEventListener("click", backupNow);
@@ -70,6 +75,8 @@ function init() {
     renderEvalList();
   });
   $("evalListSearch").addEventListener("input", renderEvalList);
+  $("evalListSubject").addEventListener("change", renderEvalList);
+  $("draftYear").addEventListener("change", function () { fillDraftSubjectOptions($("draftSubject").value); });
   $("btnNewEval").addEventListener("click", newEvaluation);
   $("btnNewFolder").addEventListener("click", function () {
     var year = $("evalListYear").value;
@@ -138,6 +145,7 @@ function init() {
   initControle();
   initSkore();
   initKlasMulti();
+  initSubjects();
   initMoveStudent();
 }
 
@@ -238,20 +246,32 @@ function initSetupWizard() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects" }
+
+/* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
+   een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
+   er later instellingen bijkomen: voeg die hier en in openSettingsView()
+   toe, niet bovenaan. */
+var SETTINGS_VIEWS = ["general", "roster", "subjects", "team"];
+
+var lastSettingsView = "general";
 
 var currentView = "main";
 
 function showView(name) {
   if (!VIEWS[name]) name = "main";
   currentView = name;
+  var inSettings = SETTINGS_VIEWS.indexOf(name) !== -1;
+  if (inSettings) lastSettingsView = name;
 
   Object.keys(VIEWS).forEach(function (key) {
     $(VIEWS[key]).classList.toggle("hidden", key !== name);
     $(NAV[key]).classList.toggle("active", key === name);
   });
+  $("btnSettings").classList.toggle("active", inSettings);
+  $("settingsTabs").classList.toggle("hidden", !inSettings);
 
   clearNotice();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -278,6 +298,25 @@ function clearNotice() { $("notice").innerHTML = ""; }
 document.addEventListener("DOMContentLoaded", init);
 
 /* ---- overgenomen uit editor.js ---- */
+
+/* Tab Instellingen: opent het onderdeel dat je het laatst bekeek. */
+function openSettings() {
+  openSettingsView(lastSettingsView);
+}
+
+function openSettingsView(name) {
+  if (name === "roster") openRoster();
+  else if (name === "team") openTeam();
+  else if (name === "subjects") openSubjects();
+  else openGeneral();
+}
+
+function openGeneral() {
+  $("generalActiveYear").textContent = db.activeSchoolYear;
+  $("generalVersion").textContent =
+    "STEM Evaluatietool, versie " + APP_VERSION + ". Vermeld dit nummer als je een probleem meldt.";
+  showView("general");
+}
 
 function goHome() {
   if (draft && !confirm("Je bent een evaluatie aan het bewerken. Wijzigingen die je nog niet opsloeg, gaan verloren.\n\nToch weggaan?")) {
@@ -349,7 +388,7 @@ function onAddSchoolYear() {
     return;
   }
   if (db.schoolYears[label]) {
-    showNotice("warn", "Dit schooljaar bestaat al", "Kies het gewoon bovenaan om ernaar te wisselen.");
+    showNotice("warn", "Dit schooljaar bestaat al", "Kies het linksboven om ernaar te wisselen.");
     return;
   }
 
@@ -360,6 +399,7 @@ function onAddSchoolYear() {
   renderSchoolYearSelect();
   renderArchivedYearBar();
   refreshAll();
+  if (currentView === "general") $("generalActiveYear").textContent = db.activeSchoolYear;
   showNotice(
     "good", "Nieuw schooljaar aangemaakt: " + label,
     "De klaslijsten zijn leeg. Rubrics en team zijn overgenomen uit " +

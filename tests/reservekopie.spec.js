@@ -256,6 +256,7 @@ test.describe("terugzetten", () => {
   });
 
   test("zonder gedeelde map staat er niets over reservekopieën", async ({ page }) => {
+    await page.click("#btnSettings");
     await page.click("#btnTeam");
     await expect(page.locator("#backupSection")).toBeHidden();
     page.expectNoErrors();
@@ -277,6 +278,8 @@ test.describe("terugzetten", () => {
     }, s);
     await opgeslagen(page);
     await page.clock.setFixedTime(START + 3 * UUR);
+
+    await page.click("#btnSettings");
 
     await page.click("#btnTeam");
     await expect(page.locator("#backupSection")).toBeVisible();
@@ -314,6 +317,7 @@ test.describe("terugzetten", () => {
     const s = await beoordeel(page, 4);
     await page.evaluate(({ key }) => { db.sessions[key] = []; persist(); }, s);
     await opgeslagen(page);
+    await page.click("#btnSettings");
     await page.click("#btnTeam");
     page.once("dialog", (d) => d.dismiss());
     await page.locator("#backupList .backup-row").last().getByRole("button", { name: "Terugzetten" }).click();
@@ -392,6 +396,7 @@ test.describe("terugzetten", () => {
     await verbindMap(page);
     await beoordeel(page, 2);
     await page.clock.setFixedTime(START + 5 * 60000);
+    await page.click("#btnSettings");
     await page.click("#btnTeam");
     await page.click("#btnBackupNow");
     await expect(page.locator("#notice")).toContainText("Reservekopie gemaakt");

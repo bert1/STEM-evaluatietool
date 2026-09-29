@@ -13,6 +13,59 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.30.0 · 29 september 2026
+
+**Vakken als eigen onderdeel bij Instellingen**
+
+- Onder Instellingen staat nu ook **Vakken**, tussen Klaslijsten en Team.
+  Het blok Vakken staat niet meer onderaan het Klaslijsten-scherm. Wat je
+  er kan doen, is niet veranderd.
+- In de handleiding heeft Vakken een eigen hoofdstuk (5); de hoofdstukken
+  erna schoven één nummer op.
+
+## 1.29.0 · 29 september 2026
+
+**Tab Instellingen met Algemeen, Klaslijsten en Team**
+
+- Bovenaan staan nog vijf tabs: Evalueren, Rubrics, Controle, Skore en
+  **Instellingen**. Klaslijsten en Team staan niet meer bovenaan, maar
+  onder Instellingen, samen met het nieuwe onderdeel **Algemeen**. Nieuwe
+  instellingen komen voortaan daar, zodat de bovenste rij overzichtelijk
+  blijft.
+- Instellingen opent het onderdeel dat je het laatst bekeek (eerst
+  Algemeen).
+- **Algemeen:** het schooljaar waarin je werkt, de knop **+ Nieuw
+  schooljaar** (stond vroeger linksboven) en het versienummer. De
+  keuzelijst om een ouder schooljaar te bekijken blijft linksboven.
+- De knoppen en schermen van Klaslijsten en Team zijn verder niet
+  veranderd.
+
+## 1.28.0 · 29 september 2026
+
+**Vakken: per vak enkel de eigen klassen en evaluaties**
+
+- Nieuw blok **Vakken** op het Klaslijsten-scherm: per leerjaar vakken
+  toevoegen (bv. "STEM-wetenschappen" en "Techniek"), per vak de klassen
+  aanduiden die het volgen, en een vak verwijderen (voor iedereen of voor
+  mezelf). Een vak zonder aangeduide klassen toont alle klassen.
+- **Rubrics:** in de editor een keuzelijst **Vak**; in de lijst per
+  evaluatie een keuzelijst voor het vak naast die voor de map, en boven de
+  lijst een filter (Alle vakken, een vak, Geen vak). Een nieuwe evaluatie
+  krijgt het vak van de filter. Dupliceren neemt het vak over.
+- **Evalueren:** tussen leerjaar en klas een keuzelijst **Vak**. Met een vak
+  zie je enkel de klassen en evaluaties van dat vak. Het veld is verborgen
+  zolang een leerjaar geen vakken heeft; dan werkt alles zoals vroeger. De
+  keuze wordt per leerjaar op dit toestel onthouden. Een open beoordeling
+  die niet bij het nieuwe vak hoort, sluit.
+- **Nu beoordelen** (Controle) kiest zelf het juiste vak, zodat de
+  evaluatie nooit verborgen is.
+- Opslag: `db.subjects[leerjaar] = [{name, classes, updatedAt}]` en
+  `subject` bij een evaluatie. Samenvoegen: nieuwste versie van een vak
+  wint; verwijderen via een nieuwe tombstone-soort `subjects`. Mee in
+  reservekopieën en terugzetten. `DB_VERSION` blijft 4; oudere bestanden
+  werken gewoon (geen vakken).
+- Nieuwe testen in `tests/vakken.spec.js`.
+
 ## 1.27.0 · 29 september 2026
 
 **Bestaande evaluaties en cursusmateriaal omzetten naar een rubric**

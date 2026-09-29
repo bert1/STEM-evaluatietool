@@ -95,6 +95,7 @@ function backupData() {
     activeSchoolYear: db.activeSchoolYear,
     evaluations: db.evaluations,
     evaluationFolders: db.evaluationFolders,
+    subjects: db.subjects,
     tombstones: db.tombstones,
     localTombstones: db.localTombstones,
     team: db.team,
@@ -283,6 +284,13 @@ function refreshRestoredTimes(restored, current, now) {
     var curNames = ((current.evaluationFolders || {})[year] || []).map(function (f) { return f.name; });
     restored.evaluationFolders[year].forEach(function (f) {
       if (curNames.indexOf(f.name) === -1) f.updatedAt = later(null, "folders", year + "||" + f.name);
+    });
+  });
+
+  Object.keys(restored.subjects || {}).forEach(function (year) {
+    restored.subjects[year].forEach(function (s) {
+      var cur = ((current.subjects || {})[year] || []).filter(function (x) { return x.name === s.name; })[0];
+      if (!cur || !same(s.classes, cur.classes)) s.updatedAt = later(cur, "subjects", year + "||" + s.name);
     });
   });
 }
