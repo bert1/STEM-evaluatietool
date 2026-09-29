@@ -13,6 +13,25 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.26.0 · 29 september 2026
+
+**Automatische reservekopieën en een vorige versie terugzetten**
+
+- Met een gedeelde map bewaart de tool automatisch een kopie van je werk in
+  de submap `backups`, met initialen, datum en uur in de naam
+  (`evaluaties-BB-2026-09-29-14u05.json`). Een kopie bij het verbinden met
+  de map en daarna hoogstens één per uur na een geslaagde opslag; geen
+  nieuwe kopie als er niets veranderde (`js/backups.js`).
+- Opruimen: alles van de laatste 14 dagen blijft, daarna één per week, na
+  365 dagen weg; de 10 nieuwste blijven altijd. Enkel je eigen kopieën.
+- Nieuw onderdeel **Reservekopieën** op het Teamscherm: lijst met datum en
+  uur, knop **Terugzetten** per kopie en **Nu een reservekopie maken**.
+- Terugzetten maakt eerst een kopie van de huidige stand. Alles wat in de
+  teruggezette versie anders is dan nu, krijgt een nieuw tijdstip, zodat
+  "Team bijwerken" de fout niet terugbrengt uit het bestand van een
+  collega. De datum van een beoordeling (Skore-periode) blijft gelijk.
+- De kopieën tellen niet mee bij "Team bijwerken".
+
 ## 1.25.3 · 28 september 2026
 
 **Eén vertrouwenszin vervangen**

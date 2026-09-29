@@ -205,6 +205,7 @@ function renderTeamClasses() {
    ------------------------------------------------------------------ */
 
 function renderFolderSection() {
+  renderBackupList();
   var buttons = $("folderButtons");
   var state = $("folderState");
   buttons.innerHTML = "";
