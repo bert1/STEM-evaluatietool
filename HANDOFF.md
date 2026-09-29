@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.31.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.31.1**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,18 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.31.0)
+## Volledige featurelijst (huidige stand, 1.31.1)
+
+- **Bugfix klaspaneel en vak** (1.31.1), gemeld door de gebruiker:
+  `renderKlasMultiPanel()` in `js/evaluations.js` gebruikte
+  `classesFor()` en toonde dus alle klassen, ook met een vak gekozen. Nu
+  `classesForSubject(db, year, selectedSubject())`. **Les:** het
+  Evalueren-scherm heeft onzichtbare `<select>`s (`#classSelect`,
+  `#evalSelect`) met een zelfgetekend paneel erboven. Test een filter
+  altijd op het zichtbare paneel (`#klasMultiPanel`, `#evalComboPanel`),
+  niet enkel op de onzichtbare lijst. Let op: `.klas-multi-option` staat
+  in hoofdletters via CSS, gebruik `allTextContents()`.
+
 
 - **Vak verplicht bij een nieuwe evaluatie** (1.31.0), gevraagd door de
   gebruiker. `validateEvaluation(draft, db, originalName)` in

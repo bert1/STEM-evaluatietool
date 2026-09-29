@@ -164,10 +164,14 @@ function renderKlasMultiPanel() {
   var panel = $("klasMultiPanel");
   panel.innerHTML = "";
   var year = $("yearSelect").value;
-  var classes = year && CONFIG[year] ? classesFor(db, year) : [];
+  // Enkel de klassen van het gekozen vak (sinds 1.31.1; daarvoor filterde
+  // enkel de onzichtbare <select> en toonde dit paneel alle klassen).
+  var subject = selectedSubject();
+  var classes = year && CONFIG[year] ? classesForSubject(db, year, subject) : [];
 
   if (!classes.length) {
-    panel.appendChild(el("div", "klas-multi-empty", "Nog geen klassen voor dit leerjaar."));
+    panel.appendChild(el("div", "klas-multi-empty",
+      subject ? "Geen klassen voor dit vak. Duid ze aan bij Instellingen, Vakken." : "Nog geen klassen voor dit leerjaar."));
     return;
   }
 
