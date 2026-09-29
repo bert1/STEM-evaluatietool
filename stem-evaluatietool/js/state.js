@@ -123,7 +123,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.27.0";
+var APP_VERSION = "1.28.0";
 
 var DB_VERSION = 4;
 
@@ -194,6 +194,7 @@ function emptyDb() {
     activeSchoolYear: yearLabel,
     evaluations: {},
     evaluationFolders: {},
+    subjects: {},
     tombstones: emptyTombstones(),
     localTombstones: emptyTombstones(),
     team: { members: {}, classes: {}, updatedAt: 0 },
@@ -217,10 +218,11 @@ function emptyDb() {
 /* "exemptions" (sinds 1.22.0): een opgeheven vrijstelling, zie
    js/controle.js. Oudere bestanden hebben die soort niet; dat is gewoon
    "nog nooit iets opgeheven". */
-var TOMBSTONE_KINDS = ["roster", "evaluations", "folders", "exemptions"];
+/* "subjects" (sinds 1.28.0): een verwijderd vak, zie js/subjects.js. */
+var TOMBSTONE_KINDS = ["roster", "evaluations", "folders", "exemptions", "subjects"];
 
 function emptyTombstones() {
-  return { roster: {}, evaluations: {}, folders: {}, exemptions: {} };
+  return { roster: {}, evaluations: {}, folders: {}, exemptions: {}, subjects: {} };
 }
 
 /* Later moment van beide lagen samen — het maakt voor de vraag "moet
@@ -451,6 +453,7 @@ function mergeDb(target, incoming) {
 
   stats.evaluations = mergeEvaluations(target, incoming.evaluations);
   stats.evaluationFolders = mergeEvaluationFolders(target, incoming.evaluationFolders);
+  stats.subjects = mergeSubjects(target, incoming.subjects);
   stats.team = mergeTeam(target, incoming.team);
   stats.settings = mergeSettings(target, incoming.settings);
 
@@ -681,6 +684,7 @@ function normaliseDb(db) {
         version: ev.version || 1,
         history: ev.history ? JSON.parse(JSON.stringify(ev.history)) : {},
         folder: typeof ev.folder === "string" ? ev.folder : "",
+        subject: typeof ev.subject === "string" ? ev.subject : "",
         updatedAt: ev.updatedAt || 0,
       };
     });
@@ -702,6 +706,8 @@ function normaliseDb(db) {
       out.evaluationFolders[year].push({ name: name, updatedAt: updatedAt });
     });
   });
+
+  out.subjects = normaliseSubjects(db.subjects);
 
   function copyTombstones(src) {
     var t = emptyTombstones();

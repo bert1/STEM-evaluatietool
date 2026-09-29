@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.27.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.28.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -88,19 +88,23 @@ Rechtsboven zie je altijd of je werk veilig staat:
 ## 3. Evalueren
 
 1. Kies bovenaan het **leerjaar**.
-2. Kies de **klas**. Je mag meerdere klassen aanvinken als een groepje
+2. Kies het **vak**. Je ziet dan enkel nog de klassen en de evaluaties van
+   dat vak. Kies **Alle vakken** om alles te zien. Dit veld staat er pas als
+   er vakken zijn (zie [Vakken](#vakken) bij Klaslijsten). De tool onthoudt
+   je keuze.
+3. Kies de **klas**. Je mag meerdere klassen aanvinken als een groepje
    leerlingen uit verschillende klassen bevat.
-3. Kies het **evaluatiemoment**. Typ een deel van de naam of van de map om te
+4. Kies het **evaluatiemoment**. Typ een deel van de naam of van de map om te
    zoeken (hoofdletters en accenten maken niet uit). Blijft er één evaluatie
    over, dan kies je die met **Enter**.
-4. Vink de **leerling** aan. Voor **groepswerk** vink je alle leerlingen van
+5. Vink de **leerling** aan. Voor **groepswerk** vink je alle leerlingen van
    de groep aan: ze krijgen dezelfde score.
-5. Klik per criterium op het juiste **niveau**.
-6. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
+6. Klik per criterium op het juiste **niveau**.
+7. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
    **feedforward** (wat doet de leerling de volgende keer anders) in. Die
    tekst komt later mee in de feedback die je vanuit het tabblad Skore
    naar Smartschool kopieert.
-7. Klik op **Opslaan**. De tool vinkt meteen de volgende leerling aan.
+8. Klik op **Opslaan**. De tool vinkt meteen de volgende leerling aan.
 
 **Handig om te weten:**
 
@@ -140,6 +144,25 @@ Doe dit **aan het begin van het schooljaar**, of als er een klas bijkomt.
 - **Leerling van klas veranderen** (onderaan): verplaatst één leerling naar
   een andere klas, samen met de beoordelingen die al gebeurd zijn.
 
+### Vakken
+
+Geef je in een leerjaar verschillende vakken of richtingen, bijvoorbeeld
+STEM-wetenschappen in 2STa en Techniek in 2TWa? Maak dan vakken aan. Zo zie
+je bij Evalueren enkel de evaluaties die bij je vak horen.
+
+1. Ga naar **Klaslijsten** en scrol naar **Vakken**.
+2. Kies het **leerjaar**, typ de **naam van het vak** en klik op **Vak
+   toevoegen**.
+3. Klik bij het vak op de **klassen** die het volgen. Een aangeduide klas
+   wordt blauw. Duid je geen klassen aan, dan zie je bij dat vak alle
+   klassen.
+4. Ga naar **Rubrics** en kies bij elke evaluatie het **vak** (zie
+   [Rubrics](#5-rubrics)).
+
+Met **Vak verwijderen** verdwijnt enkel het vak. De evaluaties blijven
+bestaan, maar hebben dan geen vak meer. Vakken gaan mee naar je collega's
+bij **Team bijwerken**, net als de rubrics.
+
 ---
 
 ## 5. Rubrics
@@ -148,6 +171,14 @@ Hier maak je de evaluaties die je bij Evalueren kan kiezen. De knoppen
 **Nieuwe evaluatie**, **+ Nieuwe map** en **Jaaroverzicht afdrukken** staan
 bovenaan, boven de lijst.
 
+- **Vak:** kies bij een nieuwe evaluatie het vak waar ze bij hoort. Bij
+  Evalueren staat ze dan enkel bij dat vak. Een evaluatie die al bestaat,
+  zet je bij een vak met de keuzelijst **Vak** naast de keuzelijst voor de
+  map, of via **Bewerk**. Met het veld **Vak** boven de lijst toon je enkel
+  de evaluaties van één vak, of kies je **Geen vak** om te zien welke
+  evaluaties nog geen vak hebben. Staat de lijst op één vak, dan hoort een
+  nieuwe evaluatie meteen bij dat vak. Vakken maak je aan bij
+  [Klaslijsten](#vakken).
 - **Nieuwe evaluatie:** geef een naam, voeg **criteria** toe en kies per
   criterium het aantal niveaus. Geef bij voorkeur alle criteria hetzelfde
   aantal niveaus, anders weegt het ene criterium zwaarder dan het andere.

@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.27.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.28.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -62,7 +62,7 @@ boven): `ui.js` ($/el-hulpfuncties, `makeSearchCombo`, klembord `copyText()`
 en `legacyCopy()`, melding `showToast()`; moet als eerste laden),
 `state.js` (db-model, opslaan/laden, mergeDb, schooljaren), `storage.js`
 (bestand openen/opslaan, File System Access API), `rosters.js` (klaslijsten,
-Excel-import), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
+Excel-import), `subjects.js` (vakken, sinds 1.28.0), `evaluations.js` (rubric-editor, scores, AI-rubriekhulp),
 `results.js` (statistieken, grafieken, kalibratie), `reports.js` (rapport,
 feed-up-blad), `goals.js` (leerplandoelen-UI, groeigrafiek), `sync.js`
 (gedeelde map, team), `backups.js` (reservekopieën, sinds 1.26.0), `feedback.js` (feedbacktekst voor Smartschool, sinds
@@ -90,7 +90,43 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.27.0)
+## Volledige featurelijst (huidige stand, 1.28.0)
+
+- **Vakken** (1.28.0, `js/subjects.js`, laadt na `rosters.js`). Gevraagd
+  door de gebruiker: 2STa en 2TWa mogen niet dezelfde evaluaties zien,
+  anders wordt de lijst te lang. Vakken toevoegen op het
+  Klaslijsten-scherm, kiezen bij een rubric, en bij Evalueren eerst het
+  vak kiezen.
+  **Opslag:** `db.subjects[leerjaar] = [{name, classes, updatedAt}]`,
+  niet per schooljaar (zoals rubrics en mappen), en `ev.subject` (leeg =
+  geen vak). `normaliseDb()` kopieert `subject` (anders ging het verloren,
+  die functie neemt enkel bekende velden van een evaluatie over) en
+  `normaliseSubjects()`. `dbBlob()` en `backupData()` nemen `subjects` mee.
+  **Samenvoegen:** `mergeSubjects()`, nieuwste `updatedAt` wint (de
+  klassen), nieuwe tombstone-soort `subjects` met sleutel
+  `leerjaar||vak`. `deleteSubject()` zet `subject` van de evaluaties leeg
+  en verhoogt hun `updatedAt`. `refreshRestoredTimes()` kent de vakken.
+  **Klassen:** een vak zonder klassen toont alle klassen
+  (`classesForSubject()`); namen van klassen die dit schooljaar niet
+  bestaan, worden gewoon genegeerd.
+  **Evalueren:** `#subjectWrap`/`#subjectSelect` tussen leerjaar en klas,
+  verborgen als het leerjaar geen vakken heeft. `fillClassAndEvalOptions()`
+  roept `fillSubjectOptions()` aan en filtert klassen en evaluaties;
+  `evaluationGroups(year, subject)` en `fillGroupedEvalSelect(..., subject)`
+  hebben een optioneel vak. Keuze per leerjaar in localStorage
+  (`SUBJECT_CHOICE_KEY`), niet in het werkbestand. `closeSessionIfHidden()`
+  sluit een open beoordeling die door de filter verborgen raakt (ook in
+  `refreshAll()`). `openEvaluationFor()` (Nu beoordelen) zet het vak van
+  de evaluatie, of "Alle vakken" als de klas niet bij dat vak hoort.
+  `makeSearchCombo()` kreeg een optionele `emptyTextFn`.
+  **Rubrics:** `#draftSubject` in de editor (`fillDraftSubjectOptions()`,
+  uitgeschakeld zonder vakken, volgt `#draftYear`), `.eval-subject-select`
+  per rij en de filter `#evalListSubject` (waarde `NO_SUBJECT` = " geen"
+  voor evaluaties zonder vak). Controle en Skore filteren niet op vak:
+  die werken al per klas.
+  **Testen:** `tests/vakken.spec.js`. Getoetst door de filter uit te
+  schakelen: drie testen faalden.
+
 
 - **Bestaande evaluatie omzetten** (1.27.0, `js/ai-source.js`, stand
   `aiMode = "omzetten"` in `js/ai-rubric.js`). Gevraagd door de
@@ -728,6 +764,12 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   heropenen en synchronisatie tussen twee personen, `rubricsDiffer()`.
   Getoetst met ingebouwde fouten (opslaan vergeet de volgende stap,
   labels van de AI, `next` telt mee voor versies): telkens rood.
+- `vakken.spec.js` (1.28.0): vakken toevoegen, dubbel weigeren, klassen
+  aanduiden, verwijderen met tombstone, Evalueren zonder en met vak
+  (klassen en evaluaties gefilterd, melding bij een leeg vak, beoordeling
+  sluit, keuze onthouden), Nu beoordelen met een ander vak, Rubrics
+  (filter, vak per rij, nieuwe evaluatie, dupliceren, leerjaar zonder
+  vakken), opslaan, openen en samenvoegen.
 - `omzetten.spec.js` (1.27.0): Excel-tekst met samengevoegde cellen,
   bestanden kiezen (Excel, Word, PowerPoint, PDF met uitleg, tweede keer
   voegt toe), lange tekst, de omzetprompt (regels, materiaal, geen

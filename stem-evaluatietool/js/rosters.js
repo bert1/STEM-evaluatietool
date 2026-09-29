@@ -15,6 +15,7 @@ function openRoster() {
     });
   }
   renderRosterCurrent();
+  renderSubjectSection();
   fillMoveYearOptions();
   fillMoveFromKlasOptions();
   showView("roster");

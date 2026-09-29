@@ -70,6 +70,8 @@ function init() {
     renderEvalList();
   });
   $("evalListSearch").addEventListener("input", renderEvalList);
+  $("evalListSubject").addEventListener("change", renderEvalList);
+  $("draftYear").addEventListener("change", function () { fillDraftSubjectOptions($("draftSubject").value); });
   $("btnNewEval").addEventListener("click", newEvaluation);
   $("btnNewFolder").addEventListener("click", function () {
     var year = $("evalListYear").value;
@@ -138,6 +140,7 @@ function init() {
   initControle();
   initSkore();
   initKlasMulti();
+  initSubjects();
   initMoveStudent();
 }
 

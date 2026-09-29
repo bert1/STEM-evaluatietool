@@ -217,6 +217,7 @@ function dbBlob() {
     activeSchoolYear: db.activeSchoolYear,
     evaluations: db.evaluations,
     evaluationFolders: db.evaluationFolders,
+    subjects: db.subjects,
     tombstones: db.tombstones,
     team: db.team,
     settings: db.settings,
@@ -436,6 +437,7 @@ function refreshAll() {
   fillClassAndEvalOptions($("yearSelect").value);
   if (currentView === "roster") {
     renderRosterCurrent();
+    renderSubjectSection();
     fillMoveFromKlasOptions();
   }
   if (currentView === "evals" && !draft) renderEvalList();
@@ -462,6 +464,8 @@ function refreshAll() {
     closeSession();
     return;
   }
+  // Het gekozen vak kan klas of evaluatie nu verbergen (sinds 1.28.0).
+  if (closeSessionIfHidden()) return;
   // Rubrics of vragen kunnen net aangepast zijn.
   if (cur.key) {
     cur.rubrics = rubricsFor(db, cur.year, cur.evaluation);

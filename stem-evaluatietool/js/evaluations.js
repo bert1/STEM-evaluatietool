@@ -11,17 +11,19 @@
 function fillClassAndEvalOptions(year) {
   var prevClasses = selectedKlassen();
   var prevEval = $("evalSelect").value;
+  fillSubjectOptions(year);
+  var subject = selectedSubject();
 
   $("classSelect").innerHTML = "";
   $("evalSelect").innerHTML = "";
   $("evalSelect").appendChild(new Option("Kies een evaluatie", ""));
 
   if (year && CONFIG[year]) {
-    classesFor(db, year).forEach(function (c) {
+    classesForSubject(db, year, subject).forEach(function (c) {
       $("classSelect").appendChild(new Option(c, c));
     });
 
-    fillGroupedEvalSelect($("evalSelect"), year, "Evaluaties");
+    fillGroupedEvalSelect($("evalSelect"), year, "Evaluaties", subject);
 
     $("classSelect").disabled = false;
     $("evalSelect").disabled = false;
@@ -47,8 +49,8 @@ function fillClassAndEvalOptions(year) {
 
 /* Evaluaties van een leerjaar, gegroepeerd per map in de volgorde van
    het Rubrics-scherm. Gedeeld door de zoeklijst bij Evalueren en die bij
-   Resultaten. */
-function evaluationGroups(year) {
+   Resultaten. Met een vak (sinds 1.28.0) enkel de evaluaties van dat vak. */
+function evaluationGroups(year, subject) {
   if (!year || !CONFIG[year]) return [];
 
   var folders = evaluationFoldersFor(db, year);
@@ -56,6 +58,7 @@ function evaluationGroups(year) {
   folders.forEach(function (f) { byFolder[f] = []; });
   var ongeordend = [];
   evaluationNames(db, year).forEach(function (name) {
+    if (!evaluationInSubject(db, year, name, subject)) return;
     var ev = getEvaluation(db, year, name);
     var f = ev && ev.folder;
     if (f && byFolder[f]) byFolder[f].push(name);
@@ -76,8 +79,8 @@ function evaluationGroups(year) {
    indeling als de zoeklijst. Evaluaties zonder map krijgen de kop
    "Geen map"; zijn er helemaal geen mappen, dan fallbackLabel (of geen
    <optgroup> als die leeg is). Bestaande opties blijven staan. */
-function fillGroupedEvalSelect(select, year, fallbackLabel) {
-  evaluationGroups(year).forEach(function (g) {
+function fillGroupedEvalSelect(select, year, fallbackLabel, subject) {
+  evaluationGroups(year, subject).forEach(function (g) {
     var label = g.label || fallbackLabel;
     var parent = select;
     if (label) {
@@ -97,11 +100,14 @@ var evalCombo = makeSearchCombo({
   panelId: "evalComboPanel",
   selectId: "evalSelect",
   wrapId: "evalComboWrap",
-  groups: function () { return evaluationGroups($("yearSelect").value); },
+  groups: function () { return evaluationGroups($("yearSelect").value, selectedSubject()); },
   isEnabled: function () { return !!($("yearSelect").value && CONFIG[$("yearSelect").value]); },
   placeholder: "Zoek een evaluatie…",
   disabledPlaceholder: "Zoek eerst een jaar en klas…",
   emptyText: "Nog geen evaluaties voor dit leerjaar.",
+  emptyTextFn: function () {
+    return selectedSubject() ? "Nog geen evaluaties voor dit vak. Kies het vak bij Rubrics." : "Nog geen evaluaties voor dit leerjaar.";
+  },
 });
 
 function syncEvalComboDisplay() { evalCombo.sync(); }
@@ -232,6 +238,14 @@ function onYearChange() {
 function openEvaluationFor(year, klas, evaluation) {
   $("yearSelect").value = year;
   onYearChange();
+  // Het gekozen vak mag de klas of de evaluatie niet verbergen.
+  var ev = getEvaluation(db, year, evaluation);
+  var subject = (ev && ev.subject) || "";
+  if (classesForSubject(db, year, subject).indexOf(klas) === -1) subject = "";
+  if ($("subjectSelect").value !== subject) {
+    $("subjectSelect").value = subjectNames(db, year).indexOf(subject) !== -1 ? subject : "";
+    fillClassAndEvalOptions(year);
+  }
   Array.prototype.forEach.call($("classSelect").options, function (o) { o.selected = o.value === klas; });
   $("evalSelect").value = evaluation;
   syncKlasMultiDisplay();

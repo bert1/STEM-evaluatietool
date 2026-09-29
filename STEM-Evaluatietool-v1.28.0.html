@@ -1367,6 +1367,15 @@ details.controle-fold { margin: 14px 0; }
 .ai-change-was { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(100, 116, 139, 0.5); }
 .ai-change-new { color: var(--text); }
 .ai-change-tag { font-weight: 600; text-decoration: none; display: inline-block; }
+
+/* Vakken op het Klaslijsten-scherm (sinds 1.28.0) */
+.subject-title { font-size: 15px; margin: 0 0 6px; }
+.subject-row { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--card); }
+.subject-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.subject-head .btn-small { margin-left: auto; }
+.subject-count { margin: 0; }
+.subject-classes-label { margin: 8px 0 6px; }
+.subject-classes { gap: 6px; }
 </style>
     <style>
 /* ---------- Voortgang ---------- */
@@ -1981,6 +1990,30 @@ table.feedup-table td {
           bewaard: die staan op naam en verdwijnen niet mee.
         </p>
 
+        <section id="subjectSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
+          <h3 class="subject-title">Vakken</h3>
+          <p class="hint" style="margin-bottom: 14px">
+            Voeg de vakken toe die je in een leerjaar geeft, bijvoorbeeld "STEM-wetenschappen" en
+            "Techniek". Duid bij elk vak aan welke klassen het volgen. Bij Rubrics kies je dan bij
+            elke evaluatie het vak. Bij Evalueren zie je na het kiezen van een vak enkel nog de
+            klassen en evaluaties van dat vak.
+          </p>
+          <div class="selection-grid" style="margin-bottom: 12px">
+            <div class="form-group" style="margin: 0">
+              <label for="subjectYear">Leerjaar</label>
+              <select id="subjectYear"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="subjectName">Naam van het vak</label>
+              <input type="text" id="subjectName" placeholder="STEM-wetenschappen" autocomplete="off" />
+            </div>
+            <div class="form-group" style="margin: 0; align-self: end">
+              <button type="button" class="btn-primary" id="btnAddSubject">Vak toevoegen</button>
+            </div>
+          </div>
+          <div id="subjectList"></div>
+        </section>
+
         <details id="moveStudentSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
           <summary style="cursor: pointer; font-size: 14px; color: var(--muted)">
             Leerling van klas veranderen
@@ -2045,6 +2078,10 @@ table.feedup-table td {
               <label for="evalListYear">Leerjaar</label>
               <select id="evalListYear"></select>
             </div>
+            <div class="form-group hidden" id="evalListSubjectWrap" style="margin: 0">
+              <label for="evalListSubject">Vak</label>
+              <select id="evalListSubject"></select>
+            </div>
             <div class="form-group" style="margin: 0">
               <label for="evalListSearch">Zoeken</label>
               <input
@@ -2069,6 +2106,11 @@ table.feedup-table td {
             <div class="form-group" style="margin: 0">
               <label for="draftYear">Leerjaar</label>
               <select id="draftYear"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="draftSubject">Vak</label>
+              <select id="draftSubject"></select>
+              <p class="hint" id="draftSubjectHint" style="margin: 4px 0 0"></p>
             </div>
           </div>
 
@@ -2430,6 +2472,12 @@ table.feedup-table td {
           <label for="yearSelect">Leerjaar</label>
           <select id="yearSelect">
             <option value="">Kies een jaar</option>
+          </select>
+        </div>
+        <div class="form-group hidden" id="subjectWrap" style="margin: 0">
+          <label for="subjectSelect">Vak</label>
+          <select id="subjectSelect">
+            <option value="">Alle vakken</option>
           </select>
         </div>
         <div class="form-group klas-multi-wrap" style="margin: 0; position: relative">
@@ -4541,7 +4589,7 @@ function searchKey(text) {
    cfg: inputId, panelId, selectId, wrapId,
         groups()        -> [{label, names}], label "" = geen kop
         isEnabled()     -> true/false
-        placeholder, disabledPlaceholder, emptyText */
+        placeholder, disabledPlaceholder, emptyText, emptyTextFn (optioneel) */
 function makeSearchCombo(cfg) {
   var highlight = -1;
 
@@ -4633,7 +4681,7 @@ function makeSearchCombo(cfg) {
         "div", "eval-combo-empty",
         needle
           ? "Geen evaluaties of mappen gevonden voor \"" + input().value.trim() + "\"."
-          : cfg.emptyText,
+          : (cfg.emptyTextFn ? cfg.emptyTextFn() : cfg.emptyText),
       ));
     }
 
@@ -4831,7 +4879,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.27.0";
+var APP_VERSION = "1.28.0";
 
 var DB_VERSION = 4;
 
@@ -4902,6 +4950,7 @@ function emptyDb() {
     activeSchoolYear: yearLabel,
     evaluations: {},
     evaluationFolders: {},
+    subjects: {},
     tombstones: emptyTombstones(),
     localTombstones: emptyTombstones(),
     team: { members: {}, classes: {}, updatedAt: 0 },
@@ -4925,10 +4974,11 @@ function emptyDb() {
 /* "exemptions" (sinds 1.22.0): een opgeheven vrijstelling, zie
    js/controle.js. Oudere bestanden hebben die soort niet; dat is gewoon
    "nog nooit iets opgeheven". */
-var TOMBSTONE_KINDS = ["roster", "evaluations", "folders", "exemptions"];
+/* "subjects" (sinds 1.28.0): een verwijderd vak, zie js/subjects.js. */
+var TOMBSTONE_KINDS = ["roster", "evaluations", "folders", "exemptions", "subjects"];
 
 function emptyTombstones() {
-  return { roster: {}, evaluations: {}, folders: {}, exemptions: {} };
+  return { roster: {}, evaluations: {}, folders: {}, exemptions: {}, subjects: {} };
 }
 
 /* Later moment van beide lagen samen — het maakt voor de vraag "moet
@@ -5159,6 +5209,7 @@ function mergeDb(target, incoming) {
 
   stats.evaluations = mergeEvaluations(target, incoming.evaluations);
   stats.evaluationFolders = mergeEvaluationFolders(target, incoming.evaluationFolders);
+  stats.subjects = mergeSubjects(target, incoming.subjects);
   stats.team = mergeTeam(target, incoming.team);
   stats.settings = mergeSettings(target, incoming.settings);
 
@@ -5389,6 +5440,7 @@ function normaliseDb(db) {
         version: ev.version || 1,
         history: ev.history ? JSON.parse(JSON.stringify(ev.history)) : {},
         folder: typeof ev.folder === "string" ? ev.folder : "",
+        subject: typeof ev.subject === "string" ? ev.subject : "",
         updatedAt: ev.updatedAt || 0,
       };
     });
@@ -5410,6 +5462,8 @@ function normaliseDb(db) {
       out.evaluationFolders[year].push({ name: name, updatedAt: updatedAt });
     });
   });
+
+  out.subjects = normaliseSubjects(db.subjects);
 
   function copyTombstones(src) {
     var t = emptyTombstones();
@@ -5695,6 +5749,7 @@ function dbBlob() {
     activeSchoolYear: db.activeSchoolYear,
     evaluations: db.evaluations,
     evaluationFolders: db.evaluationFolders,
+    subjects: db.subjects,
     tombstones: db.tombstones,
     team: db.team,
     settings: db.settings,
@@ -5914,6 +5969,7 @@ function refreshAll() {
   fillClassAndEvalOptions($("yearSelect").value);
   if (currentView === "roster") {
     renderRosterCurrent();
+    renderSubjectSection();
     fillMoveFromKlasOptions();
   }
   if (currentView === "evals" && !draft) renderEvalList();
@@ -5940,6 +5996,8 @@ function refreshAll() {
     closeSession();
     return;
   }
+  // Het gekozen vak kan klas of evaluatie nu verbergen (sinds 1.28.0).
+  if (closeSessionIfHidden()) return;
   // Rubrics of vragen kunnen net aangepast zijn.
   if (cur.key) {
     cur.rubrics = rubricsFor(db, cur.year, cur.evaluation);
@@ -6118,6 +6176,7 @@ function openRoster() {
     });
   }
   renderRosterCurrent();
+  renderSubjectSection();
   fillMoveYearOptions();
   fillMoveFromKlasOptions();
   showView("roster");
@@ -7374,6 +7433,326 @@ function sheetToClass(sheet) {
 }
 
 
+/* ------------------------------------------------------------------
+   VAKKEN (sinds 1.28.0)
+
+   Per leerjaar een lijst vakken, bv. "STEM-wetenschappen" voor 2STa en
+   "Techniek" voor 2TWa. Een evaluatie hoort bij één vak (ev.subject,
+   leeg = geen vak). Op het Evalueren-scherm kies je een vak en zie je
+   enkel de klassen en evaluaties van dat vak.
+
+   Opslag: db.subjects[leerjaar] = [{name, classes: [klas], updatedAt}].
+   Net als de rubrics niet aan een schooljaar gebonden: vakken en
+   klasnamen blijven meestal jaren gelijk. Zonder gekoppelde klassen
+   toont een vak alle klassen van het leerjaar.
+   ------------------------------------------------------------------ */
+
+/* Het gekozen vak per leerjaar op dit toestel. Enkel een gemak voor wie
+   elke dag hetzelfde vak geeft, daarom niet in het werkbestand. */
+var SUBJECT_CHOICE_KEY = "STEM_EVAL_VAK";
+
+function cleanSubjectName(name) {
+  return String(name || "").trim().replace(/\s+/g, " ");
+}
+
+function subjectsFor(dbObj, year) {
+  return ((dbObj.subjects && dbObj.subjects[year]) || []).slice();
+}
+
+function subjectNames(dbObj, year) {
+  return subjectsFor(dbObj, year).map(function (s) { return s.name; });
+}
+
+function findSubject(dbObj, year, name) {
+  return subjectsFor(dbObj, year).filter(function (s) { return s.name === name; })[0] || null;
+}
+
+function addSubject(dbObj, year, name) {
+  var clean = cleanSubjectName(name);
+  if (!clean) return false;
+  if (!dbObj.subjects) dbObj.subjects = {};
+  if (!dbObj.subjects[year]) dbObj.subjects[year] = [];
+  var lower = clean.toLowerCase();
+  if (dbObj.subjects[year].some(function (s) { return s.name.toLowerCase() === lower; })) return false;
+  dbObj.subjects[year].push({ name: clean, classes: [], updatedAt: Date.now() });
+  return true;
+}
+
+/* Klas aan- of afvinken bij een vak. */
+function setSubjectClass(dbObj, year, name, klas, on) {
+  var s = findSubject(dbObj, year, name);
+  if (!s) return false;
+  var i = s.classes.indexOf(klas);
+  if (on && i === -1) s.classes.push(klas);
+  else if (!on && i !== -1) s.classes.splice(i, 1);
+  else return false;
+  s.classes.sort(function (a, b) { return a.localeCompare(b, "nl", { numeric: true }); });
+  s.updatedAt = Date.now();
+  return true;
+}
+
+/* Het vak verdwijnt, de evaluaties niet: die komen bij "Geen vak". */
+function deleteSubject(dbObj, year, name, scope) {
+  if (dbObj.subjects && dbObj.subjects[year]) {
+    dbObj.subjects[year] = dbObj.subjects[year].filter(function (s) { return s.name !== name; });
+  }
+  Object.keys((dbObj.evaluations && dbObj.evaluations[year]) || {}).forEach(function (evName) {
+    var ev = dbObj.evaluations[year][evName];
+    if (ev.subject === name) {
+      ev.subject = "";
+      ev.updatedAt = Date.now();
+    }
+  });
+  recordDeletion("subjects", year + "||" + name, scope);
+}
+
+function setEvaluationSubject(dbObj, year, evalName, subject) {
+  var ev = getEvaluation(dbObj, year, evalName);
+  if (!ev) return;
+  ev.subject = subject || "";
+  ev.updatedAt = Date.now();
+}
+
+/* Hoort deze evaluatie bij het gekozen vak? Leeg vak = alle vakken. */
+function evaluationInSubject(dbObj, year, evalName, subject) {
+  if (!subject) return true;
+  var ev = getEvaluation(dbObj, year, evalName);
+  return !!ev && ev.subject === subject;
+}
+
+/* Klassen van een vak, enkel die er dit schooljaar echt zijn. Heeft het
+   vak geen gekoppelde klassen, dan alle klassen van het leerjaar. */
+function classesForSubject(dbObj, year, subject) {
+  var all = classesFor(dbObj, year);
+  var s = subject ? findSubject(dbObj, year, subject) : null;
+  if (!s || !s.classes.length) return all;
+  return all.filter(function (k) { return s.classes.indexOf(k) !== -1; });
+}
+
+/* Nieuwste versie van een vak wint (klassen); verwijderen gaat via de
+   tombstones, net als bij de mappen. De volgorde blijft die van wie
+   het vak eerst had. */
+function mergeSubjects(target, incoming) {
+  var added = [];
+  if (!target.subjects) target.subjects = {};
+
+  Object.keys(incoming || {}).forEach(function (year) {
+    if (!target.subjects[year]) target.subjects[year] = [];
+    (incoming[year] || []).forEach(function (s) {
+      if (!s || !s.name) return;
+      if (isTombstoned("subjects", year + "||" + s.name, s.updatedAt)) return;
+      var list = target.subjects[year];
+      var existing = list.filter(function (x) { return x.name === s.name; })[0];
+      if (!existing) {
+        list.push({ name: s.name, classes: (s.classes || []).slice(), updatedAt: s.updatedAt || 0 });
+        added.push(s.name + " [" + year + "]");
+      } else if ((s.updatedAt || 0) > (existing.updatedAt || 0)) {
+        existing.classes = (s.classes || []).slice();
+        existing.updatedAt = s.updatedAt;
+      }
+    });
+  });
+
+  Object.keys(target.subjects).forEach(function (year) {
+    target.subjects[year] = target.subjects[year].filter(function (s) {
+      return !isTombstoned("subjects", year + "||" + s.name, s.updatedAt);
+    });
+  });
+  return added;
+}
+
+function normaliseSubjects(src) {
+  var out = {};
+  Object.keys(src || {}).forEach(function (year) {
+    if (!Array.isArray(src[year])) return;
+    var seen = {};
+    out[year] = [];
+    src[year].forEach(function (s) {
+      var name = cleanSubjectName(s && s.name);
+      if (!name || seen[name]) return;
+      seen[name] = true;
+      out[year].push({
+        name: name,
+        classes: Array.isArray(s.classes) ? s.classes.filter(function (k) { return typeof k === "string" && k; }) : [],
+        updatedAt: s.updatedAt || 0,
+      });
+    });
+  });
+  return out;
+}
+
+/* ------------------------------------------------------------------ */
+/* Klaslijsten-scherm: vakken beheren                                   */
+/* ------------------------------------------------------------------ */
+
+function renderSubjectSection() {
+  var yearSel = $("subjectYear");
+  if (!yearSel.options.length) {
+    Object.keys(CONFIG).forEach(function (y) { yearSel.appendChild(new Option(y, y)); });
+    var chosen = $("yearSelect").value;
+    if (chosen && CONFIG[chosen]) yearSel.value = chosen;
+  }
+  var year = yearSel.value;
+  var host = $("subjectList");
+  host.innerHTML = "";
+
+  var list = subjectsFor(db, year);
+  if (!list.length) {
+    host.appendChild(el("div", "empty", "Nog geen vakken voor " + year + "."));
+    return;
+  }
+
+  var classes = classesFor(db, year);
+  list.forEach(function (s) {
+    var row = el("div", "subject-row");
+    var head = el("div", "subject-head");
+    var count = Object.keys((db.evaluations && db.evaluations[year]) || {}).filter(function (n) {
+      return db.evaluations[year][n].subject === s.name;
+    }).length;
+    head.appendChild(el("strong", "subject-name", s.name));
+    head.appendChild(el("span", "hint subject-count", count + (count === 1 ? " evaluatie" : " evaluaties")));
+
+    var del = el("button", "btn-ghost btn-small", "Vak verwijderen");
+    del.type = "button";
+    del.addEventListener("click", function () {
+      askDeleteScope(
+        'Vak "' + s.name + '" verwijderen?',
+        ["De evaluaties van dit vak blijven gewoon bestaan: ze komen bij \"Geen vak\"."],
+        function (scope) {
+          deleteSubject(db, year, s.name, scope);
+          persist();
+          renderSubjectSection();
+          refreshAll();
+          showNotice("good", 'Vak "' + s.name + '" verwijderd', "");
+        },
+      );
+    });
+    head.appendChild(del);
+    row.appendChild(head);
+
+    var label = el("div", "hint subject-classes-label",
+      "Welke klassen volgen dit vak? Duid niets aan en je ziet alle klassen.");
+    row.appendChild(label);
+    var chips = el("div", "btn-row subject-classes");
+    if (!classes.length) {
+      chips.appendChild(el("span", "hint", "Nog geen klassen in dit leerjaar."));
+    }
+    classes.forEach(function (klas) {
+      var chip = el("button", "chip-toggle", klas);
+      chip.type = "button";
+      chip.setAttribute("aria-pressed", s.classes.indexOf(klas) !== -1 ? "true" : "false");
+      chip.addEventListener("click", function () {
+        var on = chip.getAttribute("aria-pressed") !== "true";
+        setSubjectClass(db, year, s.name, klas, on);
+        persist();
+        renderSubjectSection();
+        refreshSubjectFilter();
+      });
+      chips.appendChild(chip);
+    });
+    row.appendChild(chips);
+    host.appendChild(row);
+  });
+}
+
+function onAddSubject() {
+  var year = $("subjectYear").value;
+  var input = $("subjectName");
+  var name = cleanSubjectName(input.value);
+  if (!name) {
+    showNotice("warn", "Vul de naam van het vak in", "");
+    input.focus();
+    return;
+  }
+  if (!addSubject(db, year, name)) {
+    showNotice("warn", "Dit vak bestaat al", 'Er is al een vak "' + name + '" in ' + year + ".");
+    return;
+  }
+  input.value = "";
+  persist();
+  renderSubjectSection();
+  refreshSubjectFilter();
+  showNotice("good", "Vak toegevoegd: " + name,
+    "Duid hieronder aan welke klassen dit vak volgen. Bij Rubrics kies je bij elke evaluatie het vak.");
+}
+
+function initSubjects() {
+  $("subjectYear").addEventListener("change", renderSubjectSection);
+  $("btnAddSubject").addEventListener("click", onAddSubject);
+  $("subjectName").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); onAddSubject(); }
+  });
+  $("subjectSelect").addEventListener("change", onSubjectChange);
+}
+
+/* ------------------------------------------------------------------ */
+/* Evalueren-scherm: vak kiezen                                         */
+/* ------------------------------------------------------------------ */
+
+function selectedSubject() {
+  var sel = $("subjectSelect");
+  return sel ? sel.value : "";
+}
+
+function rememberedSubject(year) {
+  try {
+    var saved = JSON.parse(localStorage.getItem(SUBJECT_CHOICE_KEY) || "{}");
+    return (saved && saved[year]) || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+function rememberSubject(year, subject) {
+  try {
+    var saved = JSON.parse(localStorage.getItem(SUBJECT_CHOICE_KEY) || "{}") || {};
+    saved[year] = subject;
+    localStorage.setItem(SUBJECT_CHOICE_KEY, JSON.stringify(saved));
+  } catch (e) {}
+}
+
+/* Vult de keuzelijst met vakken. Zonder vakken voor dit leerjaar blijft
+   ze verborgen: dan werkt alles zoals vroeger. */
+function fillSubjectOptions(year) {
+  var sel = $("subjectSelect");
+  // Ander leerjaar: het vak dat je daar het laatst koos.
+  var prev = sel.getAttribute("data-year") === year ? sel.value : rememberedSubject(year);
+  sel.setAttribute("data-year", year || "");
+  sel.innerHTML = "";
+  var names = year && CONFIG[year] ? subjectNames(db, year) : [];
+  $("subjectWrap").classList.toggle("hidden", !names.length);
+  sel.appendChild(new Option("Alle vakken", ""));
+  names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
+  sel.value = names.indexOf(prev) !== -1 ? prev : "";
+}
+
+function onSubjectChange() {
+  var year = $("yearSelect").value;
+  rememberSubject(year, selectedSubject());
+  closeEvalCombo();
+  closeKlasMulti();
+  fillClassAndEvalOptions(year);
+  onSelectionChange();
+}
+
+/* Na een wijziging aan de vakken: keuzelijsten bij Evalueren opnieuw
+   vullen, en een open beoordeling sluiten als haar klas of evaluatie
+   niet meer bij het gekozen vak hoort. */
+function refreshSubjectFilter() {
+  fillClassAndEvalOptions($("yearSelect").value);
+  closeSessionIfHidden();
+}
+
+function closeSessionIfHidden() {
+  if (!cur.key) return false;
+  var shown = selectedKlassen();
+  var hidden = $("evalSelect").value !== cur.evaluation ||
+    cur.klassen.some(function (k) { return shown.indexOf(k) === -1; });
+  if (hidden) closeSession();
+  return hidden;
+}
+
+
 /* Evaluatiedefinities: rubrics, open vragen, mappen en rubricversies.
    Enkel gegevenslogica, geen schermopbouw. Afgesplitst uit
    js/evaluations.js (1.19.1). */
@@ -8035,17 +8414,19 @@ function archiveVersion(evaluationObj) {
 function fillClassAndEvalOptions(year) {
   var prevClasses = selectedKlassen();
   var prevEval = $("evalSelect").value;
+  fillSubjectOptions(year);
+  var subject = selectedSubject();
 
   $("classSelect").innerHTML = "";
   $("evalSelect").innerHTML = "";
   $("evalSelect").appendChild(new Option("Kies een evaluatie", ""));
 
   if (year && CONFIG[year]) {
-    classesFor(db, year).forEach(function (c) {
+    classesForSubject(db, year, subject).forEach(function (c) {
       $("classSelect").appendChild(new Option(c, c));
     });
 
-    fillGroupedEvalSelect($("evalSelect"), year, "Evaluaties");
+    fillGroupedEvalSelect($("evalSelect"), year, "Evaluaties", subject);
 
     $("classSelect").disabled = false;
     $("evalSelect").disabled = false;
@@ -8071,8 +8452,8 @@ function fillClassAndEvalOptions(year) {
 
 /* Evaluaties van een leerjaar, gegroepeerd per map in de volgorde van
    het Rubrics-scherm. Gedeeld door de zoeklijst bij Evalueren en die bij
-   Resultaten. */
-function evaluationGroups(year) {
+   Resultaten. Met een vak (sinds 1.28.0) enkel de evaluaties van dat vak. */
+function evaluationGroups(year, subject) {
   if (!year || !CONFIG[year]) return [];
 
   var folders = evaluationFoldersFor(db, year);
@@ -8080,6 +8461,7 @@ function evaluationGroups(year) {
   folders.forEach(function (f) { byFolder[f] = []; });
   var ongeordend = [];
   evaluationNames(db, year).forEach(function (name) {
+    if (!evaluationInSubject(db, year, name, subject)) return;
     var ev = getEvaluation(db, year, name);
     var f = ev && ev.folder;
     if (f && byFolder[f]) byFolder[f].push(name);
@@ -8100,8 +8482,8 @@ function evaluationGroups(year) {
    indeling als de zoeklijst. Evaluaties zonder map krijgen de kop
    "Geen map"; zijn er helemaal geen mappen, dan fallbackLabel (of geen
    <optgroup> als die leeg is). Bestaande opties blijven staan. */
-function fillGroupedEvalSelect(select, year, fallbackLabel) {
-  evaluationGroups(year).forEach(function (g) {
+function fillGroupedEvalSelect(select, year, fallbackLabel, subject) {
+  evaluationGroups(year, subject).forEach(function (g) {
     var label = g.label || fallbackLabel;
     var parent = select;
     if (label) {
@@ -8121,11 +8503,14 @@ var evalCombo = makeSearchCombo({
   panelId: "evalComboPanel",
   selectId: "evalSelect",
   wrapId: "evalComboWrap",
-  groups: function () { return evaluationGroups($("yearSelect").value); },
+  groups: function () { return evaluationGroups($("yearSelect").value, selectedSubject()); },
   isEnabled: function () { return !!($("yearSelect").value && CONFIG[$("yearSelect").value]); },
   placeholder: "Zoek een evaluatie…",
   disabledPlaceholder: "Zoek eerst een jaar en klas…",
   emptyText: "Nog geen evaluaties voor dit leerjaar.",
+  emptyTextFn: function () {
+    return selectedSubject() ? "Nog geen evaluaties voor dit vak. Kies het vak bij Rubrics." : "Nog geen evaluaties voor dit leerjaar.";
+  },
 });
 
 function syncEvalComboDisplay() { evalCombo.sync(); }
@@ -8256,6 +8641,14 @@ function onYearChange() {
 function openEvaluationFor(year, klas, evaluation) {
   $("yearSelect").value = year;
   onYearChange();
+  // Het gekozen vak mag de klas of de evaluatie niet verbergen.
+  var ev = getEvaluation(db, year, evaluation);
+  var subject = (ev && ev.subject) || "";
+  if (classesForSubject(db, year, subject).indexOf(klas) === -1) subject = "";
+  if ($("subjectSelect").value !== subject) {
+    $("subjectSelect").value = subjectNames(db, year).indexOf(subject) !== -1 ? subject : "";
+    fillClassAndEvalOptions(year);
+  }
   Array.prototype.forEach.call($("classSelect").options, function (o) { o.selected = o.value === klas; });
   $("evalSelect").value = evaluation;
   syncKlasMultiDisplay();
@@ -9058,19 +9451,27 @@ function renderEvalList() {
   var host = $("evalList");
   host.innerHTML = "";
 
+  fillEvalListSubjectOptions(year);
+  var subject = $("evalListSubject").value;
   var needle = ($("evalListSearch").value || "").trim().toLowerCase();
   var allNames = evaluationNames(db, year);
-  var names = needle
-    ? allNames.filter(function (n) { return n.toLowerCase().indexOf(needle) !== -1; })
-    : allNames;
+  var names = allNames.filter(function (n) {
+    if (needle && n.toLowerCase().indexOf(needle) === -1) return false;
+    if (subject === NO_SUBJECT) return !getEvaluation(db, year, n).subject;
+    return evaluationInSubject(db, year, n, subject);
+  });
+  // Met een vakfilter tonen we lege mappen niet, net als bij zoeken.
+  var filtering = !!needle || !!subject;
   var folders = evaluationFoldersFor(db, year);
 
   if (!allNames.length && !folders.length) {
     host.appendChild(el("div", "empty", "Nog geen evaluaties voor " + year + "."));
     return;
   }
-  if (needle && !names.length) {
-    host.appendChild(el("div", "empty", "Geen evaluaties gevonden voor \"" + $("evalListSearch").value.trim() + "\"."));
+  if (filtering && !names.length) {
+    host.appendChild(el("div", "empty", $("evalListSearch").value.trim()
+      ? "Geen evaluaties gevonden voor \"" + $("evalListSearch").value.trim() + "\"."
+      : "Geen evaluaties voor dit vak. Kies het vak bij een evaluatie met de keuzelijst \"Vak\"."));
     return;
   }
 
@@ -9087,10 +9488,10 @@ function renderEvalList() {
   folders.forEach(function (f, i) {
     // Tijdens het zoeken tonen we enkel mappen die ook echt een
     // treffer bevatten — anders lijkt het net of het zoeken niets doet.
-    if (needle && !byFolder[f].length) return;
+    if (filtering && !byFolder[f].length) return;
     host.appendChild(renderEvalFolderGroup(year, f, byFolder[f], i, folders.length));
   });
-  if (ongeordend.length || (!folders.length && !needle)) {
+  if (ongeordend.length || (!folders.length && !filtering)) {
     host.appendChild(renderEvalFolderGroup(year, "", ongeordend, -1, 0));
   }
 }
@@ -9202,6 +9603,24 @@ function renderEvalRow(year, name) {
   });
   actions.appendChild(folderSelect);
 
+  var subjects = subjectNames(db, year);
+  if (subjects.length) {
+    var subjectSelect = document.createElement("select");
+    subjectSelect.className = "eval-folder-select eval-subject-select";
+    subjectSelect.title = "Vak";
+    subjectSelect.setAttribute("aria-label", "Vak van " + name);
+    subjectSelect.appendChild(new Option("Geen vak", ""));
+    subjects.forEach(function (v) { subjectSelect.appendChild(new Option(v, v)); });
+    subjectSelect.value = subjects.indexOf(ev.subject) !== -1 ? ev.subject : "";
+    subjectSelect.addEventListener("change", function () {
+      setEvaluationSubject(db, year, name, this.value);
+      persist();
+      renderEvalList();
+      refreshSubjectFilter();
+    });
+    actions.appendChild(subjectSelect);
+  }
+
   var feedup = el("button", "btn-ghost btn-small", "Voor leerlingen afdrukken");
   feedup.type = "button";
   feedup.title = "Print de criteria en niveaus zonder scores. Geef dit vooraf mee.";
@@ -9237,6 +9656,8 @@ function newEvaluation() {
     rubrics: [blankRubric(5, [])],
     questions: [],
     folder: "",
+    // Staat de lijst gefilterd op een vak, dan hoort de nieuwe evaluatie daarbij.
+    subject: $("evalListSubject").value === NO_SUBJECT ? "" : $("evalListSubject").value,
   };
   renderDraft();
 }
@@ -9252,6 +9673,7 @@ function editEvaluation(year, name) {
     rubrics: JSON.parse(JSON.stringify(ev.rubrics || [])),
     questions: JSON.parse(JSON.stringify(ev.questions || [])),
     folder: ev.folder || "",
+    subject: ev.subject || "",
   };
   renderDraft();
 }
@@ -9285,6 +9707,7 @@ function duplicateEvaluation(year, name) {
       return { id: id, label: q.label, hint: q.hint };
     }),
     folder: ev.folder || "",
+    subject: ev.subject || "",
   };
   renderDraft();
 }
@@ -9326,6 +9749,7 @@ function renderDraft() {
 
   $("draftName").value = draft.name;
   $("draftYear").value = draft.year;
+  fillDraftSubjectOptions(draft.subject || "");
 
   resetAiRubricHelper();
 
@@ -9837,6 +10261,7 @@ function addQuestion() {
 function saveDraft() {
   draft.name = $("draftName").value.trim();
   draft.year = $("draftYear").value;
+  draft.subject = $("draftSubject").value;
 
   // Sleutels alsnog netjes maken voor criteria die nog de standaardnaam hadden.
   var used = [];
@@ -9929,6 +10354,7 @@ function saveDraft() {
     version: original ? original.version || 1 : 1,
     history: original ? original.history || {} : {},
     folder: draft.folder || "",
+    subject: draft.subject || "",
     updatedAt: Date.now(),
   };
 
@@ -9976,6 +10402,40 @@ function saveDraft() {
         : "") +
       " Vergeet niet op te slaan in je bestand.",
   );
+}
+
+
+/* --- vakken (sinds 1.28.0, zie js/subjects.js) --- */
+
+/* Waarde in de vakfilter voor "evaluaties zonder vak". Geen geldige
+   vaknaam: addSubject() knipt spaties weg. */
+var NO_SUBJECT = " geen";
+
+function fillEvalListSubjectOptions(year) {
+  var sel = $("evalListSubject");
+  var names = subjectNames(db, year);
+  var prev = sel.getAttribute("data-year") === year ? sel.value : "";
+  sel.setAttribute("data-year", year);
+  sel.innerHTML = "";
+  sel.appendChild(new Option("Alle vakken", ""));
+  names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
+  sel.appendChild(new Option("Geen vak", NO_SUBJECT));
+  sel.value = prev === NO_SUBJECT || names.indexOf(prev) !== -1 ? prev : "";
+  $("evalListSubjectWrap").classList.toggle("hidden", !names.length);
+}
+
+/* Keuzelijst "Vak" in de editor, voor het leerjaar dat nu gekozen is. */
+function fillDraftSubjectOptions(value) {
+  var sel = $("draftSubject");
+  var names = subjectNames(db, $("draftYear").value);
+  sel.innerHTML = "";
+  sel.appendChild(new Option("Geen vak", ""));
+  names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
+  sel.value = names.indexOf(value) !== -1 ? value : "";
+  sel.disabled = !names.length;
+  $("draftSubjectHint").textContent = names.length
+    ? "Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
+    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Klaslijsten.";
 }
 
 
@@ -13708,6 +14168,7 @@ function backupData() {
     activeSchoolYear: db.activeSchoolYear,
     evaluations: db.evaluations,
     evaluationFolders: db.evaluationFolders,
+    subjects: db.subjects,
     tombstones: db.tombstones,
     localTombstones: db.localTombstones,
     team: db.team,
@@ -13896,6 +14357,13 @@ function refreshRestoredTimes(restored, current, now) {
     var curNames = ((current.evaluationFolders || {})[year] || []).map(function (f) { return f.name; });
     restored.evaluationFolders[year].forEach(function (f) {
       if (curNames.indexOf(f.name) === -1) f.updatedAt = later(null, "folders", year + "||" + f.name);
+    });
+  });
+
+  Object.keys(restored.subjects || {}).forEach(function (year) {
+    restored.subjects[year].forEach(function (s) {
+      var cur = ((current.subjects || {})[year] || []).filter(function (x) { return x.name === s.name; })[0];
+      if (!cur || !same(s.classes, cur.classes)) s.updatedAt = later(cur, "subjects", year + "||" + s.name);
     });
   });
 }
@@ -15625,6 +16093,8 @@ function init() {
     renderEvalList();
   });
   $("evalListSearch").addEventListener("input", renderEvalList);
+  $("evalListSubject").addEventListener("change", renderEvalList);
+  $("draftYear").addEventListener("change", function () { fillDraftSubjectOptions($("draftSubject").value); });
   $("btnNewEval").addEventListener("click", newEvaluation);
   $("btnNewFolder").addEventListener("click", function () {
     var year = $("evalListYear").value;
@@ -15693,6 +16163,7 @@ function init() {
   initControle();
   initSkore();
   initKlasMulti();
+  initSubjects();
   initMoveStudent();
 }
 

@@ -1326,3 +1326,12 @@ details.controle-fold { margin: 14px 0; }
 .ai-change-was { color: var(--muted); text-decoration: line-through; text-decoration-color: rgba(100, 116, 139, 0.5); }
 .ai-change-new { color: var(--text); }
 .ai-change-tag { font-weight: 600; text-decoration: none; display: inline-block; }
+
+/* Vakken op het Klaslijsten-scherm (sinds 1.28.0) */
+.subject-title { font-size: 15px; margin: 0 0 6px; }
+.subject-row { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; background: var(--card); }
+.subject-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.subject-head .btn-small { margin-left: auto; }
+.subject-count { margin: 0; }
+.subject-classes-label { margin: 8px 0 6px; }
+.subject-classes { gap: 6px; }

@@ -37,19 +37,27 @@ function renderEvalList() {
   var host = $("evalList");
   host.innerHTML = "";
 
+  fillEvalListSubjectOptions(year);
+  var subject = $("evalListSubject").value;
   var needle = ($("evalListSearch").value || "").trim().toLowerCase();
   var allNames = evaluationNames(db, year);
-  var names = needle
-    ? allNames.filter(function (n) { return n.toLowerCase().indexOf(needle) !== -1; })
-    : allNames;
+  var names = allNames.filter(function (n) {
+    if (needle && n.toLowerCase().indexOf(needle) === -1) return false;
+    if (subject === NO_SUBJECT) return !getEvaluation(db, year, n).subject;
+    return evaluationInSubject(db, year, n, subject);
+  });
+  // Met een vakfilter tonen we lege mappen niet, net als bij zoeken.
+  var filtering = !!needle || !!subject;
   var folders = evaluationFoldersFor(db, year);
 
   if (!allNames.length && !folders.length) {
     host.appendChild(el("div", "empty", "Nog geen evaluaties voor " + year + "."));
     return;
   }
-  if (needle && !names.length) {
-    host.appendChild(el("div", "empty", "Geen evaluaties gevonden voor \"" + $("evalListSearch").value.trim() + "\"."));
+  if (filtering && !names.length) {
+    host.appendChild(el("div", "empty", $("evalListSearch").value.trim()
+      ? "Geen evaluaties gevonden voor \"" + $("evalListSearch").value.trim() + "\"."
+      : "Geen evaluaties voor dit vak. Kies het vak bij een evaluatie met de keuzelijst \"Vak\"."));
     return;
   }
 
@@ -66,10 +74,10 @@ function renderEvalList() {
   folders.forEach(function (f, i) {
     // Tijdens het zoeken tonen we enkel mappen die ook echt een
     // treffer bevatten — anders lijkt het net of het zoeken niets doet.
-    if (needle && !byFolder[f].length) return;
+    if (filtering && !byFolder[f].length) return;
     host.appendChild(renderEvalFolderGroup(year, f, byFolder[f], i, folders.length));
   });
-  if (ongeordend.length || (!folders.length && !needle)) {
+  if (ongeordend.length || (!folders.length && !filtering)) {
     host.appendChild(renderEvalFolderGroup(year, "", ongeordend, -1, 0));
   }
 }
@@ -181,6 +189,24 @@ function renderEvalRow(year, name) {
   });
   actions.appendChild(folderSelect);
 
+  var subjects = subjectNames(db, year);
+  if (subjects.length) {
+    var subjectSelect = document.createElement("select");
+    subjectSelect.className = "eval-folder-select eval-subject-select";
+    subjectSelect.title = "Vak";
+    subjectSelect.setAttribute("aria-label", "Vak van " + name);
+    subjectSelect.appendChild(new Option("Geen vak", ""));
+    subjects.forEach(function (v) { subjectSelect.appendChild(new Option(v, v)); });
+    subjectSelect.value = subjects.indexOf(ev.subject) !== -1 ? ev.subject : "";
+    subjectSelect.addEventListener("change", function () {
+      setEvaluationSubject(db, year, name, this.value);
+      persist();
+      renderEvalList();
+      refreshSubjectFilter();
+    });
+    actions.appendChild(subjectSelect);
+  }
+
   var feedup = el("button", "btn-ghost btn-small", "Voor leerlingen afdrukken");
   feedup.type = "button";
   feedup.title = "Print de criteria en niveaus zonder scores. Geef dit vooraf mee.";
@@ -216,6 +242,8 @@ function newEvaluation() {
     rubrics: [blankRubric(5, [])],
     questions: [],
     folder: "",
+    // Staat de lijst gefilterd op een vak, dan hoort de nieuwe evaluatie daarbij.
+    subject: $("evalListSubject").value === NO_SUBJECT ? "" : $("evalListSubject").value,
   };
   renderDraft();
 }
@@ -231,6 +259,7 @@ function editEvaluation(year, name) {
     rubrics: JSON.parse(JSON.stringify(ev.rubrics || [])),
     questions: JSON.parse(JSON.stringify(ev.questions || [])),
     folder: ev.folder || "",
+    subject: ev.subject || "",
   };
   renderDraft();
 }
@@ -264,6 +293,7 @@ function duplicateEvaluation(year, name) {
       return { id: id, label: q.label, hint: q.hint };
     }),
     folder: ev.folder || "",
+    subject: ev.subject || "",
   };
   renderDraft();
 }
@@ -305,6 +335,7 @@ function renderDraft() {
 
   $("draftName").value = draft.name;
   $("draftYear").value = draft.year;
+  fillDraftSubjectOptions(draft.subject || "");
 
   resetAiRubricHelper();
 
@@ -816,6 +847,7 @@ function addQuestion() {
 function saveDraft() {
   draft.name = $("draftName").value.trim();
   draft.year = $("draftYear").value;
+  draft.subject = $("draftSubject").value;
 
   // Sleutels alsnog netjes maken voor criteria die nog de standaardnaam hadden.
   var used = [];
@@ -908,6 +940,7 @@ function saveDraft() {
     version: original ? original.version || 1 : 1,
     history: original ? original.history || {} : {},
     folder: draft.folder || "",
+    subject: draft.subject || "",
     updatedAt: Date.now(),
   };
 
@@ -955,4 +988,38 @@ function saveDraft() {
         : "") +
       " Vergeet niet op te slaan in je bestand.",
   );
+}
+
+
+/* --- vakken (sinds 1.28.0, zie js/subjects.js) --- */
+
+/* Waarde in de vakfilter voor "evaluaties zonder vak". Geen geldige
+   vaknaam: addSubject() knipt spaties weg. */
+var NO_SUBJECT = " geen";
+
+function fillEvalListSubjectOptions(year) {
+  var sel = $("evalListSubject");
+  var names = subjectNames(db, year);
+  var prev = sel.getAttribute("data-year") === year ? sel.value : "";
+  sel.setAttribute("data-year", year);
+  sel.innerHTML = "";
+  sel.appendChild(new Option("Alle vakken", ""));
+  names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
+  sel.appendChild(new Option("Geen vak", NO_SUBJECT));
+  sel.value = prev === NO_SUBJECT || names.indexOf(prev) !== -1 ? prev : "";
+  $("evalListSubjectWrap").classList.toggle("hidden", !names.length);
+}
+
+/* Keuzelijst "Vak" in de editor, voor het leerjaar dat nu gekozen is. */
+function fillDraftSubjectOptions(value) {
+  var sel = $("draftSubject");
+  var names = subjectNames(db, $("draftYear").value);
+  sel.innerHTML = "";
+  sel.appendChild(new Option("Geen vak", ""));
+  names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
+  sel.value = names.indexOf(value) !== -1 ? value : "";
+  sel.disabled = !names.length;
+  $("draftSubjectHint").textContent = names.length
+    ? "Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
+    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Klaslijsten.";
 }

@@ -13,6 +13,32 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.28.0 · 29 september 2026
+
+**Vakken: per vak enkel de eigen klassen en evaluaties**
+
+- Nieuw blok **Vakken** op het Klaslijsten-scherm: per leerjaar vakken
+  toevoegen (bv. "STEM-wetenschappen" en "Techniek"), per vak de klassen
+  aanduiden die het volgen, en een vak verwijderen (voor iedereen of voor
+  mezelf). Een vak zonder aangeduide klassen toont alle klassen.
+- **Rubrics:** in de editor een keuzelijst **Vak**; in de lijst per
+  evaluatie een keuzelijst voor het vak naast die voor de map, en boven de
+  lijst een filter (Alle vakken, een vak, Geen vak). Een nieuwe evaluatie
+  krijgt het vak van de filter. Dupliceren neemt het vak over.
+- **Evalueren:** tussen leerjaar en klas een keuzelijst **Vak**. Met een vak
+  zie je enkel de klassen en evaluaties van dat vak. Het veld is verborgen
+  zolang een leerjaar geen vakken heeft; dan werkt alles zoals vroeger. De
+  keuze wordt per leerjaar op dit toestel onthouden. Een open beoordeling
+  die niet bij het nieuwe vak hoort, sluit.
+- **Nu beoordelen** (Controle) kiest zelf het juiste vak, zodat de
+  evaluatie nooit verborgen is.
+- Opslag: `db.subjects[leerjaar] = [{name, classes, updatedAt}]` en
+  `subject` bij een evaluatie. Samenvoegen: nieuwste versie van een vak
+  wint; verwijderen via een nieuwe tombstone-soort `subjects`. Mee in
+  reservekopieën en terugzetten. `DB_VERSION` blijft 4; oudere bestanden
+  werken gewoon (geen vakken).
+- Nieuwe testen in `tests/vakken.spec.js`.
+
 ## 1.27.0 · 29 september 2026
 
 **Bestaande evaluaties en cursusmateriaal omzetten naar een rubric**
