@@ -1356,7 +1356,7 @@ details.controle-fold { margin: 14px 0; }
 .ai-questions { border-left: 3px solid var(--border); padding-left: 12px; margin-bottom: 12px; }
 .ai-result { margin-top: 12px; }
 .ai-result h4 { margin: 14px 0 6px; font-size: 14px; }
-.ai-linked, .ai-without { margin: 0; padding-left: 20px; font-size: 13.5px; }
+.ai-linked, .ai-without, .ai-not-taken { margin: 0; padding-left: 20px; font-size: 13.5px; }
 .ai-also-row { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; margin-bottom: 6px; font-size: 13.5px; }
 .ai-also-text { flex: 1 1 320px; }
 .ai-also-row select { width: auto; max-width: 240px; }
@@ -2073,7 +2073,7 @@ table.feedup-table td {
           </div>
 
           <details id="aiRubricHelper" style="margin-bottom: 18px">
-            <summary class="section-toggle">AI-hulp: rubric laten maken of nakijken</summary>
+            <summary class="section-toggle">AI-hulp: rubric laten maken, omzetten of nakijken</summary>
             <div style="margin-top: 12px">
               <p class="hint">
                 Geen sleutel, geen account nodig: je gebruikt gewoon een AI-gesprek dat je toch al
@@ -2083,10 +2083,28 @@ table.feedup-table td {
 
               <div class="ai-mode btn-row" role="group" aria-label="Wat wil je doen?">
                 <button type="button" class="chip-toggle" id="aiModeNew" aria-pressed="true">Nieuwe criteria laten maken</button>
+                <button type="button" class="chip-toggle" id="aiModeConvert" aria-pressed="false">Bestaande evaluatie omzetten</button>
                 <button type="button" class="chip-toggle" id="aiModeReview" aria-pressed="false">Deze rubric laten nakijken</button>
               </div>
 
-              <div class="form-group ai-new-only">
+              <div class="form-group hidden" data-ai-modes="omzetten">
+                <label for="aiSource">Je bestaande evaluatie of een stuk cursus</label>
+                <p class="hint" style="margin-top: 0">
+                  Kies een of meer bestanden (Excel, Word, PowerPoint of tekst), of plak de tekst
+                  hieronder. Een PDF of een ander bestand: open het, selecteer alles (Ctrl+A),
+                  kopieer (Ctrl+C) en plak het hier. De AI zet alles om naar criteria met de niveaus
+                  van de tool, in leerlingentaal.
+                </p>
+                <div class="btn-row" style="margin-bottom: 8px">
+                  <button type="button" class="btn-ghost btn-small" id="btnAiSourceFile">Bestand kiezen</button>
+                </div>
+                <input type="file" id="aiSourceFile" multiple accept=".xlsx,.xlsm,.docx,.pptx,.txt,.csv,.tsv,.md" class="hidden" />
+                <div id="aiSourceState"></div>
+                <textarea id="aiSource" rows="8" placeholder="Of plak hier de tekst van je evaluatiefiche of cursus…"></textarea>
+                <p class="hint hidden" id="aiSourceLength"></p>
+              </div>
+
+              <div class="form-group" data-ai-modes="nieuw omzetten">
                 <span class="ai-q-label">Aantal niveaus per criterium</span>
                 <div class="btn-row" id="aiLevels" role="group" aria-label="Aantal niveaus">
                   <button type="button" class="chip-toggle" data-value="4" aria-pressed="false">4</button>
@@ -2094,14 +2112,14 @@ table.feedup-table td {
                 </div>
                 <p class="hint" id="aiLevelLabels"></p>
               </div>
-              <p class="hint ai-review-only hidden" style="margin-top: 0">
+              <p class="hint hidden" data-ai-modes="nakijken" style="margin-top: 0">
                 De AI verbetert de huidige criteria volgens dezelfde regels en vult ontbrekende
                 volgende stappen aan. Het aantal criteria en niveaus blijft gelijk. Je ziet eerst wat
                 er verandert voor je iets overneemt.
               </p>
 
               <div class="form-group">
-                <label for="aiDescription">Beschrijf de opdracht <span class="ai-new-only">(verplicht)</span><span class="ai-review-only hidden">(optioneel)</span></label>
+                <label for="aiDescription">Beschrijf de opdracht <span data-ai-modes="nieuw">(verplicht)</span><span class="hidden" data-ai-modes="omzetten nakijken">(optioneel)</span></label>
                 <textarea id="aiDescription" rows="3" placeholder="Bijvoorbeeld: leerlingen bouwen in groepjes van drie een brug van houten staafjes en testen die op draagkracht, met een verslag van hun ontwerpproces."></textarea>
               </div>
 
@@ -2148,7 +2166,7 @@ table.feedup-table td {
                   <textarea id="aiPrior" rows="2" placeholder="Bijvoorbeeld: een hypothese opstellen, een meetlat en een weegschaal gebruiken"></textarea>
                 </div>
 
-                <div class="form-group ai-new-only">
+                <div class="form-group" data-ai-modes="nieuw">
                   <span class="ai-q-label">Mag de AI ook criteria voorstellen die je niet noemde?</span>
                   <div class="btn-row" id="aiExtra" data-single="1" data-required="1" role="group" aria-label="Ook andere criteria voorstellen">
                     <button type="button" class="chip-toggle" data-value="ja" aria-pressed="true">Ja</button>
@@ -2161,7 +2179,7 @@ table.feedup-table td {
                 <button type="button" class="btn-primary" id="btnAiGeneratePrompt">Prompt maken</button>
               </div>
 
-              <div id="aiPromptBlock" class="hidden" style="margin-top: 14px">
+              <div id="aiPromptBlock" class="form-group hidden" style="margin-top: 14px">
                 <label for="aiPromptOut">Kopieer dit naar je AI-gesprek</label>
                 <textarea id="aiPromptOut" rows="8" readonly></textarea>
                 <div class="btn-row" style="margin-top: 8px">
@@ -4813,7 +4831,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.26.0";
+var APP_VERSION = "1.27.0";
 
 var DB_VERSION = 4;
 
@@ -7199,6 +7217,31 @@ function sheetToTable(doc, sharedStrings) {
   return rows;
 }
 
+/* Samengevoegde cellen als ["C7:D7", …]. De klaslijsten gebruiken dit
+   niet; de AI-hulp (js/ai-source.js) wel, want in een evaluatiefiche
+   loopt één omschrijving soms over meerdere niveaus. */
+function sheetMerges(doc) {
+  var out = [];
+  var els = doc.getElementsByTagName("mergeCell");
+  for (var i = 0; i < els.length; i++) {
+    var ref = els[i].getAttribute("ref");
+    if (ref) out.push(ref);
+  }
+  return out;
+}
+
+/* Het echte rijnummer (1, 2, …) van elke rij uit sheetToTable(). Lege
+   rijen staan vaak niet in de XML, dus plaats en nummer verschillen. */
+function sheetRowNumbers(doc) {
+  var out = [];
+  var rowEls = doc.getElementsByTagName("row");
+  for (var r = 0; r < rowEls.length; r++) {
+    var n = parseInt(rowEls[r].getAttribute("r"), 10);
+    out.push(n > 0 ? n : (out.length ? out[out.length - 1] + 1 : 1));
+  }
+  return out;
+}
+
 function readSharedStrings(doc) {
   var out = [];
   var sis = doc.getElementsByTagName("si");
@@ -7216,7 +7259,7 @@ function readSharedStrings(doc) {
 
 /* --- hoofdfunctie ------------------------------------------------- */
 
-/* Levert [{ sheetName, rows }] op, één item per tabblad. */
+/* Levert [{ sheetName, rows, rowNumbers, merges }] op, één item per tabblad. */
 function readXlsx(arrayBuffer) {
   var zip = zipEntries(arrayBuffer);
 
@@ -7254,7 +7297,8 @@ function readXlsx(arrayBuffer) {
         jobs.push(
           readEntry(zip, target).then(function (xml) {
             if (!xml) return null;
-            return { sheetName: name, rows: sheetToTable(parseXml(xml), shared) };
+            var doc = parseXml(xml);
+            return { sheetName: name, rows: sheetToTable(doc, shared), rowNumbers: sheetRowNumbers(doc), merges: sheetMerges(doc) };
           }),
         );
       })(sheetEls[s], s);
@@ -9945,9 +9989,12 @@ function saveDraft() {
    …), en plakt het antwoord terug. Er verlaat nooit iets automatisch
    dit toestel.
 
-   Twee standen:
+   Drie standen:
    - "nieuw": criteria laten maken op basis van de opdracht en een paar
      optionele contextvragen;
+   - "omzetten" (sinds 1.27.0): een bestaande evaluatiefiche of een stuk
+     cursus (bestand of geplakte tekst, zie js/ai-source.js) laten
+     omzetten naar criteria volgens dezelfde regels als "nieuw";
    - "nakijken": de huidige rubric laten verbeteren. Het aantal criteria
      en niveaus blijft gelijk; de leerkracht ziet eerst per criterium wat
      er verandert en kiest wat ze overneemt.
@@ -10005,7 +10052,7 @@ function aiContextLines(ctx, mode) {
   if (ctx.time) lines.push("Lestijd: " + ctx.time + ".");
   var prior = String(ctx.prior || "").trim();
   if (prior) lines.push("Wat ze vooraf al leerden of oefenden: " + prior.replace(/[.\s]+$/, "") + ".");
-  if (mode !== "nakijken" && evaluate) {
+  if (mode !== "nakijken" && mode !== "omzetten" && evaluate) {
     lines.push(ctx.extraCriteria === false
       ? "Beperk je tot de aspecten die ik noemde."
       : "Je mag ook criteria voorstellen die ik niet noemde, als ze nodig zijn om de opdracht goed te beoordelen.");
@@ -10076,12 +10123,48 @@ function rubricsForAiReview(rubrics, year) {
   };
 }
 
-/* opts: { year, description, levels, context, mode, rubrics }
+/* Het bestaande materiaal voor de stand "omzetten". Gedachtestreepjes
+   worden een dubbelpunt ("4 – Uitstekend" wordt "4: Uitstekend"):
+   modellen nemen de stijl van de vraag over, en de rubric mag er geen
+   bevatten. Drie backticks zouden het tekstblok in de prompt sluiten. */
+function sourceForPrompt(text) {
+  return String(text || "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]*[\u2014\u2013][ \t]*/g, ": ")
+    .replace(/`{3,}/g, "``")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/* Regels voor het omzetten van bestaand materiaal (sinds 1.27.0). */
+function aiConvertRules(levels) {
+  return [
+    "Het materiaal staat onderaan bij BESTAAND MATERIAAL. Tabellen staan er als rijen, met | tussen de cellen.",
+    "Staat achter een cel \"(over 2 kolommen)\", dan loopt die cel over zoveel kolommen. Bijvoorbeeld: één omschrijving geldt " +
+      "dan voor twee niveaus. Staat dezelfde tekst in de eerste kolom van meerdere rijen, dan horen die rijen bij hetzelfde onderdeel.",
+    "Is het een evaluatiefiche of een rubric, neem dan de criteria over die erin staan. Behoud wat de leerkracht wil beoordelen " +
+      "en de concrete details, zoals aantallen, materialen en stappen.",
+    "Is het een stuk cursus, een opdracht of een werkblad, maak dan 4 tot 7 criteria voor wat de leerlingen daarin maken of doen.",
+    "Meet één rij twee dingen tegelijk, splits ze dan in twee criteria. Meten twee rijen hetzelfde, voeg ze dan samen.",
+    "Komt hetzelfde criterium terug in verschillende onderdelen (een fase, een hoek, een post), noem het onderdeel dan in de naam " +
+      "of de beschrijving, zodat elk criterium herkenbaar blijft.",
+    "Het materiaal heeft misschien andere niveaus (bijvoorbeeld Zeer goed, Goed, Zwak, Zeer zwak), of per rij een ander aantal. " +
+      "Zet elk criterium om naar precies " + levels + " niveaus met de vaste namen hieronder. Schrijf ontbrekende niveaus zelf bij, in dezelfde lijn.",
+    "Staat het materiaal in de ik-vorm (een zelfevaluatie) of spreekt het over \"de leerling\", schrijf het dan in de je-vorm.",
+    "Laat vakken voor naam, klas, nummer, datum, punten en opmerkingen weg.",
+    "Voldoet iets niet aan de kwaliteitsregels, zoals een criterium over de persoon, herschrijf het dan naar iets wat je ziet in " +
+      "het werk of de aanpak. Lukt dat niet, neem het dan niet over en zet het in \"nietOvergenomen\" met de reden.",
+  ];
+}
+
+/* opts: { year, description, levels, context, mode, rubrics, source }
    Oude aanroep (beschrijving, leerjaar) blijft werken. */
 function buildAiRubricPrompt(opts, legacyYear) {
   if (typeof opts === "string") opts = { description: opts, year: legacyYear };
   var year = opts.year;
   var review = opts.mode === "nakijken";
+  var convert = opts.mode === "omzetten";
+  var source = convert ? sourceForPrompt(opts.source) : "";
   var levels = LEVEL_TEMPLATES[opts.levels] ? opts.levels : DEFAULT_LEVEL_COUNT;
   var labels = LEVEL_TEMPLATES[levels];
   var target = LEVEL_TARGETS[levels];
@@ -10097,6 +10180,12 @@ function buildAiRubricPrompt(opts, legacyYear) {
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Kijk de beoordelingsrubric " +
         "hieronder na, voor leerlingen uit het " + year + ageNote + ", en verbeter ze volgens de regels in deze vraag.",
     );
+  } else if (convert) {
+    lines.push(
+      "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Zet het bestaande materiaal hieronder " +
+        "(een evaluatiefiche of een stuk cursus) om naar een beoordelingsrubric voor leerlingen uit het " + year + ageNote +
+        ", volgens de regels in deze vraag.",
+    );
   } else {
     lines.push(
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Help me een beoordelingsrubric " +
@@ -10106,8 +10195,13 @@ function buildAiRubricPrompt(opts, legacyYear) {
 
   if (description) lines.push("", "OPDRACHT", "\"" + description + "\"");
 
-  var ctx = aiContextLines(opts.context, review ? "nakijken" : "nieuw");
+  var ctx = aiContextLines(opts.context, review ? "nakijken" : convert ? "omzetten" : "nieuw");
   if (ctx.length) lines.push.apply(lines, ["", "CONTEXT"].concat(ctx));
+
+  if (convert) {
+    lines.push("", "OMZETTEN");
+    aiConvertRules(levels).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+  }
 
   lines.push("", "NIVEAUS");
   if (review) {
@@ -10140,7 +10234,7 @@ function buildAiRubricPrompt(opts, legacyYear) {
   );
 
   lines.push("", "KWALITEITSREGELS");
-  var rules = (review ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
+  var rules = (review || convert ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
   rules.forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
 
   lines.push("", "LEERLINGENTAAL",
@@ -10175,6 +10269,10 @@ function buildAiRubricPrompt(opts, legacyYear) {
     goals.forEach(function (g) { lines.push(g.id + " [" + g.bloom + "]: " + g.text); });
   }
 
+  if (convert) {
+    lines.push("", "BESTAAND MATERIAAL", "```text", source, "```");
+  }
+
   if (review) {
     lines.push("", "HUIDIGE RUBRIC", "```json", JSON.stringify(rubricsForAiReview(opts.rubrics || [], year), null, 2), "```");
   }
@@ -10183,6 +10281,9 @@ function buildAiRubricPrompt(opts, legacyYear) {
   var checks = review
     ? ["Heeft elk criterium nog hetzelfde id en evenveel niveaus als in de huidige rubric?"]
     : ["Heeft elk criterium precies " + levels + " niveaus?"];
+  if (convert) {
+    checks.push("Staat alles wat het materiaal beoordeelt in een criterium, of in \"nietOvergenomen\" met de reden?");
+  }
   checks = checks.concat([
     "Meet elk criterium één aspect?",
     "Is elk niveau waarneembaar, en beschrijft het wat er wel is?",
@@ -10223,13 +10324,18 @@ function buildAiRubricPrompt(opts, legacyYear) {
       ? level + "\"volgendeStap\": \"Je-vorm: wat de leerling nu doet\" },"
       : level + "\"uitdaging\": \"Je-vorm: hoe de leerling nog verder gaat\" }");
   }
-  lines.push("      ]", "    }", "  ]" + (goals.length ? "," : ""));
+  var tail = [];
   if (goals.length) {
-    lines.push(
-      "  \"ookPassend\": [ { \"doel\": \"SW12\", \"uitleg\": \"Waarom dit doel bij de opdracht past\" } ],",
+    tail.push(
+      "  \"ookPassend\": [ { \"doel\": \"SW12\", \"uitleg\": \"Waarom dit doel bij de opdracht past\" } ]",
       "  \"zonderDoel\": [ \"Aspect dat bij geen enkel doel past\" ]",
     );
   }
+  if (convert) {
+    tail.push("  \"nietOvergenomen\": [ { \"onderdeel\": \"Wat in het materiaal stond\", \"reden\": \"Waarom je het niet overnam\" } ]");
+  }
+  lines.push("      ]", "    }", "  ]" + (tail.length ? "," : ""));
+  tail.forEach(function (t, i) { lines.push(t + (i < tail.length - 1 ? "," : "")); });
   lines.push("}", "```");
   if (review) lines.push("", "Geef elk criterium evenveel niveaus als in de huidige rubric, ook als dat meer of minder is dan in dit voorbeeld.");
 
@@ -10283,7 +10389,8 @@ function aiGoalKeys(codes, year, counter) {
    niveaus. Enkel voor een aantal zonder standaardreeks valt de tool
    terug op het label van de AI.
    Geeft { criteria, alsoFitting: [{goal, uitleg}], withoutGoal: [tekst],
-   goalsSkipped }. */
+   notTaken: [{part, reason}], goalsSkipped }. notTaken komt enkel van de
+   stand "omzetten" (json "nietOvergenomen"). */
 function parseAiRubricResponse(text, year, taken) {
   var data = readAiJson(text);
   var counter = { skipped: 0 };
@@ -10334,7 +10441,19 @@ function parseAiRubricResponse(text, year, taken) {
     .map(function (t) { return String((t && typeof t === "object" ? t.aspect || t.tekst : t) || "").trim(); })
     .filter(Boolean);
 
-  return { criteria: criteria, alsoFitting: alsoFitting, withoutGoal: withoutGoal, goalsSkipped: counter.skipped };
+  var notTaken = (Array.isArray(data.nietOvergenomen) ? data.nietOvergenomen : [])
+    .map(function (t) {
+      if (t && typeof t === "object") {
+        return { part: String(t.onderdeel || t.tekst || "").trim(), reason: String(t.reden || "").trim() };
+      }
+      return { part: String(t || "").trim(), reason: "" };
+    })
+    .filter(function (t) { return t.part || t.reason; });
+
+  return {
+    criteria: criteria, alsoFitting: alsoFitting, withoutGoal: withoutGoal,
+    notTaken: notTaken, goalsSkipped: counter.skipped,
+  };
 }
 
 /* Stand "nakijken": vergelijkt het antwoord met de huidige criteria.
@@ -10464,13 +10583,17 @@ function renderAiLevelLabels() {
   });
 }
 
+/* Elk deel met data-ai-modes="nieuw omzetten" is enkel zichtbaar in die
+   standen. */
 function setAiMode(mode) {
   aiMode = mode;
   $("aiModeNew").setAttribute("aria-pressed", mode === "nieuw" ? "true" : "false");
+  $("aiModeConvert").setAttribute("aria-pressed", mode === "omzetten" ? "true" : "false");
   $("aiModeReview").setAttribute("aria-pressed", mode === "nakijken" ? "true" : "false");
-  document.querySelectorAll("#aiRubricHelper .ai-new-only").forEach(function (n) { n.classList.toggle("hidden", mode !== "nieuw"); });
-  document.querySelectorAll("#aiRubricHelper .ai-review-only").forEach(function (n) { n.classList.toggle("hidden", mode !== "nakijken"); });
-  $("btnAiImport").textContent = mode === "nieuw" ? "Criteria toevoegen aan deze evaluatie" : "Voorstel bekijken";
+  document.querySelectorAll("#aiRubricHelper [data-ai-modes]").forEach(function (n) {
+    n.classList.toggle("hidden", n.dataset.aiModes.split(" ").indexOf(mode) === -1);
+  });
+  $("btnAiImport").textContent = mode === "nakijken" ? "Voorstel bekijken" : "Criteria toevoegen aan deze evaluatie";
   $("aiPromptBlock").classList.add("hidden");
   $("aiPromptOut").value = "";
   $("aiImportState").innerHTML = "";
@@ -10491,7 +10614,9 @@ function updateAiReviewAvailability() {
 
 /* Reset bij het openen van een evaluatie in de editor. */
 function resetAiRubricHelper() {
-  ["aiDescription", "aiEvaluate", "aiDeliverOther", "aiPrior", "aiPromptOut", "aiResponseIn"].forEach(function (id) { $(id).value = ""; });
+  ["aiDescription", "aiEvaluate", "aiDeliverOther", "aiPrior", "aiPromptOut", "aiResponseIn", "aiSource"].forEach(function (id) { $(id).value = ""; });
+  $("aiSourceState").innerHTML = "";
+  updateAiSourceHint();
   setChipValues("aiLevels", [String(DEFAULT_LEVEL_COUNT)]);
   setChipValues("aiDeliver", []);
   setChipValues("aiWorkform", []);
@@ -10582,6 +10707,19 @@ function renderAiImportResult(parsed, levels) {
     var wl = el("ul", "ai-without");
     parsed.withoutGoal.forEach(function (t) { wl.appendChild(el("li", null, t)); });
     box.appendChild(wl);
+  }
+
+  if (parsed.notTaken && parsed.notTaken.length) {
+    box.appendChild(el("h4", null, "Niet overgenomen"));
+    box.appendChild(el("p", "hint", "Dit stond in je materiaal, maar de AI nam het niet over. Voeg het zelf toe als je het toch wil beoordelen."));
+    var nl = el("ul", "ai-not-taken");
+    parsed.notTaken.forEach(function (t) {
+      var li = el("li");
+      if (t.part) li.appendChild(el("strong", null, t.part + (t.reason ? ": " : "")));
+      if (t.reason) li.appendChild(document.createTextNode(t.reason));
+      nl.appendChild(li);
+    });
+    box.appendChild(nl);
   }
 
   var warnings = rubricWarnings(parsed.criteria, draft.year, levels);
@@ -10675,7 +10813,9 @@ function initAiRubricHelper() {
   initChipGroup("aiLevels", renderAiLevelLabels);
   ["aiDeliver", "aiWorkform", "aiTime", "aiExtra"].forEach(function (id) { initChipGroup(id); });
   renderAiLevelLabels();
+  initAiSource();
   $("aiModeNew").addEventListener("click", function () { setAiMode("nieuw"); });
+  $("aiModeConvert").addEventListener("click", function () { setAiMode("omzetten"); });
   $("aiModeReview").addEventListener("click", function () { setAiMode("nakijken"); });
   $("btnAiReview").addEventListener("click", openAiReview);
 
@@ -10683,6 +10823,10 @@ function initAiRubricHelper() {
     var desc = $("aiDescription").value.trim();
     if (aiMode === "nieuw" && !desc) {
       showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan. Hoe concreter, hoe beter de rubric.");
+      return;
+    }
+    if (aiMode === "omzetten" && !$("aiSource").value.trim()) {
+      showNoticeIn("aiImportState", "warn", "Voeg eerst je materiaal toe", "Kies een bestand of plak de tekst van je evaluatiefiche of cursus.");
       return;
     }
     var year = (draft && draft.year) || $("draftYear").value || "2de jaar";
@@ -10693,6 +10837,7 @@ function initAiRubricHelper() {
       context: aiContextFromForm(),
       mode: aiMode,
       rubrics: reviewableRubrics(),
+      source: $("aiSource").value,
     });
     $("aiPromptBlock").classList.remove("hidden");
     $("aiImportState").innerHTML = "";
@@ -10774,6 +10919,292 @@ function initAiRubricHelper() {
     renderAiImportResult(parsed, aiChosenLevels());
     $("aiResponseIn").value = "";
   });
+}
+
+
+/* Bestaand materiaal inlezen voor de AI-hulp, stand "omzetten" (1.27.0).
+   De leerkracht kiest een oude evaluatiefiche of een stuk cursus (Excel,
+   Word, PowerPoint of tekst), of plakt de tekst. De tool maakt er gewone
+   tekst van, die mee in de prompt gaat. Er verlaat niets dit toestel:
+   de leerkracht kopieert de prompt zelf naar een AI-gesprek.
+
+   Excel, Word en PowerPoint zijn zip-bestanden met XML erin. Het
+   uitpakken gebeurt met dezelfde functies als de klaslijsten
+   (js/rosters.js: zipEntries, readEntry, readXlsx, parseXml). Een PDF of
+   een oud .doc/.xls-bestand kan de browser niet lezen zonder een grote
+   bibliotheek; daarvoor vraagt de tool om de tekst te kopiëren en te
+   plakken. */
+
+/* Vanaf hier toont de tool een tip om stukken weg te laten. Sommige
+   AI-gesprekken aanvaarden een lange vraag niet. */
+var SOURCE_LONG_CHARS = 30000;
+
+var SOURCE_TEXT_TYPES = ["txt", "csv", "tsv", "md"];
+var SOURCE_ZIP_TYPES = ["xlsx", "xlsm", "docx", "pptx"];
+
+/* Eén cel of stukje tekst opschonen: invulstreepjes ("naam: ______")
+   en dubbele spaties weg. */
+function sourceCleanText(value) {
+  return String(value == null ? "" : value)
+    .replace(/_{3,}/g, " ")
+    .replace(/[ \t ]+/g, " ")
+    .replace(/ *\n */g, " ")
+    .trim();
+}
+
+/* "C7" -> { row: 7, col: 2 } */
+function sourceCellRef(ref) {
+  var m = String(ref || "").match(/^([A-Z]+)(\d+)$/);
+  if (!m) return null;
+  return { col: colIndex(m[1]), row: parseInt(m[2], 10) };
+}
+
+/* Tekst van een cel die over meerdere kolommen loopt. De AI-prompt
+   legt deze aanduiding uit (aiConvertRules in js/ai-rubric.js). */
+function sourceSpanText(value, columns) {
+  return columns > 1 ? value + " (over " + columns + " kolommen)" : value;
+}
+
+/* Een Excel-tabblad als tekst: één regel per rij, cellen gescheiden door
+   " | ". Een samengevoegde cel over meerdere kolommen staat er één keer,
+   met "(over 2 kolommen)" erachter: zo ziet de AI dat één omschrijving
+   over twee niveaus loopt. Over meerdere rijen herhaalt de tekst zich in
+   elke rij, zodat duidelijk is dat een fase (Oriënteren, Uitvoeren) bij
+   al die rijen hoort. */
+function xlsxSheetText(sheet) {
+  var grid = {};
+  var covered = {};
+  var rowNumbers = sheet.rowNumbers || [];
+  (sheet.rows || []).forEach(function (row, i) {
+    grid[rowNumbers[i] || i + 1] = (row || []).map(sourceCleanText);
+  });
+
+  (sheet.merges || []).forEach(function (ref) {
+    var parts = String(ref).split(":");
+    var a = sourceCellRef(parts[0]);
+    var b = sourceCellRef(parts[1] || parts[0]);
+    if (!a || !b) return;
+    var value = (grid[a.row] || [])[a.col] || "";
+    for (var r = a.row; r <= b.row; r++) {
+      if (!grid[r]) grid[r] = [];
+      while (grid[r].length <= a.col) grid[r].push("");
+      grid[r][a.col] = value ? sourceSpanText(value, b.col - a.col + 1) : "";
+      for (var c = a.col + 1; c <= b.col; c++) covered[r + ":" + c] = true;
+    }
+  });
+
+  var lines = [];
+  Object.keys(grid)
+    .map(Number)
+    .sort(function (x, y) { return x - y; })
+    .forEach(function (n) {
+      var cells = grid[n].filter(function (v, c) { return !covered[n + ":" + c]; });
+      while (cells.length && !cells[cells.length - 1]) cells.pop();
+      if (!cells.some(Boolean)) return;
+      var line = cells.join(" | ");
+      // Een samengevoegde cel over meerdere rijen (een titel) geeft
+      // anders dezelfde regel twee keer.
+      if (lines[lines.length - 1] === line) return;
+      lines.push(line);
+    });
+  return lines.join("\n");
+}
+
+function xlsxSourceText(sheets) {
+  var parts = sheets
+    .map(function (s) { return { name: s.sheetName, text: xlsxSheetText(s) }; })
+    .filter(function (s) { return s.text; });
+  if (parts.length === 1) return parts[0].text;
+  return parts.map(function (s) { return "Tabblad " + s.name + ":\n" + s.text; }).join("\n\n");
+}
+
+/* Directe kinderen met deze lokale naam (w:p, w:tr, …). */
+function xmlChildren(node, localName) {
+  var out = [];
+  for (var i = 0; i < node.childNodes.length; i++) {
+    var c = node.childNodes[i];
+    if (c.nodeType === 1 && c.localName === localName) out.push(c);
+  }
+  return out;
+}
+
+/* Alle tekst onder een knoop, met tabs en regeleinden als spatie. */
+function xmlRunText(node) {
+  var out = "";
+  (function walk(n) {
+    for (var i = 0; i < n.childNodes.length; i++) {
+      var c = n.childNodes[i];
+      if (c.nodeType !== 1) continue;
+      if (c.localName === "t") out += c.textContent;
+      else if (c.localName === "tab" || c.localName === "br" || c.localName === "cr") out += " ";
+      else walk(c);
+    }
+  })(node);
+  return sourceCleanText(out);
+}
+
+/* Een Word-document als tekst: alinea's als regels, tabellen als rijen
+   met " | " tussen de cellen. Een cel over meerdere kolommen (gridSpan)
+   krijgt "(over 2 kolommen)", net als bij Excel. */
+function docxSourceText(xml) {
+  var doc = parseXml(xml);
+  var body = doc.getElementsByTagNameNS("*", "body")[0] || doc.documentElement;
+  var lines = [];
+
+  function cellText(tc) {
+    return xmlChildren(tc, "p").map(xmlRunText).filter(Boolean).join(" ");
+  }
+
+  (function walk(node) {
+    for (var i = 0; i < node.childNodes.length; i++) {
+      var c = node.childNodes[i];
+      if (c.nodeType !== 1) continue;
+      if (c.localName === "p") {
+        var t = xmlRunText(c);
+        if (t) lines.push(t);
+      } else if (c.localName === "tbl") {
+        xmlChildren(c, "tr").forEach(function (tr) {
+          var cells = [];
+          xmlChildren(tr, "tc").forEach(function (tc) {
+            var text = cellText(tc);
+            var span = tc.getElementsByTagNameNS("*", "gridSpan")[0];
+            var n = span ? parseInt(span.getAttribute("w:val"), 10) || 1 : 1;
+            cells.push(text ? sourceSpanText(text, n) : "");
+          });
+          while (cells.length && !cells[cells.length - 1]) cells.pop();
+          if (cells.some(Boolean)) lines.push(cells.join(" | "));
+        });
+        lines.push("");
+      } else if (c.localName === "sdt" || c.localName === "sdtContent") {
+        walk(c);
+      }
+    }
+  })(body);
+
+  return lines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+}
+
+/* Een PowerPoint als tekst: per dia de alinea's. */
+function pptxSlideText(xml) {
+  var doc = parseXml(xml);
+  var ps = doc.getElementsByTagNameNS("*", "p");
+  var lines = [];
+  for (var i = 0; i < ps.length; i++) {
+    if (ps[i].namespaceURI && !/drawingml/.test(ps[i].namespaceURI)) continue;
+    var t = xmlRunText(ps[i]);
+    if (t) lines.push(t);
+  }
+  return lines.join("\n");
+}
+
+function pptxSourceText(zip) {
+  var slides = Object.keys(zip.entries)
+    .map(function (name) {
+      var m = name.match(/^ppt\/slides\/slide(\d+)\.xml$/);
+      return m ? { name: name, nr: parseInt(m[1], 10) } : null;
+    })
+    .filter(Boolean)
+    .sort(function (a, b) { return a.nr - b.nr; });
+  return Promise.all(slides.map(function (s) { return readEntry(zip, s.name); })).then(function (xmls) {
+    return xmls
+      .map(function (xml, i) {
+        var text = xml ? pptxSlideText(xml) : "";
+        return text ? "Dia " + slides[i].nr + ":\n" + text : "";
+      })
+      .filter(Boolean)
+      .join("\n\n");
+  });
+}
+
+function sourceExtension(name) {
+  var m = String(name || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+  return m ? m[1] : "";
+}
+
+/* Leest één bestand en geeft een Promise met de tekst. Bij een type dat
+   de tool niet kan lezen: een fout met uitleg voor de leerkracht. */
+function readSourceFile(file) {
+  var ext = sourceExtension(file.name);
+  if (SOURCE_TEXT_TYPES.indexOf(ext) !== -1) {
+    return file.text().then(function (t) { return String(t).replace(/\r\n?/g, "\n").trim(); });
+  }
+  if (SOURCE_ZIP_TYPES.indexOf(ext) === -1) {
+    var what = ext === "pdf" ? "Een PDF" : ext ? "Een ." + ext + "-bestand" : "Dit bestand";
+    return Promise.reject(new Error(
+      what + " kan de tool niet lezen. Open het, selecteer alles (Ctrl+A), kopieer (Ctrl+C) en plak de tekst in het vak.",
+    ));
+  }
+  if (!XLSX_SUPPORTED) {
+    return Promise.reject(new Error("Deze browser kan dit bestand niet uitpakken. Gebruik Chrome of Edge, of plak de tekst in het vak."));
+  }
+  return file.arrayBuffer().then(function (buf) {
+    if (ext === "xlsx" || ext === "xlsm") return readXlsx(buf).then(xlsxSourceText);
+    var zip = zipEntries(buf);
+    if (ext === "pptx") return pptxSourceText(zip);
+    return readEntry(zip, "word/document.xml").then(function (xml) {
+      if (!xml) throw new Error("Dit lijkt geen Word-bestand.");
+      return docxSourceText(xml);
+    });
+  });
+}
+
+/* ---- scherm ---- */
+
+function updateAiSourceHint() {
+  var n = $("aiSource").value.length;
+  var hint = $("aiSourceLength");
+  if (n > SOURCE_LONG_CHARS) {
+    hint.textContent = "De tekst is lang (" + n.toLocaleString("nl-BE") + " tekens). Laat stukken weg die niet over deze " +
+      "opdracht gaan. Sommige AI-gesprekken aanvaarden zo'n lange vraag niet.";
+    hint.classList.remove("hidden");
+  } else {
+    hint.textContent = "";
+    hint.classList.add("hidden");
+  }
+}
+
+function onAiSourceFiles(e) {
+  var files = Array.prototype.slice.call(e.target.files || []);
+  e.target.value = "";
+  if (!files.length) return;
+  $("aiSourceState").innerHTML = "";
+
+  Promise.all(files.map(function (file) {
+    return readSourceFile(file).then(
+      function (text) { return { name: file.name, text: text, error: "" }; },
+      function (err) { return { name: file.name, text: "", error: (err && err.message) || "onleesbaar" }; },
+    );
+  })).then(function (results) {
+    var read = results.filter(function (r) { return !r.error && r.text; });
+    var empty = results.filter(function (r) { return !r.error && !r.text; });
+    var failed = results.filter(function (r) { return r.error; });
+
+    var field = $("aiSource");
+    var blocks = read.map(function (r) { return "[Bestand: " + r.name + "]\n" + r.text; });
+    if (blocks.length) {
+      var current = field.value.replace(/\s+$/, "");
+      field.value = (current ? current + "\n\n" : "") + blocks.join("\n\n");
+    }
+    updateAiSourceHint();
+
+    var problems = failed.map(function (r) { return r.name + ": " + r.error; })
+      .concat(empty.map(function (r) { return r.name + ": geen tekst gevonden."; }));
+    if (!read.length) {
+      showNoticeIn("aiSourceState", "warn", "Niets ingelezen", problems.join(" "));
+    } else {
+      showNoticeIn(
+        "aiSourceState", problems.length ? "warn" : "good",
+        read.length === 1 ? "1 bestand ingelezen" : read.length + " bestanden ingelezen",
+        "Kijk de tekst hieronder na. Je mag stukken weglaten of aanpassen." + (problems.length ? " " + problems.join(" ") : ""),
+      );
+    }
+  });
+}
+
+function initAiSource() {
+  $("btnAiSourceFile").addEventListener("click", function () { $("aiSourceFile").click(); });
+  $("aiSourceFile").addEventListener("change", onAiSourceFiles);
+  $("aiSource").addEventListener("input", updateAiSourceHint);
 }
 
 

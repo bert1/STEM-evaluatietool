@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.26.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.27.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,47 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.26.0)
+## Volledige featurelijst (huidige stand, 1.27.0)
+
+- **Bestaande evaluatie omzetten** (1.27.0, `js/ai-source.js`, stand
+  `aiMode = "omzetten"` in `js/ai-rubric.js`). Gevraagd door de
+  gebruiker: oude evaluatiefiches (Excel, voorbeelden in
+  `tests/fixtures/`) of stukken cursus invoegen en met de AI omzetten
+  naar een rubric volgens het huidige systeem.
+  **Inlezen:** `readSourceFile(file)` geeft een Promise met tekst. Excel
+  via `readXlsx()` uit `js/rosters.js`, dat sindsdien per tabblad ook
+  `merges` (`sheetMerges()`) en `rowNumbers` (`sheetRowNumbers()`, want
+  lege rijen ontbreken in de XML) teruggeeft; de klaslijsten negeren die.
+  `xlsxSheetText()` is puur: een samengevoegde cel over kolommen staat er
+  één keer met "(over N kolommen)" (`sourceSpanText()`), over rijen
+  herhaald in elke rij; lege rijen, invulstreepjes en een regel die gelijk
+  is aan de vorige vallen weg. Word: `word/document.xml`, alinea's en
+  tabellen (`gridSpan` ook als "(over N kolommen)"). PowerPoint: dia's op
+  nummer gesorteerd. Tekstbestanden rechtstreeks. PDF, .doc, .xls en
+  andere: foutmelding met uitleg om te kopiëren en te plakken (bewust
+  geen pdf.js: te groot voor het ene HTML-bestand).
+  **Scherm:** knop "Bestaande evaluatie omzetten" (`#aiModeConvert`),
+  vak `#aiSource` dat de leerkracht kan nakijken en inkorten, knop "Bestand
+  kiezen" (meerdere bestanden, voegt toe), melding in `#aiSourceState`, tip
+  vanaf `SOURCE_LONG_CHARS` (30 000). Zichtbaarheid per stand gaat nu met
+  `data-ai-modes="nieuw omzetten"` in plaats van de klassen
+  `ai-new-only`/`ai-review-only`. De beschrijving is bij omzetten
+  optioneel, het materiaal verplicht; de vraag "ook andere criteria" staat
+  enkel bij nieuw.
+  **Prompt:** zelfde opbouw als "nieuw" (vaste niveaus en labels, de lat,
+  kwaliteitsregels, leerlingentaal, feedbackzinnen, leerplandoelen), plus
+  een sectie OMZETTEN (`aiConvertRules(levels)`) en het materiaal onderaan
+  in BESTAAND MATERIAAL, vóór de zelfcontrole. `sourceForPrompt()` maakt
+  van gedachtestreepjes een dubbelpunt (de fiches hebben "4 – Uitstekend")
+  en van ``` twee backticks. Geen vast aantal criteria bij een fiche (een
+  fiche met 15 criteria blijft er 15); 4 tot 7 bij cursusmateriaal.
+  **Antwoord:** zelfde formaat, plus `nietOvergenomen[]` (`onderdeel`,
+  `reden`), ingelezen als `notTaken` en getoond onder "Niet overgenomen".
+  Het inlezen gebruikt verder gewoon `parseAiRubricResponse()`.
+  **Meegenomen bugfix:** `#aiPromptBlock` kreeg `form-group`, anders was
+  het promptvak maar ongeveer 220 pixels breed.
+  **Testen:** `tests/omzetten.spec.js`, met twee echte fiches van de
+  school (lege sjablonen) en kleine zelfgemaakte .docx, .pptx en .pdf.
 
 - **Reservekopieën en terugzetten** (1.26.0, `js/backups.js`, laadt na
   `sync.js`). Gevraagd door de gebruiker: bij een fout van een leerkracht
@@ -405,7 +445,8 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
   GitHub Actions, zie "Testinfrastructuur".
 - **Code opgesplitst** (1.19.1): `js/evaluations.js` is nu vier bestanden,
   in deze laadvolgorde: `rubric-model.js`, `evaluations.js`,
-  `rubric-editor.js`, `ai-rubric.js`. `build.js` schrijft naar `dist/`
+  `rubric-editor.js`, `ai-rubric.js` (en sinds 1.27.0 `ai-source.js`
+direct daarna). `build.js` schrijft naar `dist/`
   (of het eerste argument / `STEM_OUT_DIR`). De testreeks verwacht
   `/mnt/user-data/outputs/STEM-Evaluatietool.html`: bouw dan met
   `node build.js /mnt/user-data/outputs`.
@@ -687,6 +728,13 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   heropenen en synchronisatie tussen twee personen, `rubricsDiffer()`.
   Getoetst met ingebouwde fouten (opslaan vergeet de volgende stap,
   labels van de AI, `next` telt mee voor versies): telkens rood.
+- `omzetten.spec.js` (1.27.0): Excel-tekst met samengevoegde cellen,
+  bestanden kiezen (Excel, Word, PowerPoint, PDF met uitleg, tweede keer
+  voegt toe), lange tekst, de omzetprompt (regels, materiaal, geen
+  gedachtestreep, het json-voorbeeld is geldige json in alle standen),
+  `nietOvergenomen` inlezen, en de volledige flow op het scherm tot
+  opslaan. Getoetst met ingebouwde fouten (samengevoegde cellen negeren,
+  streepjes niet vervangen): telkens rood.
 
 Elke test controleert ook dat er geen JavaScript-fouten waren
 (`page.expectNoErrors()` uit `tests/helpers.js`). Filosofie blijft:

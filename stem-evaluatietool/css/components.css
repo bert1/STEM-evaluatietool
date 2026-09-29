@@ -1315,7 +1315,7 @@ details.controle-fold { margin: 14px 0; }
 .ai-questions { border-left: 3px solid var(--border); padding-left: 12px; margin-bottom: 12px; }
 .ai-result { margin-top: 12px; }
 .ai-result h4 { margin: 14px 0 6px; font-size: 14px; }
-.ai-linked, .ai-without { margin: 0; padding-left: 20px; font-size: 13.5px; }
+.ai-linked, .ai-without, .ai-not-taken { margin: 0; padding-left: 20px; font-size: 13.5px; }
 .ai-also-row { display: flex; gap: 10px; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; margin-bottom: 6px; font-size: 13.5px; }
 .ai-also-text { flex: 1 1 320px; }
 .ai-also-row select { width: auto; max-width: 240px; }

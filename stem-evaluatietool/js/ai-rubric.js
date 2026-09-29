@@ -8,9 +8,12 @@
    …), en plakt het antwoord terug. Er verlaat nooit iets automatisch
    dit toestel.
 
-   Twee standen:
+   Drie standen:
    - "nieuw": criteria laten maken op basis van de opdracht en een paar
      optionele contextvragen;
+   - "omzetten" (sinds 1.27.0): een bestaande evaluatiefiche of een stuk
+     cursus (bestand of geplakte tekst, zie js/ai-source.js) laten
+     omzetten naar criteria volgens dezelfde regels als "nieuw";
    - "nakijken": de huidige rubric laten verbeteren. Het aantal criteria
      en niveaus blijft gelijk; de leerkracht ziet eerst per criterium wat
      er verandert en kiest wat ze overneemt.
@@ -68,7 +71,7 @@ function aiContextLines(ctx, mode) {
   if (ctx.time) lines.push("Lestijd: " + ctx.time + ".");
   var prior = String(ctx.prior || "").trim();
   if (prior) lines.push("Wat ze vooraf al leerden of oefenden: " + prior.replace(/[.\s]+$/, "") + ".");
-  if (mode !== "nakijken" && evaluate) {
+  if (mode !== "nakijken" && mode !== "omzetten" && evaluate) {
     lines.push(ctx.extraCriteria === false
       ? "Beperk je tot de aspecten die ik noemde."
       : "Je mag ook criteria voorstellen die ik niet noemde, als ze nodig zijn om de opdracht goed te beoordelen.");
@@ -139,12 +142,48 @@ function rubricsForAiReview(rubrics, year) {
   };
 }
 
-/* opts: { year, description, levels, context, mode, rubrics }
+/* Het bestaande materiaal voor de stand "omzetten". Gedachtestreepjes
+   worden een dubbelpunt ("4 – Uitstekend" wordt "4: Uitstekend"):
+   modellen nemen de stijl van de vraag over, en de rubric mag er geen
+   bevatten. Drie backticks zouden het tekstblok in de prompt sluiten. */
+function sourceForPrompt(text) {
+  return String(text || "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/[ \t]*[\u2014\u2013][ \t]*/g, ": ")
+    .replace(/`{3,}/g, "``")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+}
+
+/* Regels voor het omzetten van bestaand materiaal (sinds 1.27.0). */
+function aiConvertRules(levels) {
+  return [
+    "Het materiaal staat onderaan bij BESTAAND MATERIAAL. Tabellen staan er als rijen, met | tussen de cellen.",
+    "Staat achter een cel \"(over 2 kolommen)\", dan loopt die cel over zoveel kolommen. Bijvoorbeeld: één omschrijving geldt " +
+      "dan voor twee niveaus. Staat dezelfde tekst in de eerste kolom van meerdere rijen, dan horen die rijen bij hetzelfde onderdeel.",
+    "Is het een evaluatiefiche of een rubric, neem dan de criteria over die erin staan. Behoud wat de leerkracht wil beoordelen " +
+      "en de concrete details, zoals aantallen, materialen en stappen.",
+    "Is het een stuk cursus, een opdracht of een werkblad, maak dan 4 tot 7 criteria voor wat de leerlingen daarin maken of doen.",
+    "Meet één rij twee dingen tegelijk, splits ze dan in twee criteria. Meten twee rijen hetzelfde, voeg ze dan samen.",
+    "Komt hetzelfde criterium terug in verschillende onderdelen (een fase, een hoek, een post), noem het onderdeel dan in de naam " +
+      "of de beschrijving, zodat elk criterium herkenbaar blijft.",
+    "Het materiaal heeft misschien andere niveaus (bijvoorbeeld Zeer goed, Goed, Zwak, Zeer zwak), of per rij een ander aantal. " +
+      "Zet elk criterium om naar precies " + levels + " niveaus met de vaste namen hieronder. Schrijf ontbrekende niveaus zelf bij, in dezelfde lijn.",
+    "Staat het materiaal in de ik-vorm (een zelfevaluatie) of spreekt het over \"de leerling\", schrijf het dan in de je-vorm.",
+    "Laat vakken voor naam, klas, nummer, datum, punten en opmerkingen weg.",
+    "Voldoet iets niet aan de kwaliteitsregels, zoals een criterium over de persoon, herschrijf het dan naar iets wat je ziet in " +
+      "het werk of de aanpak. Lukt dat niet, neem het dan niet over en zet het in \"nietOvergenomen\" met de reden.",
+  ];
+}
+
+/* opts: { year, description, levels, context, mode, rubrics, source }
    Oude aanroep (beschrijving, leerjaar) blijft werken. */
 function buildAiRubricPrompt(opts, legacyYear) {
   if (typeof opts === "string") opts = { description: opts, year: legacyYear };
   var year = opts.year;
   var review = opts.mode === "nakijken";
+  var convert = opts.mode === "omzetten";
+  var source = convert ? sourceForPrompt(opts.source) : "";
   var levels = LEVEL_TEMPLATES[opts.levels] ? opts.levels : DEFAULT_LEVEL_COUNT;
   var labels = LEVEL_TEMPLATES[levels];
   var target = LEVEL_TARGETS[levels];
@@ -160,6 +199,12 @@ function buildAiRubricPrompt(opts, legacyYear) {
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Kijk de beoordelingsrubric " +
         "hieronder na, voor leerlingen uit het " + year + ageNote + ", en verbeter ze volgens de regels in deze vraag.",
     );
+  } else if (convert) {
+    lines.push(
+      "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Zet het bestaande materiaal hieronder " +
+        "(een evaluatiefiche of een stuk cursus) om naar een beoordelingsrubric voor leerlingen uit het " + year + ageNote +
+        ", volgens de regels in deze vraag.",
+    );
   } else {
     lines.push(
       "Ik ben leerkracht STEM in het secundair onderwijs in Vlaanderen. Help me een beoordelingsrubric " +
@@ -169,8 +214,13 @@ function buildAiRubricPrompt(opts, legacyYear) {
 
   if (description) lines.push("", "OPDRACHT", "\"" + description + "\"");
 
-  var ctx = aiContextLines(opts.context, review ? "nakijken" : "nieuw");
+  var ctx = aiContextLines(opts.context, review ? "nakijken" : convert ? "omzetten" : "nieuw");
   if (ctx.length) lines.push.apply(lines, ["", "CONTEXT"].concat(ctx));
+
+  if (convert) {
+    lines.push("", "OMZETTEN");
+    aiConvertRules(levels).forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
+  }
 
   lines.push("", "NIVEAUS");
   if (review) {
@@ -203,7 +253,7 @@ function buildAiRubricPrompt(opts, legacyYear) {
   );
 
   lines.push("", "KWALITEITSREGELS");
-  var rules = (review ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
+  var rules = (review || convert ? [] : ["Maak 4 tot 7 criteria die samen de opdracht dekken."]).concat(AI_QUALITY_RULES);
   rules.forEach(function (r, i) { lines.push((i + 1) + ". " + r); });
 
   lines.push("", "LEERLINGENTAAL",
@@ -238,6 +288,10 @@ function buildAiRubricPrompt(opts, legacyYear) {
     goals.forEach(function (g) { lines.push(g.id + " [" + g.bloom + "]: " + g.text); });
   }
 
+  if (convert) {
+    lines.push("", "BESTAAND MATERIAAL", "```text", source, "```");
+  }
+
   if (review) {
     lines.push("", "HUIDIGE RUBRIC", "```json", JSON.stringify(rubricsForAiReview(opts.rubrics || [], year), null, 2), "```");
   }
@@ -246,6 +300,9 @@ function buildAiRubricPrompt(opts, legacyYear) {
   var checks = review
     ? ["Heeft elk criterium nog hetzelfde id en evenveel niveaus als in de huidige rubric?"]
     : ["Heeft elk criterium precies " + levels + " niveaus?"];
+  if (convert) {
+    checks.push("Staat alles wat het materiaal beoordeelt in een criterium, of in \"nietOvergenomen\" met de reden?");
+  }
   checks = checks.concat([
     "Meet elk criterium één aspect?",
     "Is elk niveau waarneembaar, en beschrijft het wat er wel is?",
@@ -286,13 +343,18 @@ function buildAiRubricPrompt(opts, legacyYear) {
       ? level + "\"volgendeStap\": \"Je-vorm: wat de leerling nu doet\" },"
       : level + "\"uitdaging\": \"Je-vorm: hoe de leerling nog verder gaat\" }");
   }
-  lines.push("      ]", "    }", "  ]" + (goals.length ? "," : ""));
+  var tail = [];
   if (goals.length) {
-    lines.push(
-      "  \"ookPassend\": [ { \"doel\": \"SW12\", \"uitleg\": \"Waarom dit doel bij de opdracht past\" } ],",
+    tail.push(
+      "  \"ookPassend\": [ { \"doel\": \"SW12\", \"uitleg\": \"Waarom dit doel bij de opdracht past\" } ]",
       "  \"zonderDoel\": [ \"Aspect dat bij geen enkel doel past\" ]",
     );
   }
+  if (convert) {
+    tail.push("  \"nietOvergenomen\": [ { \"onderdeel\": \"Wat in het materiaal stond\", \"reden\": \"Waarom je het niet overnam\" } ]");
+  }
+  lines.push("      ]", "    }", "  ]" + (tail.length ? "," : ""));
+  tail.forEach(function (t, i) { lines.push(t + (i < tail.length - 1 ? "," : "")); });
   lines.push("}", "```");
   if (review) lines.push("", "Geef elk criterium evenveel niveaus als in de huidige rubric, ook als dat meer of minder is dan in dit voorbeeld.");
 
@@ -346,7 +408,8 @@ function aiGoalKeys(codes, year, counter) {
    niveaus. Enkel voor een aantal zonder standaardreeks valt de tool
    terug op het label van de AI.
    Geeft { criteria, alsoFitting: [{goal, uitleg}], withoutGoal: [tekst],
-   goalsSkipped }. */
+   notTaken: [{part, reason}], goalsSkipped }. notTaken komt enkel van de
+   stand "omzetten" (json "nietOvergenomen"). */
 function parseAiRubricResponse(text, year, taken) {
   var data = readAiJson(text);
   var counter = { skipped: 0 };
@@ -397,7 +460,19 @@ function parseAiRubricResponse(text, year, taken) {
     .map(function (t) { return String((t && typeof t === "object" ? t.aspect || t.tekst : t) || "").trim(); })
     .filter(Boolean);
 
-  return { criteria: criteria, alsoFitting: alsoFitting, withoutGoal: withoutGoal, goalsSkipped: counter.skipped };
+  var notTaken = (Array.isArray(data.nietOvergenomen) ? data.nietOvergenomen : [])
+    .map(function (t) {
+      if (t && typeof t === "object") {
+        return { part: String(t.onderdeel || t.tekst || "").trim(), reason: String(t.reden || "").trim() };
+      }
+      return { part: String(t || "").trim(), reason: "" };
+    })
+    .filter(function (t) { return t.part || t.reason; });
+
+  return {
+    criteria: criteria, alsoFitting: alsoFitting, withoutGoal: withoutGoal,
+    notTaken: notTaken, goalsSkipped: counter.skipped,
+  };
 }
 
 /* Stand "nakijken": vergelijkt het antwoord met de huidige criteria.
@@ -527,13 +602,17 @@ function renderAiLevelLabels() {
   });
 }
 
+/* Elk deel met data-ai-modes="nieuw omzetten" is enkel zichtbaar in die
+   standen. */
 function setAiMode(mode) {
   aiMode = mode;
   $("aiModeNew").setAttribute("aria-pressed", mode === "nieuw" ? "true" : "false");
+  $("aiModeConvert").setAttribute("aria-pressed", mode === "omzetten" ? "true" : "false");
   $("aiModeReview").setAttribute("aria-pressed", mode === "nakijken" ? "true" : "false");
-  document.querySelectorAll("#aiRubricHelper .ai-new-only").forEach(function (n) { n.classList.toggle("hidden", mode !== "nieuw"); });
-  document.querySelectorAll("#aiRubricHelper .ai-review-only").forEach(function (n) { n.classList.toggle("hidden", mode !== "nakijken"); });
-  $("btnAiImport").textContent = mode === "nieuw" ? "Criteria toevoegen aan deze evaluatie" : "Voorstel bekijken";
+  document.querySelectorAll("#aiRubricHelper [data-ai-modes]").forEach(function (n) {
+    n.classList.toggle("hidden", n.dataset.aiModes.split(" ").indexOf(mode) === -1);
+  });
+  $("btnAiImport").textContent = mode === "nakijken" ? "Voorstel bekijken" : "Criteria toevoegen aan deze evaluatie";
   $("aiPromptBlock").classList.add("hidden");
   $("aiPromptOut").value = "";
   $("aiImportState").innerHTML = "";
@@ -554,7 +633,9 @@ function updateAiReviewAvailability() {
 
 /* Reset bij het openen van een evaluatie in de editor. */
 function resetAiRubricHelper() {
-  ["aiDescription", "aiEvaluate", "aiDeliverOther", "aiPrior", "aiPromptOut", "aiResponseIn"].forEach(function (id) { $(id).value = ""; });
+  ["aiDescription", "aiEvaluate", "aiDeliverOther", "aiPrior", "aiPromptOut", "aiResponseIn", "aiSource"].forEach(function (id) { $(id).value = ""; });
+  $("aiSourceState").innerHTML = "";
+  updateAiSourceHint();
   setChipValues("aiLevels", [String(DEFAULT_LEVEL_COUNT)]);
   setChipValues("aiDeliver", []);
   setChipValues("aiWorkform", []);
@@ -645,6 +726,19 @@ function renderAiImportResult(parsed, levels) {
     var wl = el("ul", "ai-without");
     parsed.withoutGoal.forEach(function (t) { wl.appendChild(el("li", null, t)); });
     box.appendChild(wl);
+  }
+
+  if (parsed.notTaken && parsed.notTaken.length) {
+    box.appendChild(el("h4", null, "Niet overgenomen"));
+    box.appendChild(el("p", "hint", "Dit stond in je materiaal, maar de AI nam het niet over. Voeg het zelf toe als je het toch wil beoordelen."));
+    var nl = el("ul", "ai-not-taken");
+    parsed.notTaken.forEach(function (t) {
+      var li = el("li");
+      if (t.part) li.appendChild(el("strong", null, t.part + (t.reason ? ": " : "")));
+      if (t.reason) li.appendChild(document.createTextNode(t.reason));
+      nl.appendChild(li);
+    });
+    box.appendChild(nl);
   }
 
   var warnings = rubricWarnings(parsed.criteria, draft.year, levels);
@@ -738,7 +832,9 @@ function initAiRubricHelper() {
   initChipGroup("aiLevels", renderAiLevelLabels);
   ["aiDeliver", "aiWorkform", "aiTime", "aiExtra"].forEach(function (id) { initChipGroup(id); });
   renderAiLevelLabels();
+  initAiSource();
   $("aiModeNew").addEventListener("click", function () { setAiMode("nieuw"); });
+  $("aiModeConvert").addEventListener("click", function () { setAiMode("omzetten"); });
   $("aiModeReview").addEventListener("click", function () { setAiMode("nakijken"); });
   $("btnAiReview").addEventListener("click", openAiReview);
 
@@ -746,6 +842,10 @@ function initAiRubricHelper() {
     var desc = $("aiDescription").value.trim();
     if (aiMode === "nieuw" && !desc) {
       showNoticeIn("aiImportState", "warn", "Beschrijf eerst de opdracht", "Een paar zinnen volstaan. Hoe concreter, hoe beter de rubric.");
+      return;
+    }
+    if (aiMode === "omzetten" && !$("aiSource").value.trim()) {
+      showNoticeIn("aiImportState", "warn", "Voeg eerst je materiaal toe", "Kies een bestand of plak de tekst van je evaluatiefiche of cursus.");
       return;
     }
     var year = (draft && draft.year) || $("draftYear").value || "2de jaar";
@@ -756,6 +856,7 @@ function initAiRubricHelper() {
       context: aiContextFromForm(),
       mode: aiMode,
       rubrics: reviewableRubrics(),
+      source: $("aiSource").value,
     });
     $("aiPromptBlock").classList.remove("hidden");
     $("aiImportState").innerHTML = "";

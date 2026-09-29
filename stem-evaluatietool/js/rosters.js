@@ -1114,6 +1114,31 @@ function sheetToTable(doc, sharedStrings) {
   return rows;
 }
 
+/* Samengevoegde cellen als ["C7:D7", …]. De klaslijsten gebruiken dit
+   niet; de AI-hulp (js/ai-source.js) wel, want in een evaluatiefiche
+   loopt één omschrijving soms over meerdere niveaus. */
+function sheetMerges(doc) {
+  var out = [];
+  var els = doc.getElementsByTagName("mergeCell");
+  for (var i = 0; i < els.length; i++) {
+    var ref = els[i].getAttribute("ref");
+    if (ref) out.push(ref);
+  }
+  return out;
+}
+
+/* Het echte rijnummer (1, 2, …) van elke rij uit sheetToTable(). Lege
+   rijen staan vaak niet in de XML, dus plaats en nummer verschillen. */
+function sheetRowNumbers(doc) {
+  var out = [];
+  var rowEls = doc.getElementsByTagName("row");
+  for (var r = 0; r < rowEls.length; r++) {
+    var n = parseInt(rowEls[r].getAttribute("r"), 10);
+    out.push(n > 0 ? n : (out.length ? out[out.length - 1] + 1 : 1));
+  }
+  return out;
+}
+
 function readSharedStrings(doc) {
   var out = [];
   var sis = doc.getElementsByTagName("si");
@@ -1131,7 +1156,7 @@ function readSharedStrings(doc) {
 
 /* --- hoofdfunctie ------------------------------------------------- */
 
-/* Levert [{ sheetName, rows }] op, één item per tabblad. */
+/* Levert [{ sheetName, rows, rowNumbers, merges }] op, één item per tabblad. */
 function readXlsx(arrayBuffer) {
   var zip = zipEntries(arrayBuffer);
 
@@ -1169,7 +1194,8 @@ function readXlsx(arrayBuffer) {
         jobs.push(
           readEntry(zip, target).then(function (xml) {
             if (!xml) return null;
-            return { sheetName: name, rows: sheetToTable(parseXml(xml), shared) };
+            var doc = parseXml(xml);
+            return { sheetName: name, rows: sheetToTable(doc, shared), rowNumbers: sheetRowNumbers(doc), merges: sheetMerges(doc) };
           }),
         );
       })(sheetEls[s], s);

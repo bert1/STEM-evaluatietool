@@ -13,6 +13,34 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.27.0 · 29 september 2026
+
+**Bestaande evaluaties en cursusmateriaal omzetten naar een rubric**
+
+- De AI-hulp heeft een derde stand, **Bestaande evaluatie omzetten**. Je
+  kiest een oude evaluatiefiche of een stuk cursus (Excel, Word,
+  PowerPoint of tekst, meerdere tegelijk) met **Bestand kiezen**, of plakt
+  de tekst. De tekst verschijnt in een vak, zodat je hem kan nakijken en
+  inkorten (`js/ai-source.js`).
+- Excel: samengevoegde cellen staan er één keer, met "(over 2 kolommen)",
+  zodat de AI ziet dat een omschrijving over twee niveaus loopt. Een fase
+  over meerdere rijen staat bij elke rij. Invulstreepjes (`____`) vallen
+  weg. Word: tabellen als rijen, ook met cellen over meerdere kolommen.
+  PowerPoint: de tekst per dia.
+- Een PDF of een oud bestandstype kan de tool niet lezen; de melding zegt
+  hoe je de tekst kopieert en plakt.
+- De prompt zet alles om naar het gekozen aantal niveaus met de vaste
+  namen, in de je-vorm en in leerlingentaal (ook een zelfevaluatie in de
+  ik-vorm), met dezelfde kwaliteitsregels, feedbackzinnen en
+  leerplandoelen als bij nieuwe criteria. Gedachtestreepjes in het
+  materiaal worden een dubbelpunt.
+- De AI meldt in "nietOvergenomen" wat ze bewust niet overnam, met de
+  reden. De tool toont dat onder **Niet overgenomen**.
+- Bij een zeer lange tekst (meer dan 30 000 tekens) verschijnt een tip om
+  stukken weg te laten.
+- Opgelost: het vak "Kopieer dit naar je AI-gesprek" was smal; het is nu
+  even breed als de andere velden.
+
 ## 1.26.0 · 29 september 2026
 
 **Automatische reservekopieën en een vorige versie terugzetten**
