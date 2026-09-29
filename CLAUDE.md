@@ -23,6 +23,27 @@ Lees eerst `HANDOFF.md` voor de opbouw en de geschiedenis van de tool.
 6. Het gebouwde bestand `STEM-Evaluatietool-vX.Y.Z.html` in de hoofdmap
    vervangen door de nieuwe versie.
 
+## Je eigen bestand: nooit blind overschrijven (sinds 1.32.0)
+
+Zie `js/koppelen.js` en "Koppelen" in `HANDOFF.md`.
+
+- Koppelen is verplicht. Geen omweg in de productiecode, ook niet voor
+  testen: `openTool()` in `tests/helpers.js` koppelt via de echte wizard
+  aan een nagemaakte map (`tests/schijf.js`).
+- Vóór elke schrijfactie naar het eigen bestand vergelijkt
+  `pullOwnFile()` het tijdstip (`lastModified`) met het laatst gelezen of
+  geschreven tijdstip. Gewijzigd: eerst reservekopie, dan `mergeDb()`
+  (nooit verwijderen, `isTombstoned()`), dan pas schrijven.
+- Een onleesbaar eigen bestand (`ownFileProblem`) blokkeert elke
+  schrijfactie. Nooit een lege start die het bestand overschrijft.
+- Vóór elke inlees-, samenvoeg-, herstel- of ophaalstap een reservekopie
+  (`makeBackup()`, `backupRawText()` in `js/backups.js`).
+- Bestaande initialen in de map: nooit overschrijven aanbieden; ophalen is
+  de standaardkeuze.
+- Nieuwe wijzigingen hieraan: altijd toetsen met twee browsercontexten die
+  dezelfde map delen (`tweedeToestel()`), en de oplossing tijdelijk
+  uitschakelen om te zien dat de test rood wordt.
+
 ## Schrijfstijl
 
 - Alle teksten voor de gebruiker in het Nederlands (Vlaams).

@@ -140,6 +140,8 @@ function listBackups(dirHandle, assessor) {
   var root = dirHandle || folderHandle;
   if (!root) return Promise.resolve([]);
   var me = cleanAssessor(assessor || db.assessor) || "XX";
+  // Kopieën van vóór een wijziging van je initialen horen ook bij jou.
+  var mine = assessor ? [me] : myInitialsHistory(db);
   return root.getDirectoryHandle(BACKUP_DIR)
     .then(function (dir) {
       return (async function () {
@@ -147,7 +149,7 @@ function listBackups(dirHandle, assessor) {
         for await (var entry of dir.values()) {
           if (entry.kind !== "file") continue;
           var b = parseBackupName(entry.name);
-          if (b && b.assessor === me) out.push(b);
+          if (b && mine.indexOf(b.assessor) !== -1) out.push(b);
         }
         return out.sort(function (a, b) { return b.time - a.time; });
       })();

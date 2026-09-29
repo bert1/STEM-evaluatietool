@@ -13,6 +13,48 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.32.0 · 29 september 2026
+
+**Koppelen is verplicht, en je werk komt terug op een nieuwe computer**
+
+- Het welkomstscherm heeft geen knop "Overslaan" meer. De tool is pas
+  bruikbaar als je werk gekoppeld is aan de gedeelde map (in Firefox of
+  Safari: aan een werkbestand). Wie in 1.31.1 niet gekoppeld was, krijgt
+  dezelfde stap, met eerst een reservekopie; het werk in de browser gaat
+  mee in het bestand, of wordt samengevoegd als dat al bestond.
+- Twee knoppen bovenaan het welkomstscherm: "Ik gebruik de tool voor het
+  eerst" en "Ik heb de tool al gebruikt op een andere computer of in een
+  andere browser". Bij de tweede kies je de gedeelde map en klik je op je
+  naam. Je werk komt terug, ook "verwijderd voor mezelf".
+- Initialen die al in de map staan: de vraag "Ben jij …?", met ophalen als
+  standaardkeuze. Overschrijven kan niet meer. Een andere naam bij
+  dezelfde initialen geeft een duidelijke melding.
+- Eigen bestand verdwenen: terughalen uit een reservekopie (nieuwste
+  eerst), of anders uit de bestanden van collega's. Een nieuw, leeg
+  bestand enkel na een uitdrukkelijke keuze.
+- Nooit meer blind overschrijven: vóór elke opslag kijkt de tool of je
+  bestand intussen gewijzigd is (bijvoorbeeld op je andere computer). Zo
+  ja, dan eerst een reservekopie, dan samenvoegen, dan pas opslaan. Een
+  onleesbaar bestand wordt nooit overschreven.
+- Nieuw onderdeel **Instellingen, Gebruiker**: initialen, naam, waar je
+  werk bewaard wordt, "Koppeling opnieuw instellen", en je naam of
+  initialen wijzigen. Het veld Beoordelaar in de kop is nu een knop naar
+  dit onderdeel.
+- Initialen wijzigen: je beoordelingen, het team, vrijstellingen en
+  Skore-vinkjes krijgen de nieuwe initialen (ook bij collega's), je
+  bestand krijgt een nieuwe naam, en het oude wordt een verwijsbestand dat
+  je andere computers vanzelf volgen. Initialen van een collega worden
+  geweigerd.
+- Een nieuwe naam komt nu ook door bij collega's.
+- Het Teamscherm heeft geen blok "Gedeelde map" en geen "Map loskoppelen"
+  meer (dat zit nu bij Gebruiker). "Opslaan als…" bewaart met een
+  gedeelde map een kopie; je bestand in de map blijft het werkbestand.
+- Opgeloste risico's, eerst met een proef aangetoond op 1.31.1: een
+  nieuw toestel met dezelfde initialen kon je werkbestand leegmaken, je
+  eigen bestand kwam nooit terug via Team bijwerken, twee toestellen
+  overschreven elkaars werk, en initialen wijzigen in de kop schreef verder
+  naar het oude bestand.
+
 ## 1.31.1 · 29 september 2026
 
 **Bugfix: bij Evalueren toonde de klaslijst toch alle klassen**

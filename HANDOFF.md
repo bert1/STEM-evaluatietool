@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.31.1**.
+Laatst bijgewerkt: 29 september 2026, versie **1.32.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,95 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.31.1)
+## Volledige featurelijst (huidige stand, 1.32.0)
+
+- **Koppelen is verplicht, ophaalweg, nooit blind overschrijven**
+  (1.32.0, nieuwe module `js/koppelen.js`, laadt na `backups.js`).
+  Gevraagd door de gebruiker: een bestaande leerkracht op een nieuw toestel
+  kreeg een lege wizard en kon een tweede identiteit maken of zijn bestand
+  overschrijven.
+  **Eerst bewezen (A1):** met twee browsercontexten die één nagemaakte map
+  delen, faalden op 1.31.1 vier proeven: `connectToFolder()` bood met
+  `confirm()` aan het bestand te overschrijven (en deed dat met een lege
+  db), `readTeamFolder()` slaat het eigen bestand over, twee toestellen
+  overschreven elkaar (laatste schrijver wint), initialen wijzigen in de
+  kop schreef `assessor: XY` in `evaluaties-BB.json`.
+  **Identiteit:** initialen plus eigen bestand; geen accounts. Gekoppeld =
+  `isLinked()`: met FSA een map in IndexedDB (`teamFolder`) en initialen
+  (ook een map die nog toestemming vraagt: `pendingFolder`, de balk
+  "Verbinden met", geen wizard); zonder FSA de sleutel `WORKFILE_KEY`
+  (`STEM_EVAL_WERKBESTAND`) in localStorage. `initKoppelen()` (vanuit
+  `init()`) roept `restoreFolder()` en opent anders `openWizard("start")`.
+  Geen knop Overslaan, geen sluitknop, Esc doet niets.
+  **Wizard:** stappen `keuze`, `nieuw`, `bestaand` (`.wizard-step
+  [data-step]`). Wie al werk in de browser heeft (`browserHasWork()` =
+  `!freshStart || persistedThisSession`), gaat meteen naar `nieuw` met
+  vaste initialen. `connectToFolder(path)` kiest de map en leest ze met
+  `scanFolder()`: per persoon het eigen bestand (ook onleesbaar), de
+  reservekopieën, namen uit `team.members`, gewijzigde initialen
+  (`moved`). `recognizeInitials()` ("Ben jij …?", `#wizardFetch` is de
+  standaardkeuze; andere naam: "Andere initialen kiezen" primair),
+  `renderPeople()` (lijst `.wizard-person`), `choosePerson()` (weigert
+  werk van een ander in deze browser te vermengen), `showUnreadable()`,
+  `showBackupRestore()`, `showColleagueRecovery()`. De eigenlijke koppeling:
+  `startLink()` (reservekopie van het browserwerk), dan `linkExistingFile`,
+  `linkNewFile`, `linkFromBackup` (met `refreshRestoredTimes()`) of
+  `linkFromColleagues`, dan `linkDone()` (idbPut, naam meteen wegschrijven).
+  "Koppeling opnieuw instellen" (Gebruiker) = `openWizard("opnieuw")`, met
+  Annuleren. Alles loopt via dezelfde functies.
+  **Eigen bestand:** `attachOwnFile(opts)` leest eerst. Onbekend tijdstip
+  (`knownStamp()`, `OWN_STAMP_KEY`) of verse browser: `backupRawText()`
+  (letterlijke kopie van het bestand op schijf in `backups/`), dan
+  `mergeOwnFile()` (localTombstones, `mergeDb()`, actief schooljaar) of in
+  een verse browser vervangen. Onleesbaar: `ownFileProblem`, geen
+  `fileHandle`, rode balk met `retryOwnFile()`. `pullOwnFile()` draait
+  vóór elke `writeHandle()`, bij `syncTeam()`, en bij focus of
+  `visibilitychange`: ander tijdstip, dan inlezen en samenvoegen (melding
+  "op een ander toestel aangepast", gekozen door de gebruiker), onleesbaar
+  dan niet schrijven, verdwenen dan opnieuw aanmaken. `rememberOwnStamp()`
+  na elke schrijfactie. Twee lagen: ook als `attachOwnFile()` zou falen,
+  vangt `pullOwnFile()` het op (bij het uitschakelen van één laag bleven de
+  tests groen; beide samen: 7 rood).
+  **`dbBlob()` bevat nu `localTombstones`**: het is je eigen bestand.
+  `mergeDb()` neemt bij collega's enkel `tombstones` over, nooit
+  `localTombstones`.
+  **Reservekopieën:** `uniqueBackupName()` en een volgnummer in
+  `parseBackupName()` ("-2"), want er komen nu soms twee kopieën in één
+  minuut. `listBackups(dirHandle, assessor)` werkt ook voor een map die
+  nog niet gekoppeld is, en telt vorige initialen mee.
+  **Gebruiker** (view `user`, `#userCard`, `#btnSettingsUser`, tussen
+  Algemeen en Klaslijsten): `renderUserView()`, Wijzigen (`#userEditForm`
+  met initialen en naam). `#assessor` is een knop (`renderAssessor()`),
+  niet meer invulbaar; alle code leest `db.assessor`.
+  **Naam:** `team.members[X].updatedAt`; `mergeTeam()` laat een nieuwere
+  naam winnen, een naam zonder tijdstip overschrijft nooit een ingevulde.
+  **Initialen wijzigen** (voorstel A7, goedgekeurd): `renameMyInitials()`
+  en `renameInitialsInDb()`: `row.assessor` (met nieuw `updatedAt`, rij-id
+  blijft bewust gelijk, anders dubbele rijen), `by` bij vrijstellingen en
+  Skore-vinkjes, `team.renamed[oud] = {to, at}` (nieuw veld, in
+  `normaliseDb()` en `emptyTeam()`) toegepast door `applyTeamRenames()` in
+  `mergeTeam()`, zodat Team bijwerken de oude initialen niet terugbrengt.
+  Het oude bestand wordt een verwijsbestand (`MOVED_FORMAT` =
+  `stem-eval-verhuisd`): `readTeamFolder()` slaat het stil over, een ander
+  toestel volgt via `followMove()`, `scanFolder()` toont de persoon onder de
+  nieuwe initialen. Weigert initialen die in de map of het team voorkomen.
+  Zonder map: meteen een nieuwe download, binnen de klik (anders blokkeert
+  Chrome de tweede download, zo gevonden).
+  **Bewuste grenzen:** een verwijderde beoordeling kan terugkomen van een
+  ander toestel of een collega (geen tombstones voor rijen, zoals
+  voordien). Terughalen uit een reservekopie in een verse browser geeft
+  alles een nieuw tijdstip (`refreshRestoredTimes()` tegenover een lege
+  stand), dus ook rubrics die een collega nadien nog aanpaste.
+  **Testen:** `tests/koppelen.spec.js` (27 testen), met
+  `tests/schijf.js`: een nagemaakte map waarvan de bestanden in Node
+  staan (`page.exposeFunction`), zodat twee contexten dezelfde map delen,
+  plus een aanpassing van IndexedDB zodat de map "onthouden" wordt.
+  `openTool()` koppelt nu altijd via de wizard ("Ik gebruik de tool voor
+  het eerst", standaard initialen TST); `page.schijf.json(pad)`,
+  `.zet()`, `.wis()`, `.namen()`. `tweedeToestel(browser, schijf, opties)`
+  maakt een tweede context. Getoetst door telkens een bescherming uit te
+  schakelen: telkens minstens één test rood.
+
 
 - **Bugfix klaspaneel en vak** (1.31.1), gemeld door de gebruiker:
   `renderKlasMultiPanel()` in `js/evaluations.js` gebruikte
@@ -734,7 +822,7 @@ direct daarna). `build.js` schrijft naar `dist/`
 - Team: gedeelde map (File System Access API), in de praktijk een map in
   OneDrive. De NAS-netwerksynchronisatie is in 1.20.0 verwijderd: de school
   gebruikt enkel OneDrive (staat nog in de git-historie, tot en met 1.19.1)
-- Opstartwizard, leest bestaande bestanden correct in
+- Opstartwizard (sinds 1.32.0 verplicht, met ophaalweg, zie bovenaan)
 - Printbare rapporten en feed-up-blad, met automatische PDF-bestandsnaam
   (`klas_evaluatie` of `leerling_klas_evaluatie`) via een tijdelijke
   `document.title`-wissel
@@ -798,6 +886,11 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
   (huidige rubric, gelijke stand, drempel): de tests faalden zoals
   verwacht.
+- `koppelen.spec.js` (1.32.0): verplichte wizard, verlopen toestemming,
+  Firefox en Safari, gebruiker van 1.31.1, ophalen in een nieuwe browser
+  (lijst en zelfde initialen), collega met dezelfde initialen, niet
+  vermengen, bestand kwijt (reservekopie, collega's), twee toestellen,
+  onleesbaar bestand, Gebruiker, naam en initialen wijzigen
 - `reservekopie.spec.js`: naam met datum en uur, opruimregels, kopie bij
   verbinden, hoogstens één per uur, geen dubbele kopie, enkel eigen
   kopieën opruimen, niet ingelezen bij Team bijwerken, terugzetten via het

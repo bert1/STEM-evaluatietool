@@ -320,8 +320,48 @@ function teamKey(year, klas) {
   return year + "||" + klas;
 }
 
+/* renamed (sinds 1.32.0): { "BB": { to: "BX", at } } als iemand zijn
+   initialen wijzigde. Zonder dit zou Team bijwerken de oude initialen
+   terugbrengen uit de bestanden van collega's, want samenvoegen
+   verwijdert nooit een lid. Zie renameMyInitials() in js/koppelen.js. */
 function emptyTeam() {
-  return { members: {}, classes: {}, updatedAt: 0 };
+  return { members: {}, classes: {}, renamed: {}, updatedAt: 0 };
+}
+
+/* Voert de gewijzigde initialen door in het team: het lid en de
+   klastoewijzingen verhuizen naar de nieuwe initialen. In volgorde van
+   tijdstip, zodat ook een reeks (BB naar BX, later BX naar BY) klopt.
+   Geeft true als er iets veranderde. */
+function applyTeamRenames(team) {
+  var renamed = team.renamed || {};
+  var changed = false;
+  Object.keys(renamed)
+    .sort(function (a, b) { return (renamed[a].at || 0) - (renamed[b].at || 0); })
+    .forEach(function (from) {
+      var to = renamed[from].to;
+      if (!to || to === from) return;
+      if (team.members[from]) {
+        var old = team.members[from];
+        var cur = team.members[to];
+        if (!cur) team.members[to] = old;
+        else if (old.name && (old.updatedAt || 0) > (cur.updatedAt || 0)) team.members[to] = old;
+        else if (!cur.name && old.name) cur.name = old.name;
+        delete team.members[from];
+        changed = true;
+      }
+      Object.keys(team.classes).forEach(function (key) {
+        var list = team.classes[key];
+        if (list.indexOf(from) === -1) return;
+        var next = [];
+        list.forEach(function (i) {
+          var v = i === from ? to : i;
+          if (next.indexOf(v) === -1) next.push(v);
+        });
+        team.classes[key] = next;
+        changed = true;
+      });
+    });
+  return changed;
 }
 
 function teamFor(db, year, klas) {
@@ -378,8 +418,18 @@ function mergeTeam(target, incoming) {
   if (!target.team) target.team = emptyTeam();
   if (!target.team.members) target.team.members = {};
   if (!target.team.classes) target.team.classes = {};
+  if (!target.team.renamed) target.team.renamed = {};
 
   var changed = false;
+
+  Object.keys(incoming.renamed || {}).forEach(function (from) {
+    var inc = incoming.renamed[from];
+    var cur = target.team.renamed[from];
+    if (inc && inc.to && (!cur || (inc.at || 0) > (cur.at || 0))) {
+      target.team.renamed[from] = { to: inc.to, at: inc.at || 0 };
+      changed = true;
+    }
+  });
 
   Object.keys(incoming.members || {}).forEach(function (initials) {
     var incMember = incoming.members[initials] || {};
@@ -414,6 +464,8 @@ function mergeTeam(target, incoming) {
     });
     if (merged.length) target.team.classes[key] = merged;
   });
+
+  if (applyTeamRenames(target.team)) changed = true;
 
   if (changed) {
     target.team.updatedAt = Math.max(target.team.updatedAt || 0, incoming.updatedAt || 0);

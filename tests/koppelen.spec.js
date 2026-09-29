@@ -68,7 +68,7 @@ test.describe("de wizard is verplicht", () => {
     await page.keyboard.press("Escape");
     await page.locator(".wizard-overlay").click({ position: { x: 5, y: 5 }, force: true });
     await expect(page.locator("#setupWizard")).toBeVisible();
-    await expect(page.locator("#wizardFolderHelpNew")).toContainText("OneDrive");
+    await expect(page.locator("#wizardFolderHelpNew")).toContainText("Waar staat de gedeelde map?");
 
     await page.reload();
     await expect(page.locator("#setupWizard")).toBeVisible();
@@ -504,5 +504,157 @@ test.describe("Instellingen, Gebruiker", () => {
     await page.reload();
     await expect(page.locator("#status")).toHaveText("Opgeslagen in evaluaties-BB.json");
     page.expectNoErrors();
+  });
+});
+
+test.describe("initialen wijzigen", () => {
+  async function wijzig(page, initialen, { aanvaard = true } = {}) {
+    await page.click("#assessor");
+    await page.click("#btnUserEdit");
+    await page.fill("#userInitialsInput", initialen);
+    let vraag = "";
+    page.once("dialog", (d) => { vraag = d.message(); aanvaard ? d.accept() : d.dismiss(); });
+    await page.click("#btnUserSave");
+    return () => vraag;
+  }
+
+  test("met een gedeelde map: nieuw bestand, verwijsbestand, en collega's volgen", async ({ browser }) => {
+    const schijf = nieuweSchijf();
+    const a = await tweedeToestel(browser, schijf, { initialen: "BB", naam: "Bert Bollen" });
+    await rij(a, "BB-1");
+    const m = await tweedeToestel(browser, schijf, { initialen: "MD", naam: "Marie Dubois" });
+    await m.evaluate(() => {
+      db.team.classes["1ste jaar||1WA"] = ["BB", "MD"];
+      persist();
+      syncTeam(true);
+    });
+    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
+    await m.evaluate(async () => { clearTimeout(autoSaveTimer); await writeHandle(); });
+    const kopieenVoor = schijf.namen("Gedeeld/backups").filter((n) => n.startsWith("evaluaties-BB-")).length;
+
+    const vraag = await wijzig(a, "BX");
+    await expect(a.locator("#notice")).toContainText("Initialen gewijzigd naar BX");
+    expect(vraag()).toContain("evaluaties-BX.json");
+    expect(vraag()).not.toContain("—");
+    await expect(a.locator("#assessor")).toHaveText("BX");
+    await expect(a.locator("#userStorage")).toContainText("evaluaties-BX.json");
+
+    // Het nieuwe bestand heeft alles, met dezelfde rij-id.
+    const nieuw = schijf.json("Gedeeld/evaluaties-BX.json");
+    expect(nieuw.assessor).toBe("BX");
+    expect(rijenInBestand(schijf, "evaluaties-BX.json")).toEqual(["BB-1"]);
+    const rijBX = Object.values(nieuw.schoolYears).flatMap((b) => Object.values(b.sessions).flat())[0];
+    expect(rijBX.assessor).toBe("BX");
+    expect(nieuw.team.members.BX.name).toBe("Bert Bollen");
+    expect(nieuw.team.members.BB).toBeUndefined();
+    // Het oude bestand is een verwijsbestand.
+    expect(schijf.json("Gedeeld/evaluaties-BB.json")).toMatchObject({ format: "stem-eval-verhuisd", from: "BB", to: "BX" });
+    // De oude reservekopieën blijven de jouwe, en er kwam er een bij.
+    await a.click("#btnTeam");
+    const n = await a.locator("#backupList .backup-row").count();
+    expect(n).toBeGreaterThan(kopieenVoor);
+
+    // Marie: geen dubbele persoon, geen foutmelding, de rij heet nu BX.
+    await m.evaluate(() => syncTeam(false));
+    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
+    await expect(m.locator("#notice")).not.toContainText("Niet gelukt");
+    const bijMarie = await m.evaluate(() => ({
+      leden: memberList(db),
+      klas: db.team.classes["1ste jaar||1WA"],
+      rij: Object.values(db.sessions).flat().find((r) => r.id === "BB-1").assessor,
+    }));
+    expect(bijMarie).toEqual({ leden: ["BX", "MD"], klas: ["BX", "MD"], rij: "BX" });
+    // Ook na nog een keer samenvoegen met het oude team van Marie komt BB niet terug.
+    await a.evaluate(() => syncTeam(true));
+    await expect(a.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
+    expect(await a.evaluate(() => memberList(db))).toEqual(["BX", "MD"]);
+    a.expectNoErrors();
+    m.expectNoErrors();
+  });
+
+  test("initialen die een collega gebruikt, worden geweigerd", async ({ browser }) => {
+    const schijf = nieuweSchijf();
+    const a = await tweedeToestel(browser, schijf, { initialen: "BB", naam: "Bert Bollen" });
+    await tweedeToestel(browser, schijf, { initialen: "MD", naam: "Marie Dubois" });
+    const voor = schijf.tekst("Gedeeld/evaluaties-MD.json");
+    await wijzig(a, "MD");
+    await expect(a.locator("#notice")).toContainText("MD wordt al gebruikt door Marie Dubois");
+    expect(await a.evaluate(() => db.assessor)).toBe("BB");
+    expect(schijf.tekst("Gedeeld/evaluaties-MD.json")).toBe(voor);
+    expect(schijf.namen("Gedeeld")).toEqual(["evaluaties-BB.json", "evaluaties-MD.json"]);
+    a.expectNoErrors();
+  });
+
+  test("annuleren verandert niets", async ({ page }) => {
+    await openTool(page, { initialen: "BB" });
+    await wijzig(page, "BX", { aanvaard: false });
+    await expect(page.locator("#assessor")).toHaveText("BB");
+    expect(page.schijf.namen("Gedeeld")).toEqual(["evaluaties-BB.json"]);
+    page.expectNoErrors();
+  });
+
+  test("zonder gedeelde map: een nieuw werkbestand met de nieuwe naam", async ({ page }) => {
+    await openTool(page, { initialen: "BB", fsa: false });
+    await rij(page, "BB-1");
+    await page.click("#assessor");
+    await page.click("#btnUserEdit");
+    await page.fill("#userInitialsInput", "BX");
+    page.once("dialog", (d) => d.accept());
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#btnUserSave")]);
+    expect(dl.suggestedFilename()).toBe("stem-evaluaties-BX.json");
+    await expect(page.locator("#assessor")).toHaveText("BX");
+    const r = await page.evaluate(() => [Object.values(db.sessions).flat()[0].assessor, Object.values(db.sessions).flat()[0].id]);
+    expect(r).toEqual(["BX", "BB-1"]);
+    await page.reload();
+    await expect(page.locator("#setupWizard")).toBeHidden();
+    await expect(page.locator("#assessor")).toHaveText("BX");
+    page.expectNoErrors();
+  });
+
+  test("je tweede toestel volgt vanzelf, en er gaat niets verloren", async ({ browser }) => {
+    const schijf = nieuweSchijf();
+    const laptop = await tweedeToestel(browser, schijf, { initialen: "BB", naam: "Bert Bollen" });
+    const school = await nieuweBrowser(browser, schijf);
+    await haalOp(school, "Bert Bollen");
+    await beginnen(school);
+    await rij(laptop, "BB-laptop");
+    await wijzig(laptop, "BX");
+    await expect(laptop.locator("#notice")).toContainText("Initialen gewijzigd naar BX");
+
+    // Het schooltoestel werkt nog als BB en bewaart iets.
+    await rij(school, "BB-school");
+    await expect(school.locator("#assessor")).toHaveText("BX");
+    await expect(school.locator("#notice")).toContainText("Je initialen zijn gewijzigd");
+    expect(rijenInBestand(schijf, "evaluaties-BX.json")).toEqual(["BB-laptop", "BB-school"]);
+    expect(schijf.json("Gedeeld/evaluaties-BB.json").format).toBe("stem-eval-verhuisd");
+    laptop.expectNoErrors();
+    school.expectNoErrors();
+  });
+
+  test("een nieuwe browser met de oude initialen wordt naar de nieuwe verwezen", async ({ browser }) => {
+    const schijf = nieuweSchijf();
+    const a = await tweedeToestel(browser, schijf, { initialen: "BB", naam: "Bert Bollen" });
+    await rij(a, "BB-1");
+    await wijzig(a, "BX");
+    await expect(a.locator("#notice")).toContainText("Initialen gewijzigd naar BX");
+
+    const b = await nieuweBrowser(browser, schijf);
+    await b.click("#wizardNew");
+    await b.fill("#wizardInitials", "BB");
+    await b.click("#wizardPickFolder");
+    await expect(b.locator("#wizardNewState")).toContainText("BB werkt nu met de initialen BX");
+    await b.click("#wizardFetch");
+    await beginnen(b);
+    expect(await b.evaluate(() => db.assessor)).toBe("BX");
+    expect(await rijenInTool(b)).toEqual(["BB-1"]);
+
+    // In de lijst staat Bert één keer.
+    const c = await nieuweBrowser(browser, schijf);
+    await c.click("#wizardExisting");
+    await c.click("#wizardPickExisting");
+    await expect(c.locator(".wizard-person")).toHaveCount(1);
+    await expect(c.locator(".wizard-person")).toContainText("BX");
+    b.expectNoErrors();
+    c.expectNoErrors();
   });
 });

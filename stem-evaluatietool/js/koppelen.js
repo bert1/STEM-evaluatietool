@@ -34,6 +34,9 @@
 
 var OWN_STAMP_KEY = "STEM_EVAL_BESTAND_TIJD";
 
+// Verwijsbestand dat achterblijft als je je initialen wijzigt.
+var MOVED_FORMAT = "stem-eval-verhuisd";
+
 // Browser zonder File System Access API: de naam van het werkbestand dat
 // de leerkracht downloadde of opende. Zonder deze sleutel is de tool niet
 // gekoppeld.
@@ -116,7 +119,13 @@ function workFileName() {
    het niet te lezen is, anders het resultaat van readAnyFile(). */
 function parseDbText(text) {
   if (!String(text || "").trim()) return "leeg";
-  try { return readAnyFile(JSON.parse(text), CONFIG); } catch (e) { return null; }
+  try {
+    var parsed = JSON.parse(text);
+    if (parsed && parsed.format === MOVED_FORMAT && parsed.to) {
+      return { moved: { from: cleanAssessor(parsed.from), to: cleanAssessor(parsed.to), at: parsed.at || 0 } };
+    }
+    return readAnyFile(parsed, CONFIG);
+  } catch (e) { return null; }
 }
 
 function knownStamp(name) {
@@ -195,6 +204,7 @@ function attachOwnFile(opts) {
         return file.text().then(function (text) {
           var read = parseDbText(text);
           if (read === "leeg") return "leeg";
+          if (read && read.moved) return opts.replaceMarker ? "leeg" : read;
           if (!read) {
             if (!opts.overwriteUnreadable) return "onleesbaar";
             return backupRawText(text).then(function () { return "leeg"; });
@@ -219,6 +229,11 @@ function attachOwnFile(opts) {
       throw err;
     })
     .then(function (res) {
+      if (res && res.moved) {
+        // Op een ander toestel kreeg je nieuwe initialen: volgen.
+        followMove(res.moved);
+        return attachOwnFile(opts);
+      }
       if (res === "onleesbaar") {
         ownFileHandle = handle;
         fileHandle = null;
@@ -255,6 +270,18 @@ function pullOwnFile() {
     return file.text().then(function (text) {
       var read = parseDbText(text);
       if (read === "leeg") return true;
+      if (read && read.moved) {
+        // Op een ander toestel kreeg je nieuwe initialen. Eerst het nieuwe
+        // bestand inlezen (stamp 0), dan pas schrijven.
+        followMove(read.moved);
+        return folderHandle.getFileHandle(teamFileName(db.assessor), { create: true }).then(function (h) {
+          ownFileHandle = h;
+          fileHandle = h;
+          fileName = h.name;
+          ownFileStamp = 0;
+          return pullOwnFile();
+        });
+      }
       if (!read) {
         ownFileProblem =
           "Het bestand werd intussen gewijzigd, maar kon niet gelezen worden. Misschien is OneDrive nog bezig. " +
@@ -267,10 +294,12 @@ function pullOwnFile() {
         var changed = mergeOwnFile(db, read.db);
         ownFileStamp = file.lastModified;
         saveStamp();
+        var quiet = followedMove;
+        followedMove = false;
         if (changed) {
           saveLocal();
           refreshAll();
-          showNotice(
+          if (!quiet) showNotice(
             "info",
             "Je bestand werd intussen op een ander toestel aangepast",
             "Dat werk is bij het jouwe gevoegd. Er ging niets verloren.",
@@ -417,6 +446,7 @@ function initKoppelen() {
 function scanFolder(dirHandle) {
   var people = {};
   var files = [];
+  var moved = {};
   function person(initials) {
     if (!people[initials]) people[initials] = { initials: initials, name: "", file: null, backups: [], knownBy: [] };
     return people[initials];
@@ -432,6 +462,10 @@ function scanFolder(dirHandle) {
         var text = await file.text();
         var read = parseDbText(text);
         if (read === "leeg") continue;
+        if (read && read.moved) {
+          moved[initials] = read.moved.to;
+          continue;
+        }
         p.file = { name: entry.name, lastModified: file.lastModified, ok: !!read, db: read ? read.db : null };
         if (read) files.push({ name: entry.name, assessor: initials, db: read.db });
       } catch (e) {
@@ -473,10 +507,28 @@ function scanFolder(dirHandle) {
         if (m && m.name) q.name = m.name;
       } catch (e) {}
     }
+    // Gewijzigde initialen: ook uit het team in de bestanden.
+    files.forEach(function (f) {
+      var ren = (f.db.team && f.db.team.renamed) || {};
+      Object.keys(ren).forEach(function (from) { if (!moved[from] && ren[from].to) moved[from] = ren[from].to; });
+    });
+    // Wie zijn initialen wijzigde, staat in de lijst onder de nieuwe, met
+    // alle reservekopieën (ook die met de oude initialen in de naam).
+    Object.keys(moved).forEach(function (from) {
+      var to = moved[from];
+      var seen = {};
+      while (moved[to] && !seen[to]) { seen[to] = true; to = moved[to]; }
+      var old = people[from];
+      if (!old || old.file) return;
+      var target = person(to);
+      target.backups = target.backups.concat(old.backups);
+      if (!target.name) target.name = old.name;
+      delete people[from];
+    });
     Object.keys(people).forEach(function (k) {
       people[k].backups.sort(function (a, b) { return b.time - a.time; });
     });
-    return { people: people, files: files };
+    return { people: people, files: files, moved: moved };
   })();
 }
 
@@ -502,12 +554,21 @@ function rowsInColleagueFiles(scan, initials) {
 
 var wiz = { mode: "", first: "keuze", folder: null, scan: null, linked: false };
 
-var FOLDER_HELP =
-  "Waar staat de gedeelde map? Open de Verkenner. Links staat OneDrive (met een wolkje). " +
-  "Daarin staat de map die jullie delen, bijvoorbeeld \"STEM evaluaties\". Kies die map en klik op Map selecteren. " +
-  "De browser vraagt daarna of de tool er bestanden mag bewaren: klik op toestaan. " +
-  "Zie je OneDrive of de map niet, dan is OneDrive op deze computer nog niet gesynchroniseerd. " +
-  "Meld je aan bij OneDrive, of vraag hulp aan je ICT-verantwoordelijke.";
+/* Korte uitleg waar de gedeelde map meestal staat, in stappen. */
+function renderFolderHelp(host) {
+  host.innerHTML = "";
+  host.appendChild(el("strong", null, "Waar staat de gedeelde map?"));
+  var ol = el("ol");
+  [
+    "Open de Verkenner. Links staat OneDrive, met een wolkje.",
+    "Klik de map van je vakgroep aan, bijvoorbeeld \"STEM evaluaties\", en klik op Map selecteren.",
+    "De browser vraagt of de tool daar bestanden mag bewaren: klik op toestaan.",
+  ].forEach(function (t) { ol.appendChild(el("li", null, t)); });
+  host.appendChild(ol);
+  host.appendChild(el("span", null,
+    "Zie je OneDrive of de map niet? Dan is OneDrive op deze computer nog niet gesynchroniseerd. " +
+    "Meld je aan bij OneDrive, of vraag hulp aan je ICT-verantwoordelijke."));
+}
 
 function openWizard(mode) {
   wiz = { mode: mode, first: "keuze", folder: null, scan: null, linked: false };
@@ -519,8 +580,8 @@ function openWizard(mode) {
     ? "De tool bewaart je werk in je eigen bestand in de gedeelde map van je vakgroep, op OneDrive. Zo staat het veilig, en zien je collega's het."
     : "De tool bewaart je werk in een werkbestand. Dat bestand bewaar je zelf, bijvoorbeeld in OneDrive.";
   $("wizardBrowserWarn").classList.toggle("hidden", FOLDER_SUPPORTED);
-  $("wizardFolderHelpNew").textContent = FOLDER_HELP;
-  $("wizardFolderHelpExisting").textContent = FOLDER_HELP;
+  renderFolderHelp($("wizardFolderHelpNew"));
+  renderFolderHelp($("wizardFolderHelpExisting"));
   $("wizardFolderPart").classList.toggle("hidden", !FOLDER_SUPPORTED);
   $("wizardFilePart").classList.toggle("hidden", FOLDER_SUPPORTED);
   $("wizardExistingFolderPart").classList.toggle("hidden", !FOLDER_SUPPORTED);
@@ -556,6 +617,7 @@ function showWizardStep(step) {
   $("wizardToExistingRow").classList.toggle("hidden", !(step === "nieuw" && wiz.first === "nieuw"));
   $("wizardFinish").disabled = !wiz.linked;
   $("wizardFinish").classList.toggle("hidden", step === "keuze");
+  $("setupWizard").querySelector(".wizard-actions").classList.toggle("hidden", step === "keuze" && wiz.mode !== "opnieuw");
   var focus = step === "keuze" ? $("wizardNew") : step === "nieuw" && !$("wizardInitials").readOnly ? $("wizardInitials") : null;
   if (focus) focus.focus();
 }
@@ -640,6 +702,21 @@ function recognizeInitials(initials, typedName) {
   var again = wiz.mode === "opnieuw";
   var fixed = $("wizardInitials").readOnly;
 
+  if (!p && wiz.scan.moved[initials]) {
+    var to = wiz.scan.moved[initials];
+    var q = wiz.scan.people[to];
+    var qn = (q && q.name) || to;
+    wizardPanel(host, "info", "Die initialen worden niet meer gebruikt",
+      [initials + " werkt nu met de initialen " + to + (q && q.name ? " (" + q.name + ")" : "") + ". Ben jij " + qn + "? Dan halen we je werk op."],
+      [
+        { label: "Ja, haal mijn werk op", primary: true, id: "wizardFetch", onClick: function () { if (q) choosePerson(q, host); } },
+        { label: $("wizardInitials").readOnly ? "Nee, een andere map kiezen" : "Nee, ik kies andere initialen", onClick: function () {
+          host.innerHTML = "";
+          if (!$("wizardInitials").readOnly) $("wizardInitials").focus();
+        } },
+      ]);
+    return;
+  }
   if (!p) {
     linkNewFile(initials, typedName, host);
     return;
@@ -730,7 +807,9 @@ function renderPeople() {
   missing.type = "button";
   missing.id = "wizardNotListed";
   missing.addEventListener("click", function () { showNotListed(state); });
-  host.appendChild(missing);
+  var wrap = el("div", "btn-row");
+  wrap.appendChild(missing);
+  host.appendChild(wrap);
 }
 
 function showNotListed(host) {
@@ -1030,6 +1109,134 @@ function wizardOpenedFile(read, name) {
 }
 
 /* ------------------------------------------------------------------
+   INITIALEN WIJZIGEN (sinds 1.32.0)
+
+   Wat verandert:
+   - db.assessor en de browseropslag;
+   - row.assessor van je eigen beoordelingen, met een nieuw tijdstip
+     zodat collega's het overnemen. Het rij-id (BB-...) blijft bewust
+     hetzelfde: een nieuw id zou bij iedereen een dubbele rij geven;
+   - het team: lid en klastoewijzingen, plus team.renamed[oud] = {to,
+     at}, zodat Team bijwerken de oude initialen niet terugbrengt;
+   - "by" bij vrijstellingen en Skore-vinkjes;
+   - je bestand: evaluaties-NIEUW.json wordt je werkbestand, en
+     evaluaties-OUD.json wordt een klein verwijsbestand (MOVED_FORMAT).
+     Team bijwerken slaat dat stil over. Een ander toestel van jou dat
+     nog met de oude initialen werkt, leest het en volgt vanzelf
+     (followMove()). Wissen zou gevaarlijk zijn: dat toestel zou het oude
+     bestand gewoon opnieuw aanmaken.
+   Wat blijft: de namen van de reservekopieën (listBackups() telt de
+   vorige initialen mee, via myInitialsHistory()), de rij-id's, en de
+   beoordelingen van collega's.
+   ------------------------------------------------------------------ */
+
+/* Je huidige initialen en alle vorige. */
+function myInitialsHistory(d) {
+  var out = [cleanAssessor(d.assessor) || "XX"];
+  var ren = (d.team && d.team.renamed) || {};
+  var grew = true;
+  while (grew) {
+    grew = false;
+    Object.keys(ren).forEach(function (from) {
+      if (out.indexOf(from) === -1 && out.indexOf(ren[from].to) !== -1) {
+        out.push(from);
+        grew = true;
+      }
+    });
+  }
+  return out;
+}
+
+function renameInitialsInDb(d, from, to, now) {
+  function bump(rec) { rec.updatedAt = Math.max(now, (rec.updatedAt || 0) + 1); }
+  Object.keys(d.schoolYears || {}).forEach(function (yr) {
+    var bucket = d.schoolYears[yr];
+    Object.keys(bucket.sessions || {}).forEach(function (key) {
+      bucket.sessions[key].forEach(function (row) {
+        if (row.assessor !== from) return;
+        row.assessor = to;
+        if (!row.createdAt) row.createdAt = row.updatedAt || now;
+        bump(row);
+      });
+    });
+    [bucket.exemptions, bucket.skoreDone].forEach(function (map) {
+      Object.keys(map || {}).forEach(function (key) {
+        var rec = map[key];
+        if (rec && typeof rec === "object" && rec.by === from) { rec.by = to; bump(rec); }
+      });
+    });
+  });
+  if (!d.team) d.team = emptyTeam();
+  if (!d.team.renamed) d.team.renamed = {};
+  d.team.renamed[from] = { to: to, at: now };
+  applyTeamRenames(d.team);
+  d.team.updatedAt = now;
+}
+
+/* Je bestand heet op een ander toestel al anders: volg. */
+var followedMove = false;
+
+function followMove(m) {
+  followedMove = true;
+  var from = db.assessor;
+  renameInitialsInDb(db, from, m.to, Math.max(Date.now(), (m.at || 0) + 1));
+  setIdentity(m.to);
+  showNotice("info", "Je initialen zijn gewijzigd", "Op een ander toestel werden je initialen gewijzigd van " + from + " naar " + m.to + ". Je werkt nu verder als " + m.to + ".");
+}
+
+/* Geeft een Promise met "" als het lukte, anders de reden. */
+function renameMyInitials(next) {
+  var from = db.assessor;
+  next = cleanAssessor(next);
+  if (!next || next === from) return Promise.resolve("");
+  var mine = myInitialsHistory(db);
+  if (ownFileProblem) return Promise.resolve("Je bestand kon niet gelezen worden. Los dat eerst op.");
+  if (pendingFolder && !folderHandle) return Promise.resolve("Verbind eerst met de gedeelde map.");
+  var local = db.team && db.team.members && db.team.members[next];
+  if (local && mine.indexOf(next) === -1) {
+    return Promise.resolve(next + " wordt al gebruikt door " + (local.name || "een collega") + ". Kies andere initialen.");
+  }
+
+  // Zonder gedeelde map: meteen, binnen de klik. Een download die pas na
+  // een Promise start, blokkeert de browser als tweede download.
+  if (!folderHandle) {
+    renameInitialsInDb(db, from, next, Date.now());
+    setIdentity(next);
+    persist();
+    downloadDb();
+    try { localStorage.setItem(WORKFILE_KEY, fileName); } catch (e) {}
+    return Promise.resolve("");
+  }
+
+  var check = scanFolder(folderHandle);
+  return check.then(function (scan) {
+    if (mine.indexOf(next) === -1) {
+      var p = scan.people[next];
+      if (p) return next + " wordt al gebruikt door " + (p.name || "een collega") + ". Kies andere initialen.";
+      if (scan.moved[next]) return next + " werd vroeger al gebruikt in het team. Kies andere initialen.";
+    }
+    return makeBackup().then(function () {
+      var now = Date.now();
+      renameInitialsInDb(db, from, next, now);
+      setIdentity(next);
+      var oldHandle = ownFileHandle;
+      ownFileHandle = null;
+      fileHandle = null;
+      return attachOwnFile({ replaceMarker: true }).then(function (res) {
+        if (res !== "ok") throw new Error("Het nieuwe bestand kon niet bewaard worden");
+        if (!oldHandle) return;
+        var marker = { format: MOVED_FORMAT, from: from, to: next, at: now };
+        return oldHandle.createWritable().then(function (w) {
+          return w.write(new Blob([JSON.stringify(marker, null, 2)], { type: "application/json" })).then(function () { return w.close(); });
+        });
+      }).then(function () { return ""; });
+    });
+  }).catch(function (err) {
+    return (err && err.message ? err.message + ". " : "") + "Probeer het opnieuw.";
+  });
+}
+
+/* ------------------------------------------------------------------
    INSTELLINGEN, GEBRUIKER
    ------------------------------------------------------------------ */
 
@@ -1082,6 +1289,7 @@ function renderUserView() {
 
 function openUserEdit() {
   $("userNameInput").value = myName();
+  $("userInitialsInput").value = db.assessor;
   $("userEditForm").classList.remove("hidden");
   $("btnUserEdit").classList.add("hidden");
   $("userNameInput").focus();
@@ -1094,16 +1302,35 @@ function closeUserEdit() {
 
 function saveUserEdit() {
   var name = $("userNameInput").value.trim();
-  if (!name) {
-    showNotice("warn", "Vul je naam in", "Zo herkennen je collega's je in de overzichten.");
+  var next = cleanAssessor($("userInitialsInput").value);
+  if (!next) {
+    showNotice("warn", "Vul je initialen in", "Letters en cijfers, hoogstens zes.");
     return;
   }
-  var changed = setMyName(name);
-  closeUserEdit();
-  if (changed) {
-    persist();
-    showNotice("good", "Naam gewijzigd", "Je collega's zien je nieuwe naam na Team bijwerken.");
-  }
-  renderAssessor();
-  renderUserView();
+  var from = db.assessor;
+  if (next !== from && !confirm(
+    "Je initialen wijzigen van " + from + " naar " + next + "?\n\n" +
+    "Al je beoordelingen krijgen de nieuwe initialen, ook bij je collega's na Team bijwerken. " +
+    (folderHandle ? "Je bestand in de gedeelde map heet voortaan " + teamFileName(next) + ". " : "Je downloadt een nieuw werkbestand met de nieuwe naam. ") +
+    "De tool maakt eerst een reservekopie. Er gaat niets verloren.",
+  )) return;
+
+  var renamed = renameMyInitials(next);
+  renamed.then(function (problem) {
+    if (problem) {
+      showNotice("warn", "Initialen niet gewijzigd", problem);
+      return;
+    }
+    var nameChanged = setMyName(name);
+    closeUserEdit();
+    if (nameChanged) persist();
+    renderAssessor();
+    renderUserView();
+    refreshAll();
+    if (next !== from) {
+      showNotice("good", "Initialen gewijzigd naar " + next, "Je werk staat nu in " + fileName + ". Je collega's zien de nieuwe initialen na Team bijwerken.");
+    } else if (nameChanged) {
+      showNotice("good", "Naam gewijzigd", "Je collega's zien je nieuwe naam na Team bijwerken.");
+    }
+  });
 }

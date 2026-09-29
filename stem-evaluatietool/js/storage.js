@@ -666,6 +666,9 @@ function readTeamFolder(dirHandle, ownFileName, config) {
         var file = await entry.getFile();
         var text = await file.text();
         var parsed = JSON.parse(text);
+        // Verwijsbestand na gewijzigde initialen (sinds 1.32.0): het werk
+        // staat in het nieuwe bestand, dus stil overslaan.
+        if (parsed && parsed.format === MOVED_FORMAT) continue;
         var read = readAnyFile(parsed, config);
         if (!read) {
           problems.push(entry.name + " (geen evaluatiebestand)");

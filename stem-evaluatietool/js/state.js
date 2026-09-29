@@ -128,7 +128,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.31.1";
+var APP_VERSION = "1.32.0";
 
 var DB_VERSION = 4;
 
@@ -202,7 +202,7 @@ function emptyDb() {
     subjects: {},
     tombstones: emptyTombstones(),
     localTombstones: emptyTombstones(),
-    team: { members: {}, classes: {}, updatedAt: 0 },
+    team: { members: {}, classes: {}, renamed: {}, updatedAt: 0 },
     settings: { thresholds: null, updatedAt: 0 },
   };
   out.schoolYears[yearLabel] = { roster: {}, sessions: {}, createdAt: Date.now() };
@@ -676,6 +676,7 @@ function normaliseDb(db) {
     out.team = {
       members: JSON.parse(JSON.stringify(db.team.members || {})),
       classes: JSON.parse(JSON.stringify(db.team.classes || {})),
+      renamed: JSON.parse(JSON.stringify(db.team.renamed || {})),
       updatedAt: db.team.updatedAt || 0,
     };
   }
