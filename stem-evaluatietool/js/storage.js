@@ -437,9 +437,9 @@ function refreshAll() {
   fillClassAndEvalOptions($("yearSelect").value);
   if (currentView === "roster") {
     renderRosterCurrent();
-    renderSubjectSection();
     fillMoveFromKlasOptions();
   }
+  if (currentView === "subjects") renderSubjectSection();
   if (currentView === "evals" && !draft) renderEvalList();
   periodDraft = null; // ander schooljaar of samengevoegd: opnieuw vertrekken van wat bewaard is
   if (currentView === "skore") {

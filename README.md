@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.29.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.30.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -17,13 +17,14 @@ op je eigen computer en in je eigen OneDrive.
 2. [Je werk bewaren](#2-je-werk-bewaren)
 3. [Evalueren](#3-evalueren)
 4. [Klaslijsten](#4-klaslijsten)
-5. [Rubrics](#5-rubrics)
-6. [Controle](#6-controle)
-7. [Skore](#7-skore)
-8. [Team en OneDrive](#8-team-en-onedrive)
-9. [Een nieuw schooljaar](#9-een-nieuw-schooljaar)
-10. [Problemen oplossen](#10-problemen-oplossen)
-11. [Voor ontwikkelaars](#11-voor-ontwikkelaars)
+5. [Vakken](#5-vakken)
+6. [Rubrics](#6-rubrics)
+7. [Controle](#7-controle)
+8. [Skore](#8-skore)
+9. [Team en OneDrive](#9-team-en-onedrive)
+10. [Een nieuw schooljaar](#10-een-nieuw-schooljaar)
+11. [Problemen oplossen](#11-problemen-oplossen)
+12. [Voor ontwikkelaars](#12-voor-ontwikkelaars)
 
 ---
 
@@ -41,7 +42,7 @@ opslaan.
 3. De eerste keer verschijnt een **welkomstscherm**:
    - vul je **initialen** in (bijvoorbeeld `JVDB`);
    - vul eventueel je volledige naam in;
-   - kies de **gedeelde map** in OneDrive (zie [Team en OneDrive](#8-team-en-onedrive)),
+   - kies de **gedeelde map** in OneDrive (zie [Team en OneDrive](#9-team-en-onedrive)),
      of klik op "Overslaan, ik doe dit later".
 4. Klik op **Beginnen**.
 5. Maak meteen een **werkbestand** aan: klik op "Werkbestand aanmaken…" en
@@ -55,14 +56,15 @@ Bovenaan zie je vijf tabbladen:
 | **Rubrics** | Evaluaties en hun criteria maken en ordenen in mappen |
 | **Controle** | Wat ontbreekt er nog of klopt er niet? |
 | **Skore** | Welke punten je per periode (GE1 tot GE4) in Skore zet |
-| **Instellingen** | Alles wat je af en toe instelt, in drie onderdelen |
+| **Instellingen** | Alles wat je af en toe instelt, in vier onderdelen |
 
 Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 
 | Onderdeel | Waarvoor dient het? |
 |---|---|
 | **Algemeen** | Een nieuw schooljaar beginnen, en het versienummer van de tool |
-| **Klaslijsten** | Klassen inlezen uit Smartschool, en vakken |
+| **Klaslijsten** | Klassen inlezen uit Smartschool |
+| **Vakken** | Vakken maken en aanduiden welke klassen ze volgen |
 | **Team** | Wie geeft welke klas, de gedeelde map in OneDrive en reservekopieën |
 
 Instellingen opent altijd het onderdeel dat je het laatst bekeek.
@@ -99,7 +101,7 @@ Rechtsboven zie je altijd of je werk veilig staat:
 1. Kies bovenaan het **leerjaar**.
 2. Kies het **vak**. Je ziet dan enkel nog de klassen en de evaluaties van
    dat vak. Kies **Alle vakken** om alles te zien. Dit veld staat er pas als
-   er vakken zijn (zie [Vakken](#vakken) bij Klaslijsten). De tool onthoudt
+   er vakken zijn (zie [Vakken](#5-vakken)). De tool onthoudt
    je keuze.
 3. Kies de **klas**. Je mag meerdere klassen aanvinken als een groepje
    leerlingen uit verschillende klassen bevat.
@@ -153,20 +155,22 @@ Je vindt dit onder **Instellingen**, onderdeel **Klaslijsten**. Doe dit **aan he
 - **Leerling van klas veranderen** (onderaan): verplaatst één leerling naar
   een andere klas, samen met de beoordelingen die al gebeurd zijn.
 
-### Vakken
+---
+
+## 5. Vakken
 
 Geef je in een leerjaar verschillende vakken of richtingen, bijvoorbeeld
 STEM-wetenschappen in 2STa en Techniek in 2TWa? Maak dan vakken aan. Zo zie
 je bij Evalueren enkel de evaluaties die bij je vak horen.
 
-1. Ga naar **Instellingen**, kies **Klaslijsten** en scrol naar **Vakken**.
+1. Ga naar **Instellingen** en kies **Vakken**.
 2. Kies het **leerjaar**, typ de **naam van het vak** en klik op **Vak
    toevoegen**.
 3. Klik bij het vak op de **klassen** die het volgen. Een aangeduide klas
    wordt blauw. Duid je geen klassen aan, dan zie je bij dat vak alle
    klassen.
 4. Ga naar **Rubrics** en kies bij elke evaluatie het **vak** (zie
-   [Rubrics](#5-rubrics)).
+   [Rubrics](#6-rubrics)).
 
 Met **Vak verwijderen** verdwijnt enkel het vak. De evaluaties blijven
 bestaan, maar hebben dan geen vak meer. Vakken gaan mee naar je collega's
@@ -174,7 +178,7 @@ bij **Team bijwerken**, net als de rubrics.
 
 ---
 
-## 5. Rubrics
+## 6. Rubrics
 
 Hier maak je de evaluaties die je bij Evalueren kan kiezen. De knoppen
 **Nieuwe evaluatie**, **+ Nieuwe map** en **Jaaroverzicht afdrukken** staan
@@ -187,7 +191,7 @@ bovenaan, boven de lijst.
   de evaluaties van één vak, of kies je **Geen vak** om te zien welke
   evaluaties nog geen vak hebben. Staat de lijst op één vak, dan hoort een
   nieuwe evaluatie meteen bij dat vak. Vakken maak je aan bij
-  [Klaslijsten](#vakken).
+  [Instellingen, Vakken](#5-vakken).
 - **Nieuwe evaluatie:** geef een naam, voeg **criteria** toe en kies per
   criterium het aantal niveaus. Geef bij voorkeur alle criteria hetzelfde
   aantal niveaus, anders weegt het ene criterium zwaarder dan het andere.
@@ -314,7 +318,7 @@ klas, evaluatie of map vraagt de tool wat je bedoelt:
 
 ---
 
-## 6. Controle
+## 7. Controle
 
 Dit tabblad beantwoordt één vraag: **wat moet ik nog doen?** Je ziet enkel
 wat aandacht vraagt. Staat alles goed, dan staat er één groene zin, zoals
@@ -380,7 +384,7 @@ mee.
 
 ---
 
-## 7. Skore
+## 8. Skore
 
 Hier zie je per **rapportperiode** welke punten je in **Skore** (Smartschool)
 moet zetten.
@@ -477,7 +481,7 @@ Periodes 2026-2027:
 
 ---
 
-## 8. Team en OneDrive
+## 9. Team en OneDrive
 
 Werk je met collega's samen aan dezelfde klassen, dan deel je je werk via een
 **gedeelde map in OneDrive**.
@@ -530,7 +534,7 @@ op **Nu een reservekopie maken**.
 
 ---
 
-## 9. Een nieuw schooljaar
+## 10. Een nieuw schooljaar
 
 1. Open **Instellingen**, kies **Algemeen** en klik op **+ Nieuw schooljaar**.
 2. Lees nieuwe **klaslijsten** in (zie [Klaslijsten](#4-klaslijsten)).
@@ -541,7 +545,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 
 ---
 
-## 10. Problemen oplossen
+## 11. Problemen oplossen
 
 | Probleem | Oplossing |
 |---|---|
@@ -557,7 +561,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 
 ---
 
-## 11. Voor ontwikkelaars
+## 12. Voor ontwikkelaars
 
 - **Broncode:** [`stem-evaluatietool/`](stem-evaluatietool/) (zie de README
   daar voor de opbouw).

@@ -13,6 +13,16 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.30.0 · 29 september 2026
+
+**Vakken als eigen onderdeel bij Instellingen**
+
+- Onder Instellingen staat nu ook **Vakken**, tussen Klaslijsten en Team.
+  Het blok Vakken staat niet meer onderaan het Klaslijsten-scherm. Wat je
+  er kan doen, is niet veranderd.
+- In de handleiding heeft Vakken een eigen hoofdstuk (5); de hoofdstukken
+  erna schoven één nummer op.
+
 ## 1.29.0 · 29 september 2026
 
 **Tab Instellingen met Algemeen, Klaslijsten en Team**

@@ -78,7 +78,7 @@ test("bij Rubrics staat de knop Nieuwe evaluatie boven de lijst", async ({ page 
   page.expectNoErrors();
 });
 
-test("Instellingen: bovenaan één tab, met Algemeen, Klaslijsten en Team eronder", async ({ page }) => {
+test("Instellingen: bovenaan één tab, met Algemeen, Klaslijsten, Vakken en Team eronder", async ({ page }) => {
   await openTool(page);
   // Bovenaan geen aparte tabs meer voor Klaslijsten en Team.
   await expect(page.locator(".topbar .nav-btn")).toHaveText(["Evalueren", "Rubrics", "Controle", "Skore", "Instellingen"]);
@@ -86,7 +86,7 @@ test("Instellingen: bovenaan één tab, met Algemeen, Klaslijsten en Team eronde
 
   await page.click("#btnSettings");
   await expect(page.locator("#settingsTabs")).toBeVisible();
-  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Klaslijsten", "Team"]);
+  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Klaslijsten", "Vakken", "Team"]);
   await expect(page.locator("#btnSettingsGeneral")).toHaveClass(/active/);
   await expect(page.locator("#generalCard")).toBeVisible();
   await expect(page.locator("#generalVersion")).toContainText(await page.evaluate(() => APP_VERSION));

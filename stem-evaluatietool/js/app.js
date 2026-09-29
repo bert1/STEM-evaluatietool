@@ -57,6 +57,8 @@ function init() {
   $("btnSettingsGeneral").addEventListener("click", openGeneral);
   $("btnCloseGeneral").addEventListener("click", goHome);
   $("btnRoster").addEventListener("click", openRoster);
+  $("btnSubjects").addEventListener("click", openSubjects);
+  $("btnCloseSubjects").addEventListener("click", goHome);
   $("btnEvals").addEventListener("click", openEvals);
   $("btnTeam").addEventListener("click", openTeam);
   $("btnBackupNow").addEventListener("click", backupNow);
@@ -244,15 +246,15 @@ function initSetupWizard() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects" }
 
 /* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
    een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
    er later instellingen bijkomen: voeg die hier en in openSettingsView()
    toe, niet bovenaan. */
-var SETTINGS_VIEWS = ["general", "roster", "team"];
+var SETTINGS_VIEWS = ["general", "roster", "subjects", "team"];
 
 var lastSettingsView = "general";
 
@@ -305,6 +307,7 @@ function openSettings() {
 function openSettingsView(name) {
   if (name === "roster") openRoster();
   else if (name === "team") openTeam();
+  else if (name === "subjects") openSubjects();
   else openGeneral();
 }
 

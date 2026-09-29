@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.29.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.30.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,13 +90,22 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.29.0)
+## Volledige featurelijst (huidige stand, 1.30.0)
+
+- **Vakken als eigen onderdeel** (1.30.0): op vraag van de gebruiker een
+  vierde onderdeel onder Instellingen, `#btnSubjects` (view `subjects`,
+  kaart `#subjectsCard`, `openSubjects()` in `js/subjects.js`). Volgorde:
+  Algemeen, Klaslijsten, Vakken, Team. `#subjectSection` staat niet meer
+  in `#rosterCard`; `refreshAll()` tekent het opnieuw als die view open
+  staat. README: eigen hoofdstuk 5, de rest schoof op.
+
 
 - **Tab Instellingen** (1.29.0, `js/app.js`, `index.html`). Gevraagd door
   de gebruiker: de bovenste rij moet overzichtelijk blijven als er
   instellingen bijkomen. Bovenaan `#btnSettings`; daaronder de rij
   `#settingsTabs` met `#btnSettingsGeneral` (Algemeen, nieuw scherm
-  `#generalCard`, view `general`), `#btnRoster` en `#btnTeam` (zelfde ids,
+  `#generalCard`, view `general`), `#btnRoster`, `#btnSubjects` (sinds
+  1.30.0) en `#btnTeam` (zelfde ids,
   zelfde schermen als vroeger). `SETTINGS_VIEWS` in `js/app.js` bepaalt
   welke views onder Instellingen vallen: `showView()` toont dan de rij en
   zet `#btnSettings` actief. `openSettings()` opent `lastSettingsView`.
@@ -110,8 +119,8 @@ testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
 - **Vakken** (1.28.0, `js/subjects.js`, laadt na `rosters.js`). Gevraagd
   door de gebruiker: 2STa en 2TWa mogen niet dezelfde evaluaties zien,
-  anders wordt de lijst te lang. Vakken toevoegen op het
-  Klaslijsten-scherm, kiezen bij een rubric, en bij Evalueren eerst het
+  anders wordt de lijst te lang. Vakken toevoegen bij
+  Instellingen, Vakken (tot 1.29.0 op het Klaslijsten-scherm), kiezen bij een rubric, en bij Evalueren eerst het
   vak kiezen.
   **Opslag:** `db.subjects[leerjaar] = [{name, classes, updatedAt}]`,
   niet per schooljaar (zoals rubrics en mappen), en `ev.subject` (leeg =

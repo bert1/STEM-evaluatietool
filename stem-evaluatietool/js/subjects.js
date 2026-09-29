@@ -147,8 +147,13 @@ function normaliseSubjects(src) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Klaslijsten-scherm: vakken beheren                                   */
+/* Instellingen, onderdeel Vakken (eigen scherm sinds 1.30.0)          */
 /* ------------------------------------------------------------------ */
+
+function openSubjects() {
+  renderSubjectSection();
+  showView("subjects");
+}
 
 function renderSubjectSection() {
   var yearSel = $("subjectYear");

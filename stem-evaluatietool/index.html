@@ -91,6 +91,7 @@
         <div class="nav-group">
           <button type="button" class="nav-btn" id="btnSettingsGeneral">Algemeen</button>
           <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
+          <button type="button" class="nav-btn" id="btnSubjects">Vakken</button>
           <button type="button" class="nav-btn" id="btnTeam">Team</button>
         </div>
       </nav>
@@ -224,30 +225,6 @@
           bewaard: die staan op naam en verdwijnen niet mee.
         </p>
 
-        <section id="subjectSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
-          <h3 class="subject-title">Vakken</h3>
-          <p class="hint" style="margin-bottom: 14px">
-            Voeg de vakken toe die je in een leerjaar geeft, bijvoorbeeld "STEM-wetenschappen" en
-            "Techniek". Duid bij elk vak aan welke klassen het volgen. Bij Rubrics kies je dan bij
-            elke evaluatie het vak. Bij Evalueren zie je na het kiezen van een vak enkel nog de
-            klassen en evaluaties van dat vak.
-          </p>
-          <div class="selection-grid" style="margin-bottom: 12px">
-            <div class="form-group" style="margin: 0">
-              <label for="subjectYear">Leerjaar</label>
-              <select id="subjectYear"></select>
-            </div>
-            <div class="form-group" style="margin: 0">
-              <label for="subjectName">Naam van het vak</label>
-              <input type="text" id="subjectName" placeholder="STEM-wetenschappen" autocomplete="off" />
-            </div>
-            <div class="form-group" style="margin: 0; align-self: end">
-              <button type="button" class="btn-primary" id="btnAddSubject">Vak toevoegen</button>
-            </div>
-          </div>
-          <div id="subjectList"></div>
-        </section>
-
         <details id="moveStudentSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
           <summary style="cursor: pointer; font-size: 14px; color: var(--muted)">
             Leerling van klas veranderen
@@ -290,6 +267,39 @@
 
         <input type="file" id="csvInput" accept=".csv,.txt,text/csv,text/plain" class="hidden" />
         <input type="file" id="xlsxInput" accept=".xlsx" multiple class="hidden" />
+      </div>
+
+      <div class="card hidden" id="subjectsCard">
+        <h2>
+          Vakken
+          <span class="sub">Per vak enkel de eigen klassen en evaluaties</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseSubjects" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <section id="subjectSection">
+          <p class="hint" style="margin-bottom: 14px">
+            Voeg de vakken toe die je in een leerjaar geeft, bijvoorbeeld "STEM-wetenschappen" en
+            "Techniek". Duid bij elk vak aan welke klassen het volgen. Bij Rubrics kies je dan bij
+            elke evaluatie het vak. Bij Evalueren zie je na het kiezen van een vak enkel nog de
+            klassen en evaluaties van dat vak.
+          </p>
+          <div class="selection-grid" style="margin-bottom: 12px">
+            <div class="form-group" style="margin: 0">
+              <label for="subjectYear">Leerjaar</label>
+              <select id="subjectYear"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="subjectName">Naam van het vak</label>
+              <input type="text" id="subjectName" placeholder="STEM-wetenschappen" autocomplete="off" />
+            </div>
+            <div class="form-group" style="margin: 0; align-self: end">
+              <button type="button" class="btn-primary" id="btnAddSubject">Vak toevoegen</button>
+            </div>
+          </div>
+          <div id="subjectList"></div>
+        </section>
       </div>
 
       <div class="card hidden" id="evalCard">

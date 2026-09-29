@@ -23,10 +23,14 @@ async function zetVakkenKlaar(page) {
   }, JAAR);
 }
 
-test("vakken toevoegen, klassen aanduiden en verwijderen op het Klaslijsten-scherm", async ({ page }) => {
+test("vakken toevoegen, klassen aanduiden en verwijderen bij Instellingen, Vakken", async ({ page }) => {
   await openTool(page);
   await page.click("#btnSettings");
-  await page.click("#btnRoster");
+  await page.click("#btnSubjects");
+  await expect(page.locator("#subjectsCard")).toBeVisible();
+  await expect(page.locator("#btnSubjects")).toHaveClass(/active/);
+  // Vakken staan niet meer op het Klaslijsten-scherm.
+  expect(await page.locator("#rosterCard #subjectSection").count()).toBe(0);
   await page.selectOption("#subjectYear", JAAR);
   await expect(page.locator("#subjectList")).toContainText("Nog geen vakken");
 
@@ -191,7 +195,7 @@ test("Rubrics: vak kiezen in de editor, filteren en per evaluatie aanpassen", as
   await expect(page.locator("#draftSubject")).toHaveValue("STEM");
   await page.selectOption("#draftYear", "1ste jaar");
   await expect(page.locator("#draftSubject")).toBeDisabled();
-  await expect(page.locator("#draftSubjectHint")).toContainText("Klaslijsten");
+  await expect(page.locator("#draftSubjectHint")).toContainText("Instellingen, Vakken");
   page.expectNoErrors();
 });
 

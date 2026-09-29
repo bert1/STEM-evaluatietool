@@ -1021,5 +1021,5 @@ function fillDraftSubjectOptions(value) {
   sel.disabled = !names.length;
   $("draftSubjectHint").textContent = names.length
     ? "Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
-    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Klaslijsten.";
+    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Instellingen, Vakken.";
 }

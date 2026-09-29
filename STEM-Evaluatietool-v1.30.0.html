@@ -1895,6 +1895,7 @@ table.feedup-table td {
         <div class="nav-group">
           <button type="button" class="nav-btn" id="btnSettingsGeneral">Algemeen</button>
           <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
+          <button type="button" class="nav-btn" id="btnSubjects">Vakken</button>
           <button type="button" class="nav-btn" id="btnTeam">Team</button>
         </div>
       </nav>
@@ -2028,30 +2029,6 @@ table.feedup-table td {
           bewaard: die staan op naam en verdwijnen niet mee.
         </p>
 
-        <section id="subjectSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
-          <h3 class="subject-title">Vakken</h3>
-          <p class="hint" style="margin-bottom: 14px">
-            Voeg de vakken toe die je in een leerjaar geeft, bijvoorbeeld "STEM-wetenschappen" en
-            "Techniek". Duid bij elk vak aan welke klassen het volgen. Bij Rubrics kies je dan bij
-            elke evaluatie het vak. Bij Evalueren zie je na het kiezen van een vak enkel nog de
-            klassen en evaluaties van dat vak.
-          </p>
-          <div class="selection-grid" style="margin-bottom: 12px">
-            <div class="form-group" style="margin: 0">
-              <label for="subjectYear">Leerjaar</label>
-              <select id="subjectYear"></select>
-            </div>
-            <div class="form-group" style="margin: 0">
-              <label for="subjectName">Naam van het vak</label>
-              <input type="text" id="subjectName" placeholder="STEM-wetenschappen" autocomplete="off" />
-            </div>
-            <div class="form-group" style="margin: 0; align-self: end">
-              <button type="button" class="btn-primary" id="btnAddSubject">Vak toevoegen</button>
-            </div>
-          </div>
-          <div id="subjectList"></div>
-        </section>
-
         <details id="moveStudentSection" style="margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border)">
           <summary style="cursor: pointer; font-size: 14px; color: var(--muted)">
             Leerling van klas veranderen
@@ -2094,6 +2071,39 @@ table.feedup-table td {
 
         <input type="file" id="csvInput" accept=".csv,.txt,text/csv,text/plain" class="hidden" />
         <input type="file" id="xlsxInput" accept=".xlsx" multiple class="hidden" />
+      </div>
+
+      <div class="card hidden" id="subjectsCard">
+        <h2>
+          Vakken
+          <span class="sub">Per vak enkel de eigen klassen en evaluaties</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseSubjects" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <section id="subjectSection">
+          <p class="hint" style="margin-bottom: 14px">
+            Voeg de vakken toe die je in een leerjaar geeft, bijvoorbeeld "STEM-wetenschappen" en
+            "Techniek". Duid bij elk vak aan welke klassen het volgen. Bij Rubrics kies je dan bij
+            elke evaluatie het vak. Bij Evalueren zie je na het kiezen van een vak enkel nog de
+            klassen en evaluaties van dat vak.
+          </p>
+          <div class="selection-grid" style="margin-bottom: 12px">
+            <div class="form-group" style="margin: 0">
+              <label for="subjectYear">Leerjaar</label>
+              <select id="subjectYear"></select>
+            </div>
+            <div class="form-group" style="margin: 0">
+              <label for="subjectName">Naam van het vak</label>
+              <input type="text" id="subjectName" placeholder="STEM-wetenschappen" autocomplete="off" />
+            </div>
+            <div class="form-group" style="margin: 0; align-self: end">
+              <button type="button" class="btn-primary" id="btnAddSubject">Vak toevoegen</button>
+            </div>
+          </div>
+          <div id="subjectList"></div>
+        </section>
       </div>
 
       <div class="card hidden" id="evalCard">
@@ -4917,7 +4927,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.29.0";
+var APP_VERSION = "1.30.0";
 
 var DB_VERSION = 4;
 
@@ -6007,9 +6017,9 @@ function refreshAll() {
   fillClassAndEvalOptions($("yearSelect").value);
   if (currentView === "roster") {
     renderRosterCurrent();
-    renderSubjectSection();
     fillMoveFromKlasOptions();
   }
+  if (currentView === "subjects") renderSubjectSection();
   if (currentView === "evals" && !draft) renderEvalList();
   periodDraft = null; // ander schooljaar of samengevoegd: opnieuw vertrekken van wat bewaard is
   if (currentView === "skore") {
@@ -6214,7 +6224,6 @@ function openRoster() {
     });
   }
   renderRosterCurrent();
-  renderSubjectSection();
   fillMoveYearOptions();
   fillMoveFromKlasOptions();
   showView("roster");
@@ -7620,8 +7629,13 @@ function normaliseSubjects(src) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Klaslijsten-scherm: vakken beheren                                   */
+/* Instellingen, onderdeel Vakken (eigen scherm sinds 1.30.0)          */
 /* ------------------------------------------------------------------ */
+
+function openSubjects() {
+  renderSubjectSection();
+  showView("subjects");
+}
 
 function renderSubjectSection() {
   var yearSel = $("subjectYear");
@@ -10473,7 +10487,7 @@ function fillDraftSubjectOptions(value) {
   sel.disabled = !names.length;
   $("draftSubjectHint").textContent = names.length
     ? "Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
-    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Klaslijsten.";
+    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Instellingen, Vakken.";
 }
 
 
@@ -16118,6 +16132,8 @@ function init() {
   $("btnSettingsGeneral").addEventListener("click", openGeneral);
   $("btnCloseGeneral").addEventListener("click", goHome);
   $("btnRoster").addEventListener("click", openRoster);
+  $("btnSubjects").addEventListener("click", openSubjects);
+  $("btnCloseSubjects").addEventListener("click", goHome);
   $("btnEvals").addEventListener("click", openEvals);
   $("btnTeam").addEventListener("click", openTeam);
   $("btnBackupNow").addEventListener("click", backupNow);
@@ -16305,15 +16321,15 @@ function initSetupWizard() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects" }
 
 /* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
    een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
    er later instellingen bijkomen: voeg die hier en in openSettingsView()
    toe, niet bovenaan. */
-var SETTINGS_VIEWS = ["general", "roster", "team"];
+var SETTINGS_VIEWS = ["general", "roster", "subjects", "team"];
 
 var lastSettingsView = "general";
 
@@ -16366,6 +16382,7 @@ function openSettings() {
 function openSettingsView(name) {
   if (name === "roster") openRoster();
   else if (name === "team") openTeam();
+  else if (name === "subjects") openSubjects();
   else openGeneral();
 }
 
