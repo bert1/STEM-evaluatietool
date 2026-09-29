@@ -40,7 +40,7 @@
           <p class="hint" style="margin: 0 0 8px">
             Werk je samen met collega's? Kies de map die jullie delen: een map op OneDrive, of een
             netwerkschijf van de school. Ken je dit pad niet, vraag het aan je ICT-verantwoordelijke.
-            Dit kan ook later nog, via het Team-scherm.
+            Dit kan ook later nog, via Instellingen en dan Team.
           </p>
           <div class="btn-row">
             <button type="button" class="btn-ghost" id="wizardPickFolder">Gedeelde map kiezen</button>
@@ -60,10 +60,7 @@
         STEM Evaluatietool <span class="app-version" id="appVersion"></span>
         <small>Werkt offline · je gegevens blijven op dit toestel</small>
         <div class="school-year-field">
-          <select id="schoolYearSelect"></select>
-          <button type="button" class="btn-ghost btn-small" id="btnAddSchoolYear" title="Nieuw schooljaar toevoegen">
-            + Nieuw schooljaar
-          </button>
+          <select id="schoolYearSelect" title="Schooljaar dat je bekijkt. Een nieuw schooljaar maak je bij Instellingen, Algemeen."></select>
         </div>
       </div>
       <div class="assessor-field">
@@ -78,17 +75,52 @@
       </div>
       <nav class="nav-group">
         <button type="button" class="nav-btn active" id="btnHome">Evalueren</button>
-        <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
         <button type="button" class="nav-btn" id="btnEvals">Rubrics</button>
         <button type="button" class="nav-btn" id="btnResults">Controle</button>
         <button type="button" class="nav-btn" id="btnSkore">Skore</button>
-        <button type="button" class="nav-btn" id="btnTeam">Team</button>
+        <button type="button" class="nav-btn" id="btnSettings">Instellingen</button>
       </nav>
       <span class="status nofile" id="status">Geen bestand gekozen</span>
     </div>
 
     <div class="container">
       <div id="notice"></div>
+
+      <nav class="settings-tabs hidden" id="settingsTabs" aria-label="Instellingen">
+        <span class="settings-tabs-title">Instellingen</span>
+        <div class="nav-group">
+          <button type="button" class="nav-btn" id="btnSettingsGeneral">Algemeen</button>
+          <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
+          <button type="button" class="nav-btn" id="btnTeam">Team</button>
+        </div>
+      </nav>
+
+      <div class="card hidden" id="generalCard">
+        <h2>
+          Algemeen
+          <span class="sub">Instellingen voor de hele tool</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseGeneral" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Schooljaar</h3>
+          <p class="hint">
+            Je werkt nu in <strong id="generalActiveYear"></strong>. Begin in september een nieuw
+            schooljaar. De klaslijsten beginnen dan leeg. Rubrics, mappen, vakken en team blijven.
+            Een vorig schooljaar blijft bewaard: je kan het bekijken met de keuzelijst linksboven.
+          </p>
+          <div class="btn-row">
+            <button type="button" class="btn-ghost" id="btnAddSchoolYear">+ Nieuw schooljaar</button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Over deze tool</h3>
+          <p class="hint" id="generalVersion"></p>
+        </section>
+      </div>
 
       <div class="card hidden" id="rosterCard">
         <h2>

@@ -1335,3 +1335,9 @@ details.controle-fold { margin: 14px 0; }
 .subject-count { margin: 0; }
 .subject-classes-label { margin: 8px 0 6px; }
 .subject-classes { gap: 6px; }
+
+/* Tab Instellingen met onderdelen (sinds 1.29.0) */
+.settings-tabs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.settings-tabs-title { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.settings-tabs .nav-group { background: #e2e8f0; }
+.settings-section + .settings-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }

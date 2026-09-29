@@ -25,6 +25,7 @@ async function zetVakkenKlaar(page) {
 
 test("vakken toevoegen, klassen aanduiden en verwijderen op het Klaslijsten-scherm", async ({ page }) => {
   await openTool(page);
+  await page.click("#btnSettings");
   await page.click("#btnRoster");
   await page.selectOption("#subjectYear", JAAR);
   await expect(page.locator("#subjectList")).toContainText("Nog geen vakken");

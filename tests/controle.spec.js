@@ -297,6 +297,7 @@ test("een vrijstelling verhuist mee als de leerling van klas verandert", async (
   await page.evaluate(([ev, s]) => { setExemption("1ste jaar", ev, "1WM", s, "verhuist"); persist(); }, [d.names[0], wie]);
 
   // via het echte Klaslijsten-scherm
+  await page.click("#btnSettings");
   await page.click("#btnRoster");
   await page.locator("summary", { hasText: "Leerling van klas veranderen" }).click();
   await page.selectOption("#moveYear", "1ste jaar");

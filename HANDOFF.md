@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.28.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.29.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,23 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.28.0)
+## Volledige featurelijst (huidige stand, 1.29.0)
+
+- **Tab Instellingen** (1.29.0, `js/app.js`, `index.html`). Gevraagd door
+  de gebruiker: de bovenste rij moet overzichtelijk blijven als er
+  instellingen bijkomen. Bovenaan `#btnSettings`; daaronder de rij
+  `#settingsTabs` met `#btnSettingsGeneral` (Algemeen, nieuw scherm
+  `#generalCard`, view `general`), `#btnRoster` en `#btnTeam` (zelfde ids,
+  zelfde schermen als vroeger). `SETTINGS_VIEWS` in `js/app.js` bepaalt
+  welke views onder Instellingen vallen: `showView()` toont dan de rij en
+  zet `#btnSettings` actief. `openSettings()` opent `lastSettingsView`.
+  **Een nieuw onderdeel toevoegen:** knop in `#settingsTabs`, kaart in
+  `index.html`, en de naam in `VIEWS`, `NAV`, `SETTINGS_VIEWS` en
+  `openSettingsView()`. **Algemeen** bevat `#btnAddSchoolYear` (verhuisd
+  uit de kop; `#schoolYearSelect` bleef in de kop) en het versienummer.
+  Testen die `#btnRoster` of `#btnTeam` aanklikken, klikken eerst
+  `#btnSettings` (die knoppen zijn anders onzichtbaar).
+
 
 - **Vakken** (1.28.0, `js/subjects.js`, laadt na `rosters.js`). Gevraagd
   door de gebruiker: 2STa en 2TWa mogen niet dezelfde evaluaties zien,
@@ -723,7 +739,8 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
 `tests/`, die bij elke push automatisch draait op GitHub:
 
 - `opstarten.spec.js`: build, alle scriptbestanden bestaan, opstarten
-  zonder fouten (gebouwd én losse `index.html`), opstartwizard, alle tabbladen
+  zonder fouten (gebouwd én losse `index.html`), opstartwizard, alle tabbladen,
+  de tab Instellingen met zijn onderdelen, nieuw schooljaar via Algemeen
 - `evalueren.spec.js`: een leerling beoordelen, opslaan en terugzien bij
   Controle; melding bij ontbrekende criteria
 - `zoeklijst.spec.js`: de zoeklijst bij Evalueren (mappen, accenten,

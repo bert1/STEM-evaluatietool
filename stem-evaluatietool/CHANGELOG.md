@@ -13,6 +13,23 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.29.0 · 29 september 2026
+
+**Tab Instellingen met Algemeen, Klaslijsten en Team**
+
+- Bovenaan staan nog vijf tabs: Evalueren, Rubrics, Controle, Skore en
+  **Instellingen**. Klaslijsten en Team staan niet meer bovenaan, maar
+  onder Instellingen, samen met het nieuwe onderdeel **Algemeen**. Nieuwe
+  instellingen komen voortaan daar, zodat de bovenste rij overzichtelijk
+  blijft.
+- Instellingen opent het onderdeel dat je het laatst bekeek (eerst
+  Algemeen).
+- **Algemeen:** het schooljaar waarin je werkt, de knop **+ Nieuw
+  schooljaar** (stond vroeger linksboven) en het versienummer. De
+  keuzelijst om een ouder schooljaar te bekijken blijft linksboven.
+- De knoppen en schermen van Klaslijsten en Team zijn verder niet
+  veranderd.
+
 ## 1.28.0 · 29 september 2026
 
 **Vakken: per vak enkel de eigen klassen en evaluaties**

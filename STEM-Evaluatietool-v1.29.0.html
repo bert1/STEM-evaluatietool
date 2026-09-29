@@ -1376,6 +1376,12 @@ details.controle-fold { margin: 14px 0; }
 .subject-count { margin: 0; }
 .subject-classes-label { margin: 8px 0 6px; }
 .subject-classes { gap: 6px; }
+
+/* Tab Instellingen met onderdelen (sinds 1.29.0) */
+.settings-tabs { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+.settings-tabs-title { font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--muted); }
+.settings-tabs .nav-group { background: #e2e8f0; }
+.settings-section + .settings-section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); }
 </style>
     <style>
 /* ---------- Voortgang ---------- */
@@ -1838,7 +1844,7 @@ table.feedup-table td {
           <p class="hint" style="margin: 0 0 8px">
             Werk je samen met collega's? Kies de map die jullie delen: een map op OneDrive, of een
             netwerkschijf van de school. Ken je dit pad niet, vraag het aan je ICT-verantwoordelijke.
-            Dit kan ook later nog, via het Team-scherm.
+            Dit kan ook later nog, via Instellingen en dan Team.
           </p>
           <div class="btn-row">
             <button type="button" class="btn-ghost" id="wizardPickFolder">Gedeelde map kiezen</button>
@@ -1858,10 +1864,7 @@ table.feedup-table td {
         STEM Evaluatietool <span class="app-version" id="appVersion"></span>
         <small>Werkt offline · je gegevens blijven op dit toestel</small>
         <div class="school-year-field">
-          <select id="schoolYearSelect"></select>
-          <button type="button" class="btn-ghost btn-small" id="btnAddSchoolYear" title="Nieuw schooljaar toevoegen">
-            + Nieuw schooljaar
-          </button>
+          <select id="schoolYearSelect" title="Schooljaar dat je bekijkt. Een nieuw schooljaar maak je bij Instellingen, Algemeen."></select>
         </div>
       </div>
       <div class="assessor-field">
@@ -1876,17 +1879,52 @@ table.feedup-table td {
       </div>
       <nav class="nav-group">
         <button type="button" class="nav-btn active" id="btnHome">Evalueren</button>
-        <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
         <button type="button" class="nav-btn" id="btnEvals">Rubrics</button>
         <button type="button" class="nav-btn" id="btnResults">Controle</button>
         <button type="button" class="nav-btn" id="btnSkore">Skore</button>
-        <button type="button" class="nav-btn" id="btnTeam">Team</button>
+        <button type="button" class="nav-btn" id="btnSettings">Instellingen</button>
       </nav>
       <span class="status nofile" id="status">Geen bestand gekozen</span>
     </div>
 
     <div class="container">
       <div id="notice"></div>
+
+      <nav class="settings-tabs hidden" id="settingsTabs" aria-label="Instellingen">
+        <span class="settings-tabs-title">Instellingen</span>
+        <div class="nav-group">
+          <button type="button" class="nav-btn" id="btnSettingsGeneral">Algemeen</button>
+          <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
+          <button type="button" class="nav-btn" id="btnTeam">Team</button>
+        </div>
+      </nav>
+
+      <div class="card hidden" id="generalCard">
+        <h2>
+          Algemeen
+          <span class="sub">Instellingen voor de hele tool</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseGeneral" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Schooljaar</h3>
+          <p class="hint">
+            Je werkt nu in <strong id="generalActiveYear"></strong>. Begin in september een nieuw
+            schooljaar. De klaslijsten beginnen dan leeg. Rubrics, mappen, vakken en team blijven.
+            Een vorig schooljaar blijft bewaard: je kan het bekijken met de keuzelijst linksboven.
+          </p>
+          <div class="btn-row">
+            <button type="button" class="btn-ghost" id="btnAddSchoolYear">+ Nieuw schooljaar</button>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Over deze tool</h3>
+          <p class="hint" id="generalVersion"></p>
+        </section>
+      </div>
 
       <div class="card hidden" id="rosterCard">
         <h2>
@@ -4879,7 +4917,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.28.0";
+var APP_VERSION = "1.29.0";
 
 var DB_VERSION = 4;
 
@@ -16076,6 +16114,9 @@ function init() {
   $("btnCopy").addEventListener("click", copyTable);
   $("btnClearSession").addEventListener("click", clearSession);
 
+  $("btnSettings").addEventListener("click", openSettings);
+  $("btnSettingsGeneral").addEventListener("click", openGeneral);
+  $("btnCloseGeneral").addEventListener("click", goHome);
   $("btnRoster").addEventListener("click", openRoster);
   $("btnEvals").addEventListener("click", openEvals);
   $("btnTeam").addEventListener("click", openTeam);
@@ -16264,20 +16305,32 @@ function initSetupWizard() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral" }
+
+/* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
+   een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
+   er later instellingen bijkomen: voeg die hier en in openSettingsView()
+   toe, niet bovenaan. */
+var SETTINGS_VIEWS = ["general", "roster", "team"];
+
+var lastSettingsView = "general";
 
 var currentView = "main";
 
 function showView(name) {
   if (!VIEWS[name]) name = "main";
   currentView = name;
+  var inSettings = SETTINGS_VIEWS.indexOf(name) !== -1;
+  if (inSettings) lastSettingsView = name;
 
   Object.keys(VIEWS).forEach(function (key) {
     $(VIEWS[key]).classList.toggle("hidden", key !== name);
     $(NAV[key]).classList.toggle("active", key === name);
   });
+  $("btnSettings").classList.toggle("active", inSettings);
+  $("settingsTabs").classList.toggle("hidden", !inSettings);
 
   clearNotice();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -16304,6 +16357,24 @@ function clearNotice() { $("notice").innerHTML = ""; }
 document.addEventListener("DOMContentLoaded", init);
 
 /* ---- overgenomen uit editor.js ---- */
+
+/* Tab Instellingen: opent het onderdeel dat je het laatst bekeek. */
+function openSettings() {
+  openSettingsView(lastSettingsView);
+}
+
+function openSettingsView(name) {
+  if (name === "roster") openRoster();
+  else if (name === "team") openTeam();
+  else openGeneral();
+}
+
+function openGeneral() {
+  $("generalActiveYear").textContent = db.activeSchoolYear;
+  $("generalVersion").textContent =
+    "STEM Evaluatietool, versie " + APP_VERSION + ". Vermeld dit nummer als je een probleem meldt.";
+  showView("general");
+}
 
 function goHome() {
   if (draft && !confirm("Je bent een evaluatie aan het bewerken. Wijzigingen die je nog niet opsloeg, gaan verloren.\n\nToch weggaan?")) {
@@ -16375,7 +16446,7 @@ function onAddSchoolYear() {
     return;
   }
   if (db.schoolYears[label]) {
-    showNotice("warn", "Dit schooljaar bestaat al", "Kies het gewoon bovenaan om ernaar te wisselen.");
+    showNotice("warn", "Dit schooljaar bestaat al", "Kies het linksboven om ernaar te wisselen.");
     return;
   }
 
@@ -16386,6 +16457,7 @@ function onAddSchoolYear() {
   renderSchoolYearSelect();
   renderArchivedYearBar();
   refreshAll();
+  if (currentView === "general") $("generalActiveYear").textContent = db.activeSchoolYear;
   showNotice(
     "good", "Nieuw schooljaar aangemaakt: " + label,
     "De klaslijsten zijn leeg. Rubrics en team zijn overgenomen uit " +

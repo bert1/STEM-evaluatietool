@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.28.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.29.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -47,16 +47,25 @@ opslaan.
 5. Maak meteen een **werkbestand** aan: klik op "Werkbestand aanmaken…" en
    kies een plek in je OneDrive. Vanaf dan slaat de tool alles automatisch op.
 
-Bovenaan zie je zes tabbladen:
+Bovenaan zie je vijf tabbladen:
 
 | Tabblad | Waarvoor dient het? |
 |---|---|
 | **Evalueren** | Leerlingen beoordelen tijdens of na de les |
-| **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Rubrics** | Evaluaties en hun criteria maken en ordenen in mappen |
 | **Controle** | Wat ontbreekt er nog of klopt er niet? |
 | **Skore** | Welke punten je per periode (GE1 tot GE4) in Skore zet |
-| **Team** | Wie geeft welke klas, en de gedeelde map in OneDrive |
+| **Instellingen** | Alles wat je af en toe instelt, in drie onderdelen |
+
+Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
+
+| Onderdeel | Waarvoor dient het? |
+|---|---|
+| **Algemeen** | Een nieuw schooljaar beginnen, en het versienummer van de tool |
+| **Klaslijsten** | Klassen inlezen uit Smartschool, en vakken |
+| **Team** | Wie geeft welke klas, de gedeelde map in OneDrive en reservekopieën |
+
+Instellingen opent altijd het onderdeel dat je het laatst bekeek.
 
 ---
 
@@ -128,7 +137,7 @@ Rechtsboven zie je altijd of je werk veilig staat:
 
 ## 4. Klaslijsten
 
-Doe dit **aan het begin van het schooljaar**, of als er een klas bijkomt.
+Je vindt dit onder **Instellingen**, onderdeel **Klaslijsten**. Doe dit **aan het begin van het schooljaar**, of als er een klas bijkomt.
 
 1. Download je klaslijsten uit **Smartschool** (één Excel-bestand per klas).
 2. Klik op **Kies Smartschool-bestand(en)** en kies ze. Meerdere tegelijk mag.
@@ -150,7 +159,7 @@ Geef je in een leerjaar verschillende vakken of richtingen, bijvoorbeeld
 STEM-wetenschappen in 2STa en Techniek in 2TWa? Maak dan vakken aan. Zo zie
 je bij Evalueren enkel de evaluaties die bij je vak horen.
 
-1. Ga naar **Klaslijsten** en scrol naar **Vakken**.
+1. Ga naar **Instellingen**, kies **Klaslijsten** en scrol naar **Vakken**.
 2. Kies het **leerjaar**, typ de **naam van het vak** en klik op **Vak
    toevoegen**.
 3. Klik bij het vak op de **klassen** die het volgen. Een aangeduide klas
@@ -475,14 +484,14 @@ Werk je met collega's samen aan dezelfde klassen, dan deel je je werk via een
 
 1. Maak (of vraag) één gedeelde map in OneDrive voor de vakgroep, en zorg dat
    die op je computer gesynchroniseerd wordt.
-2. Open het tabblad **Team** en klik op **Gedeelde map kiezen**. Kies die
+2. Open **Instellingen**, kies **Team** en klik op **Gedeelde map kiezen**. Kies die
    OneDrive-map.
 3. De tool bewaart jouw werk daar automatisch in een eigen bestand met je
    initialen.
 4. Klik op het Evalueren-scherm op **Team bijwerken** om het werk van je
    collega's op te halen.
 
-Bij **Team** vul je ook in **wie welke klas geeft**. Zo zie je bij Evalueren
+Bij **Instellingen**, **Team** vul je ook in **wie welke klas geeft**. Zo zie je bij Evalueren
 wie hoeveel leerlingen van een klas al beoordeeld heeft.
 
 > Samenvoegen verwijdert **nooit** iets: de tool voegt enkel toe, en bij twee
@@ -503,7 +512,7 @@ Als je met een gedeelde map werkt, bewaart de tool vanzelf een
 
 **Iets misgegaan? Zet een vorige versie terug:**
 
-1. Open het tabblad **Team**.
+1. Open **Instellingen** en kies **Team**.
 2. Zoek onder **Reservekopieën** de datum en het uur van vóór de fout.
 3. Klik op **Terugzetten** en bevestig.
 4. Klik daarna op **Team bijwerken** om nieuw werk van je collega's weer op
@@ -523,7 +532,7 @@ op **Nu een reservekopie maken**.
 
 ## 9. Een nieuw schooljaar
 
-1. Klik linksboven op **+ Nieuw schooljaar**.
+1. Open **Instellingen**, kies **Algemeen** en klik op **+ Nieuw schooljaar**.
 2. Lees nieuwe **klaslijsten** in (zie [Klaslijsten](#4-klaslijsten)).
 3. Controleer de **periodes** in het tabblad Skore en sla ze op.
 
