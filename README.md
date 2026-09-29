@@ -5,8 +5,9 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.31.1.** Het versienummer staat ook rechtsboven in de
-> tool. Wat er per versie veranderd is, lees je in
+> **Huidige versie: 1.34.0.** Het versienummer staat ook rechtsboven in de
+> tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
+> Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
 ---
@@ -30,23 +31,71 @@ op je eigen computer en in je eigen OneDrive.
 
 ## 1. Snel aan de slag
 
-**Wat heb je nodig?** Een computer met **Google Chrome** of **Microsoft
-Edge**. Andere browsers werken ook, maar dan kan de tool niet automatisch
-opslaan.
+**Wat heb je nodig?**
+
+- Een computer met **Google Chrome** of **Microsoft Edge**.
+- **OneDrive** op die computer, met de **gedeelde map** van je vakgroep
+  (vraag je collega's hoe die heet).
+
+In andere browsers (Firefox, Safari) werkt de tool ook, maar dan moet je zelf
+na elke les op "Opslaan (download)" klikken. Zie [Zonder Chrome of Edge](#zonder-chrome-of-edge).
+
+### De eerste keer
 
 1. **Download het bestand** `STEM-Evaluatietool-v….html` (bovenaan in deze
    pagina, of krijg het van een collega) en zet het ergens waar je het
    terugvindt, bijvoorbeeld op je bureaublad.
 2. **Dubbelklik** op het bestand. Het opent in je browser. Er is geen
    installatie nodig.
-3. De eerste keer verschijnt een **welkomstscherm**:
-   - vul je **initialen** in (bijvoorbeeld `JVDB`);
-   - vul eventueel je volledige naam in;
-   - kies de **gedeelde map** in OneDrive (zie [Team en OneDrive](#9-team-en-onedrive)),
-     of klik op "Overslaan, ik doe dit later".
+3. Je ziet het **welkomstscherm** met twee knoppen. Kies de knop die bij jou
+   past:
+   - **Ik gebruik de tool voor het eerst**
+   - **Ik heb de tool al gebruikt op een andere computer of in een andere browser**
+
+Je kan de tool pas gebruiken als je dit welkomstscherm afwerkt. Sluit je het
+venster tussendoor, dan verschijnt het de volgende keer gewoon opnieuw. Er
+gaat niets verloren.
+
+**Ik gebruik de tool voor het eerst**
+
+1. Vul je **initialen** in, bijvoorbeeld `JVDB`.
+2. Vul je **volledige naam** in. Zo herkennen je collega's je.
+3. Klik op **Gedeelde map kiezen**. Je Verkenner opent:
+   - links staat **OneDrive** (met een wolkje);
+   - klik de map van je vakgroep aan, bijvoorbeeld "STEM evaluaties";
+   - klik op **Map selecteren**;
+   - de browser vraagt of de tool daar bestanden mag bewaren: klik op
+     **toestaan**.
+4. Je ziet "Gekoppeld". Klik op **Beginnen**.
+
+Zie je OneDrive of de map niet in de Verkenner? Dan is OneDrive op deze
+computer nog niet gesynchroniseerd. Meld je aan bij OneDrive, of vraag hulp
+aan je ICT-verantwoordelijke. Werk je alleen, kies dan een eigen map in je
+OneDrive.
+
+> Vul je initialen in die al in de map staan, dan vraagt de tool
+> **"Ben jij …?"**. Ben jij dat, klik dan op **Ja, haal mijn werk op**. Ben
+> jij dat niet, kies dan andere initialen. De tool overschrijft nooit het
+> werk van iemand anders.
+
+**Ik heb de tool al gebruikt op een andere computer of in een andere browser**
+
+Gebruik deze knop ook als je je browsergegevens gewist hebt.
+
+1. Klik op **Gedeelde map kiezen** en kies de map van je vakgroep (zoals
+   hierboven).
+2. Je ziet een lijst met namen. **Klik op je naam.**
+3. Je werk komt terug: beoordelingen, rubrics, klaslijsten, vakken en
+   instellingen. Je hoeft niets te typen.
 4. Klik op **Beginnen**.
-5. Maak meteen een **werkbestand** aan: klik op "Werkbestand aanmaken…" en
-   kies een plek in je OneDrive. Vanaf dan slaat de tool alles automatisch op.
+
+Staat je bestand niet meer in de map (bijvoorbeeld per ongeluk verwijderd)?
+Dan zie je bij je naam "bestand niet gevonden, wel reservekopieën". Klik erop
+en kies de **nieuwste reservekopie**. Zijn er ook geen reservekopieën, dan
+kan de tool je werk terughalen uit de bestanden van je collega's. Die bevatten
+enkel wat zij de laatste keer van jou overnamen.
+
+### De tabbladen
 
 Bovenaan zie je vijf tabbladen:
 
@@ -56,43 +105,108 @@ Bovenaan zie je vijf tabbladen:
 | **Rubrics** | Evaluaties en hun criteria maken en ordenen in mappen |
 | **Controle** | Wat ontbreekt er nog of klopt er niet? |
 | **Skore** | Welke punten je per periode (GE1 tot GE4) in Skore zet |
-| **Instellingen** | Alles wat je af en toe instelt, in vier onderdelen |
+| **Instellingen** | Alles wat je af en toe instelt, en deze handleiding |
 
 Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 
 | Onderdeel | Waarvoor dient het? |
 |---|---|
 | **Algemeen** | Een nieuw schooljaar beginnen, en het versienummer van de tool |
+| **Gebruiker** | Je initialen en naam, en waar je werk bewaard wordt |
 | **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Vakken** | Vakken maken en aanduiden welke klassen ze volgen |
-| **Team** | Wie geeft welke klas, de gedeelde map in OneDrive en reservekopieën |
+| **Team** | Het werk van je collega's ophalen, wie welke klas geeft, en reservekopieën |
+| **Help** | Deze handleiding. Klik in de inhoud op een hoofdstuk om ernaartoe te gaan. |
 
-Instellingen opent altijd het onderdeel dat je het laatst bekeek.
+Instellingen opent altijd het onderdeel dat je het laatst bekeek. Rechtsboven
+naast **Beoordelaar** staan je initialen. Klik erop om naar **Gebruiker** te
+gaan.
 
 ---
 
 ## 2. Je werk bewaren
 
-Rechtsboven zie je altijd of je werk veilig staat:
+Je werk staat in **je eigen bestand** in de gedeelde map, bijvoorbeeld
+`evaluaties-JVDB.json`. De tool bewaart elke wijziging vanzelf. Je hoeft
+nooit zelf op opslaan te klikken, en er staan geen opslagknoppen op het
+Evalueren-scherm. Zie je bovenaan toch een gekleurde balk, volg dan wat
+erin staat.
+
+Rechtsboven zie je altijd of je werk veilig staat. Klik erop om naar
+**Instellingen**, **Gebruiker** te gaan.
 
 | Status | Betekenis |
 |---|---|
-| 🟢 **Opgeslagen in …** | Alles staat in je werkbestand. |
+| 🟢 **Opgeslagen in …** | Alles staat in je bestand. |
 | 🟠 **Niet opgeslagen** | Er is een wijziging die nog weggeschreven wordt. Dat gebeurt binnen een seconde vanzelf. |
-| 🟠 **Alleen in deze browser** | Je hebt nog geen werkbestand. Maak er een aan met "Werkbestand aanmaken…". |
-| 🔴 **Niet opgeslagen!** | Opslaan is mislukt. Volg de rode balk: "Opnieuw proberen" of "Opslaan als…". |
+| 🟠 **Map niet verbonden** | De browser vraagt opnieuw toestemming. Klik in de oranje balk op **Verbinden met …**. |
+| 🔴 **Niet opgeslagen!** | Opslaan is mislukt. Volg de rode balk: "Opnieuw proberen", of "Kopie downloaden" om je werk ergens veilig te zetten. |
+| 🔴 **Bestand onleesbaar** | Je bestand kon niet gelezen worden, misschien is OneDrive nog bezig. De tool schrijft er niets naar. Wacht even en klik op **Opnieuw proberen**. |
 
-**Knoppen op het Evalueren-scherm:**
+### Instellingen, Gebruiker
 
-- **Opslaan**: schrijft meteen naar je werkbestand (gebeurt ook automatisch).
-- **Opslaan als…**: maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.
-- **Werk van collega toevoegen**: voegt het bestand van een collega bij het
-  jouwe. Er gaat nooit iets verloren.
-- **Ander bestand openen**: vervangt alles wat je nu hebt door een ander
-  werkbestand.
+Hier zie je:
 
-> **Tip:** zet je werkbestand in OneDrive. Dan heb je altijd een reservekopie
-> en kan je op een andere computer verder werken.
+- je **initialen** en je **naam**;
+- **waar je werk bewaard wordt**: de gedeelde map en de naam van je bestand.
+
+**Je naam wijzigen:** klik op **Wijzigen**, pas je naam aan en klik op
+**Opslaan**. Je collega's zien je nieuwe naam zodra hun tool bijwerkt.
+
+**Je initialen wijzigen:** doe dit enkel als het echt nodig is.
+
+1. Klik op **Wijzigen** en vul je nieuwe initialen in.
+2. Klik op **Opslaan** en bevestig.
+3. Al je beoordelingen krijgen de nieuwe initialen. Je bestand krijgt een
+   nieuwe naam. Je collega's zien het zodra hun tool bijwerkt.
+
+Initialen die een collega al gebruikt, kan je niet kiezen. De tool maakt
+eerst een reservekopie. Er gaat niets verloren.
+
+**Koppeling opnieuw instellen:** kies opnieuw de gedeelde map, bijvoorbeeld
+als die verhuisd is. Je werk wordt samengevoegd met wat er in de map staat.
+Er gaat niets verloren.
+
+**Kopie downloaden:** downloadt een kopie van al je werk, bijvoorbeeld voor
+je eigen archief. Je werk blijft gewoon bewaard waar het nu staat.
+
+**Dit toestel loskoppelen:** gebruik dit op een computer die je met anderen
+deelt, zoals in de klas of de leraarskamer.
+
+1. Klik op **Dit toestel loskoppelen** en bevestig.
+2. Je werk blijft bewaard in de gedeelde map.
+3. Op deze computer wordt alles van de tool gewist. De volgende keer start
+   de tool met het welkomstscherm. Kies dan **Ik heb de tool al gebruikt …**
+   en klik op je naam.
+
+De tool doet dit enkel als je werk echt veilig in de map staat.
+
+### Op twee computers werken
+
+Werk je thuis op je laptop en op school op een andere computer? Kies op de
+tweede computer **Ik heb de tool al gebruikt op een andere computer** en klik
+op je naam. Daarna werken beide computers met hetzelfde bestand. Sla je op de
+ene computer iets op, dan haalt de andere dat op voor ze zelf iets bewaart.
+Er gaat niets verloren. Je ziet dan de melding "Je bestand werd intussen op
+een ander toestel aangepast".
+
+> Wat nog niet kan: een beoordeling die je op de ene computer verwijdert,
+> kan terugkomen van de andere computer. Verwijder ze dan nog eens.
+
+### Zonder Chrome of Edge
+
+In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
+
+- De eerste keer klik je op **Werkbestand downloaden**. Het heet
+  bijvoorbeeld `evaluaties-JVDB.json`. Zet het op een veilige plek, het
+  liefst in de gedeelde map van je vakgroep: dan zien je collega's je werk.
+- Heb je iets gewijzigd, dan staat rechtsboven de knop **Opslaan
+  (download)**. Klik erop na elke les en vervang het oude bestand.
+- Op een andere computer kies je **Ik heb de tool al gebruikt …** en dan
+  **Mijn werkbestand openen**.
+- Werkte je intussen op een andere computer? Kies bij **Instellingen**,
+  **Gebruiker** de knop **Werkbestand openen en samenvoegen**. Het werk van
+  daar komt bij het jouwe. Er gaat niets verloren.
 
 ---
 
@@ -174,7 +288,7 @@ je bij Evalueren enkel de evaluaties die bij je vak horen.
 
 Met **Vak verwijderen** verdwijnt enkel het vak. De evaluaties blijven
 bestaan, maar hebben dan geen vak meer. Vakken gaan mee naar je collega's
-bij **Team bijwerken**, net als de rubrics.
+als hun tool bijwerkt, net als de rubrics.
 
 ---
 
@@ -487,17 +601,21 @@ Periodes 2026-2027:
 
 ## 9. Team en OneDrive
 
-Werk je met collega's samen aan dezelfde klassen, dan deel je je werk via een
-**gedeelde map in OneDrive**.
+Iedereen van de vakgroep koppelt de tool aan **dezelfde gedeelde map in
+OneDrive** (zie [De eerste keer](#de-eerste-keer)). Elke leerkracht heeft daar
+een eigen bestand met zijn initialen. Niemand schrijft in het bestand van een
+ander.
 
-1. Maak (of vraag) één gedeelde map in OneDrive voor de vakgroep, en zorg dat
-   die op je computer gesynchroniseerd wordt.
-2. Open **Instellingen**, kies **Team** en klik op **Gedeelde map kiezen**. Kies die
-   OneDrive-map.
-3. De tool bewaart jouw werk daar automatisch in een eigen bestand met je
-   initialen.
-4. Klik op het Evalueren-scherm op **Team bijwerken** om het werk van je
-   collega's op te halen.
+**Het werk van je collega's komt vanzelf binnen:** bij het opstarten, als je
+terugkomt naar het venster van de tool, en om de tien minuten. Ben je een
+leerling aan het beoordelen, dan wacht de tool tot je klaar bent.
+
+Wil je het meteen? Open **Instellingen**, **Team** en klik op **Nu
+bijwerken**. Daarnaast staat wanneer het laatst gebeurde.
+
+Kreeg je een bestand van iemand die niet in de gedeelde map werkt? Klik bij
+**Team** op **Een bestand van buiten de map toevoegen**. Het werk uit dat
+bestand komt bij het jouwe. Er gaat niets verloren.
 
 Bij **Instellingen**, **Team** vul je ook in **wie welke klas geeft**. Zo zie je bij Evalueren
 wie hoeveel leerlingen van een klas al beoordeeld heeft.
@@ -515,6 +633,8 @@ Als je met een gedeelde map werkt, bewaart de tool vanzelf een
   `evaluaties-BB-2026-09-29-14u05.json`.
 - Er komt een kopie bij als je de tool opent en daarna elk uur dat je werkt.
   Veranderde er niets, dan komt er geen nieuwe kopie.
+- Voegt de tool werk van een andere computer bij het jouwe, dan komt er eerst
+  een kopie van je bestand zoals het was.
 - Kopieën van de laatste twee weken blijven allemaal bewaard. Oudere kopieën
   worden opgeruimd tot één per week, en na een jaar verdwijnen ze.
 
@@ -523,8 +643,8 @@ Als je met een gedeelde map werkt, bewaart de tool vanzelf een
 1. Open **Instellingen** en kies **Team**.
 2. Zoek onder **Reservekopieën** de datum en het uur van vóór de fout.
 3. Klik op **Terugzetten** en bevestig.
-4. Klik daarna op **Team bijwerken** om nieuw werk van je collega's weer op
-   te halen.
+4. Nieuw werk van je collega's komt daarna vanzelf weer binnen. Wil je het
+   meteen, klik dan bij **Team** op **Nu bijwerken**.
 
 Wat je na dat tijdstip veranderde, is dan weg. Geen paniek als je de
 verkeerde kiest: de tool maakt eerst nog een kopie van hoe het was. Die staat
@@ -534,7 +654,7 @@ Ga je iets groots doen, zoals een klaslijst opnieuw inlezen? Klik dan eerst
 op **Nu een reservekopie maken**.
 
 > Je ziet enkel je eigen reservekopieën. Het teruggezette werk komt ook bij je
-> collega's terecht zodra zij op Team bijwerken klikken.
+> collega's terecht zodra hun tool bijwerkt (vanzelf, of met Nu bijwerken).
 
 ---
 
@@ -553,14 +673,16 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 
 | Probleem | Oplossing |
 |---|---|
+| Het welkomstscherm verschijnt en mijn werk is weg | Kies "Ik heb de tool al gebruikt op een andere computer of in een andere browser", kies de gedeelde map en klik op je naam. |
+| Rode balk "Je bestand … kon niet gelezen worden" | OneDrive is misschien nog bezig. Wacht even en klik op "Opnieuw proberen". Lukt het niet, zet dan een reservekopie terug bij Instellingen, Team. |
 | De tool slaat niet automatisch op | Gebruik Chrome of Edge. In andere browsers moet je zelf op "Opslaan (download)" klikken. |
-| Rode balk "Automatisch opslaan is mislukt" | Staat het bestand ergens anders open, of is OneDrive aan het synchroniseren? Klik op "Opnieuw proberen", of kies "Opslaan als…". |
-| Rode balk "Je werk in deze browser kon niet gelezen worden" | Klik op "Werkbestand openen…" en kies je laatste werkbestand uit OneDrive. Download eerst de reservekopie. |
+| Rode balk "Automatisch opslaan is mislukt" | Staat het bestand ergens anders open, of is OneDrive aan het synchroniseren? Klik op "Opnieuw proberen". |
+| Rode balk "Je werk in deze browser kon niet gelezen worden" | Meestal haalt de tool je werk vanzelf terug uit je bestand in de gedeelde map. Download toch eerst de reservekopie. |
 | Oranje balk "Gedeelde map niet verbonden" | Klik op "Verbinden met …". De browser vraagt na een herstart opnieuw toestemming. |
 | Een leerling moet een evaluatie niet krijgen | Controle, Details, "Niet te beoordelen". |
 | Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes onderaan het tabblad Skore. |
 | Ik heb per ongeluk iets gewist of overschreven | Team, Reservekopieën: klik op "Terugzetten" bij een tijdstip van vóór de fout. |
-| Ik zie de evaluaties van een collega niet | Klik op "Team bijwerken", of voeg hun bestand toe met "Werk van collega toevoegen". |
+| Ik zie de evaluaties van een collega niet | Instellingen, Team: klik op "Nu bijwerken". Werkt je collega niet in de gedeelde map, voeg hun bestand toe met "Een bestand van buiten de map toevoegen". |
 | Er staat een nieuwe versie van de tool klaar | Download het nieuwe bestand en open het. Je werkbestand blijft gewoon werken. |
 
 ---

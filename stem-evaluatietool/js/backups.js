@@ -46,12 +46,30 @@ function backupFileName(assessor, date) {
     pad2(date.getHours()) + "u" + pad2(date.getMinutes()) + ".json";
 }
 
-/* Geeft {name, assessor, time} of null als de naam geen reservekopie is. */
+/* Geeft {name, assessor, time} of null als de naam geen reservekopie is.
+   Twee kopieën in dezelfde minuut krijgen een volgnummer ("-2"), anders
+   zou de tweede de eerste overschrijven (sinds 1.32.0: vóór het
+   samenvoegen komt er een kopie van het bestand zoals het op schijf
+   stond, en na het schrijven nog een). Het volgnummer telt als seconden,
+   zodat de volgorde klopt. */
 function parseBackupName(name) {
-  var m = /^evaluaties-([A-Za-z0-9]{1,6})-(\d{4})-(\d{2})-(\d{2})-(\d{2})u(\d{2})\.json$/.exec(String(name));
+  var m = /^evaluaties-([A-Za-z0-9]{1,6})-(\d{4})-(\d{2})-(\d{2})-(\d{2})u(\d{2})(?:-(\d{1,2}))?\.json$/.exec(String(name));
   if (!m) return null;
-  var d = new Date(+m[2], +m[3] - 1, +m[4], +m[5], +m[6]);
+  var d = new Date(+m[2], +m[3] - 1, +m[4], +m[5], +m[6], m[7] ? +m[7] : 0);
   return { name: name, assessor: m[1].toUpperCase(), time: d.getTime() };
+}
+
+/* Een naam die nog niet in de lijst staat. */
+function uniqueBackupName(list, assessor, date) {
+  var base = backupFileName(assessor, date);
+  var taken = {};
+  list.forEach(function (b) { taken[b.name] = true; });
+  if (!taken[base]) return base;
+  for (var n = 2; n < 60; n++) {
+    var name = base.replace(/\.json$/, "-" + n + ".json");
+    if (!taken[name]) return name;
+  }
+  return base;
 }
 
 /* "dinsdag 29 september 2026 om 14u05" */
@@ -116,18 +134,22 @@ function backupDir(create) {
 }
 
 /* Enkel je eigen kopieën, nieuwste eerst. Een ontbrekende map is gewoon
-   "nog geen kopieën". */
-function listBackups() {
-  if (!folderHandle) return Promise.resolve([]);
-  var me = cleanAssessor(db.assessor) || "XX";
-  return backupDir(false)
+   "nog geen kopieën". Met dirHandle en assessor ook voor een map die nog
+   niet gekoppeld is (de opstartwizard, zie js/koppelen.js). */
+function listBackups(dirHandle, assessor) {
+  var root = dirHandle || folderHandle;
+  if (!root) return Promise.resolve([]);
+  var me = cleanAssessor(assessor || db.assessor) || "XX";
+  // Kopieën van vóór een wijziging van je initialen horen ook bij jou.
+  var mine = assessor ? [me] : myInitialsHistory(db);
+  return root.getDirectoryHandle(BACKUP_DIR)
     .then(function (dir) {
       return (async function () {
         var out = [];
         for await (var entry of dir.values()) {
           if (entry.kind !== "file") continue;
           var b = parseBackupName(entry.name);
-          if (b && b.assessor === me) out.push(b);
+          if (b && mine.indexOf(b.assessor) !== -1) out.push(b);
         }
         return out.sort(function (a, b) { return b.time - a.time; });
       })();
@@ -135,8 +157,8 @@ function listBackups() {
     .catch(function () { return []; });
 }
 
-function readBackupText(name) {
-  return backupDir(false)
+function readBackupText(name, dirHandle) {
+  return (dirHandle || folderHandle).getDirectoryHandle(BACKUP_DIR)
     .then(function (dir) { return dir.getFileHandle(name); })
     .then(function (h) { return h.getFile(); })
     .then(function (f) { return f.text(); });
@@ -175,7 +197,7 @@ function makeBackup() {
         lastBackupAt = now;
         return list[0].name;
       }
-      var name = backupFileName(db.assessor, new Date(now));
+      var name = uniqueBackupName(list, db.assessor, new Date(now));
       var full = { backupAt: new Date(now).toISOString() };
       Object.keys(data).forEach(function (k) { full[k] = data[k]; });
       return backupDir(true)
@@ -204,6 +226,37 @@ function makeBackup() {
       return name;
     });
   return backupBusy;
+}
+
+/* Een kopie van je eigen bestand zoals het nu op schijf staat, letterlijk,
+   vóór de tool het samenvoegt en overschrijft (sinds 1.32.0, zie
+   js/koppelen.js). Zo blijft ook de versie van het andere toestel
+   bewaard. Mislukken is geen fout voor de gebruiker: samenvoegen
+   verwijdert nooit iets. */
+var lastRawBackupAt = 0;
+
+function backupRawText(text, throttle) {
+  if (!folderHandle || !text) return Promise.resolve(null);
+  var now = Date.now();
+  if (throttle && lastRawBackupAt && now - lastRawBackupAt < BACKUP_INTERVAL_MS) return Promise.resolve(null);
+  return listBackups()
+    .then(function (list) {
+      var name = uniqueBackupName(list, db.assessor, new Date(now));
+      return backupDir(true).then(function (dir) {
+        return dir.getFileHandle(name, { create: true }).then(function (h) {
+          return h.createWritable().then(function (w) {
+            return w.write(new Blob([text], { type: "application/json" })).then(function () { return w.close(); });
+          });
+        });
+      }).then(function () {
+        lastRawBackupAt = now;
+        // De volgende gewone kopie mag niet denken dat er niets veranderde.
+        lastBackupContent = null;
+        lastBackupAt = 0;
+        return name;
+      });
+    })
+    .catch(function () { return null; });
 }
 
 /* ------------------------------------------------------------------
@@ -320,7 +373,7 @@ function restoreBackup(name) {
         showNotice(
           "good",
           "Vorige versie teruggezet",
-          "Je werk staat terug zoals het was op " + when + ". Klik op Team bijwerken om nieuw werk van je collega's weer op te halen.",
+          "Je werk staat terug zoals het was op " + when + ". Nieuw werk van je collega's komt vanzelf weer binnen.",
         );
       });
     })

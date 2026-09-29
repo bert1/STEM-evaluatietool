@@ -6,72 +6,15 @@ const START = new Date(2026, 8, 29, 10, 0).getTime();
 const UUR = 60 * 60 * 1000;
 const DAG = 24 * UUR;
 
-/* Een nagemaakte gedeelde map in het geheugen, met submappen. De echte
-   File System Access API werkt niet vanaf file:// in de testbrowser. */
+/* Sinds 1.32.0 koppelt openTool() de tool via de wizard aan een
+   nagemaakte gedeelde map (tests/schijf.js), hier met initialen BB. De
+   eerste kopie komt er bij dat koppelen. */
 async function verbindMap(page) {
-  await page.evaluate(async () => {
-    function nepMap(name) {
-      const files = new Map();
-      const dirs = new Map();
-      function fileHandle(n) {
-        return {
-          kind: "file",
-          name: n,
-          async getFile() {
-            const f = files.get(n);
-            if (!f) throw new DOMException("weg", "NotFoundError");
-            return { text: async () => f.text, lastModified: f.lastModified };
-          },
-          async createWritable() {
-            let buf = "";
-            return {
-              write: async (b) => { buf = typeof b === "string" ? b : await b.text(); },
-              close: async () => { files.set(n, { text: buf, lastModified: Date.now() }); },
-            };
-          },
-        };
-      }
-      return {
-        kind: "directory",
-        name,
-        files,
-        dirs,
-        async getFileHandle(n, opts = {}) {
-          if (!files.has(n)) {
-            if (!opts.create) throw new DOMException("weg", "NotFoundError");
-            files.set(n, { text: "", lastModified: Date.now() });
-          }
-          return fileHandle(n);
-        },
-        async getDirectoryHandle(n, opts = {}) {
-          if (!dirs.has(n)) {
-            if (!opts.create) throw new DOMException("weg", "NotFoundError");
-            dirs.set(n, nepMap(n));
-          }
-          return dirs.get(n);
-        },
-        async removeEntry(n) { files.delete(n); dirs.delete(n); },
-        async *values() {
-          for (const n of [...files.keys()]) yield fileHandle(n);
-          for (const d of [...dirs.values()]) yield d;
-        },
-      };
-    }
-    window.nepMap = nepMap;
-    db.assessor = "BB";
-    $("assessor").value = "BB";
-    folderHandle = nepMap("Gedeeld");
-    folderName = "Gedeeld";
-    await attachOwnFile();
-    await (backupBusy || Promise.resolve());
-  });
+  await page.evaluate(async () => { await (backupBusy || Promise.resolve()); });
 }
 
 async function kopieen(page) {
-  return page.evaluate(() => {
-    const d = folderHandle.dirs.get("backups");
-    return d ? [...d.files.keys()].sort() : [];
-  });
+  return page.schijf.namen("Gedeeld/backups");
 }
 
 /* Eén beoordeelde leerling in het 1ste jaar; geeft de sessiesleutel en
@@ -170,13 +113,13 @@ test.describe("namen en opruimen", () => {
 test.describe("automatisch een reservekopie", () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.setFixedTime(START);
-    await openTool(page);
+    await openTool(page, { initialen: "BB" });
   });
 
   test("bij het verbinden met de map komt er een kopie in de map backups", async ({ page }) => {
     await verbindMap(page);
     expect(await kopieen(page)).toEqual(["evaluaties-BB-2026-09-29-10u00.json"]);
-    const inhoud = await page.evaluate(() => JSON.parse(folderHandle.dirs.get("backups").files.get("evaluaties-BB-2026-09-29-10u00.json").text));
+    const inhoud = page.schijf.json("Gedeeld/backups/evaluaties-BB-2026-09-29-10u00.json");
     expect(inhoud.format).toBe("stem-eval");
     expect(inhoud.assessor).toBe("BB");
     expect(Object.keys(inhoud.schoolYears).length).toBeGreaterThan(0);
@@ -222,13 +165,13 @@ test.describe("automatisch een reservekopie", () => {
 
   test("oude kopieën worden opgeruimd, die van collega's niet", async ({ page }) => {
     await verbindMap(page);
-    await page.evaluate(({ START, DAG }) => {
-      const dir = folderHandle.dirs.get("backups");
-      for (let i = 0; i < 20; i++) {
-        dir.files.set(backupFileName("BB", new Date(START - (400 + i) * DAG)), { text: "{}", lastModified: 0 });
-      }
-      dir.files.set(backupFileName("MD", new Date(START - 500 * DAG)), { text: "{}", lastModified: 0 });
+    const namen0 = await page.evaluate(({ START, DAG }) => {
+      const out = [];
+      for (let i = 0; i < 20; i++) out.push(backupFileName("BB", new Date(START - (400 + i) * DAG)));
+      out.push(backupFileName("MD", new Date(START - 500 * DAG)));
+      return out;
     }, { START, DAG });
+    namen0.forEach((n) => page.schijf.zet("Gedeeld/backups/" + n, "{}"));
     await page.clock.setFixedTime(START + 2 * UUR);
     await beoordeel(page, 1);
     await opgeslagen(page);
@@ -249,17 +192,18 @@ test.describe("automatisch een reservekopie", () => {
   });
 });
 
+test("in een browser zonder gedeelde map staat er niets over reservekopieën", async ({ page }) => {
+  await openTool(page, { initialen: "BB", fsa: false });
+  await page.click("#btnSettings");
+  await page.click("#btnTeam");
+  await expect(page.locator("#backupSection")).toBeHidden();
+  page.expectNoErrors();
+});
+
 test.describe("terugzetten", () => {
   test.beforeEach(async ({ page }) => {
     await page.clock.setFixedTime(START);
-    await openTool(page);
-  });
-
-  test("zonder gedeelde map staat er niets over reservekopieën", async ({ page }) => {
-    await page.click("#btnSettings");
-    await page.click("#btnTeam");
-    await expect(page.locator("#backupSection")).toBeHidden();
-    page.expectNoErrors();
+    await openTool(page, { initialen: "BB" });
   });
 
   test("een vorige versie terugzetten via het Teamscherm", async ({ page }) => {
@@ -346,15 +290,13 @@ test.describe("terugzetten", () => {
     }, s);
 
     // Een collega nam de fout al over en slaat haar bestand op in de map.
-    await page.evaluate(() => {
-      const blob = JSON.parse(JSON.stringify({
-        format: DB_FORMAT, version: DB_VERSION, assessor: "MD", schoolYears: db.schoolYears,
-        currentSchoolYear: db.currentSchoolYear, activeSchoolYear: db.activeSchoolYear,
-        evaluations: db.evaluations, evaluationFolders: db.evaluationFolders,
-        tombstones: db.tombstones, team: db.team, settings: db.settings,
-      }));
-      folderHandle.files.set("evaluaties-MD.json", { text: JSON.stringify(blob), lastModified: Date.now() });
-    });
+    const blob = await page.evaluate(() => JSON.parse(JSON.stringify({
+      format: DB_FORMAT, version: DB_VERSION, assessor: "MD", schoolYears: db.schoolYears,
+      currentSchoolYear: db.currentSchoolYear, activeSchoolYear: db.activeSchoolYear,
+      evaluations: db.evaluations, evaluationFolders: db.evaluationFolders,
+      tombstones: db.tombstones, team: db.team, settings: db.settings,
+    })));
+    page.schijf.zet("Gedeeld/evaluaties-MD.json", blob);
     await opgeslagen(page);
 
     await page.clock.setFixedTime(START + 3 * UUR);
@@ -363,7 +305,6 @@ test.describe("terugzetten", () => {
     await expect(page.locator("#notice")).toContainText("Vorige versie teruggezet");
 
     await page.evaluate(() => syncTeam(true));
-    await expect(page.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     const na = await page.evaluate(({ key, klas, crit, ev }) => ({
       score: db.sessions[key][0].scores[crit],
       klas: !!db.roster["1ste jaar"][klas],

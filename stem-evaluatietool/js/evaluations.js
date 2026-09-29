@@ -424,10 +424,10 @@ function renderTeamProgress(list) {
     host.appendChild(el("span", "who-chip none", "nog " + prog.remaining.length));
   }
 
-  var me = cleanAssessor($("assessor").value);
+  var me = cleanAssessor(db.assessor);
   if (me && assigned.length && assigned.indexOf(me) === -1) {
     var warn = el("span", "who-chip none", "jij staat niet ingeschreven voor " + cur.klassen.join(" + "));
-    warn.title = "Je kan gewoon verder werken. Pas dit aan in het Teamscherm.";
+    warn.title = "Je kan gewoon verder werken. Pas dit aan bij Instellingen, Team.";
     host.appendChild(warn);
   }
 }
@@ -690,11 +690,11 @@ function saveEvaluation() {
   }
 
   var students = selectedStudents();
-  var assessor = cleanAssessor($("assessor").value);
+  var assessor = cleanAssessor(db.assessor);
 
   if (!assessor) {
-    showNotice("warn", "Vul eerst je initialen in", "Die staan bovenaan. Zonder initialen kan je je werk later niet samenvoegen met dat van je collega.");
-    $("assessor").focus();
+    // Kan normaal niet meer sinds 1.32.0: de wizard vraagt de initialen.
+    showNotice("warn", "Je initialen ontbreken", "Stel je koppeling opnieuw in bij Instellingen, Gebruiker.");
     return;
   }
   if (!students.length) {

@@ -26,14 +26,6 @@ function init() {
   $("btnAddSchoolYear").addEventListener("click", onAddSchoolYear);
   renderArchivedYearBar();
 
-  $("assessor").value = db.assessor;
-  $("assessor").addEventListener("input", function () {
-    db.assessor = cleanAssessor(this.value);
-    this.value = db.assessor;
-    try { localStorage.setItem(ASSESSOR_KEY, db.assessor); } catch (e) {}
-    markDirty();
-  });
-
   $("yearSelect").addEventListener("change", onYearChange);
   $("classSelect").addEventListener("change", onSelectionChange);
   $("evalSelect").addEventListener("change", onSelectionChange);
@@ -45,10 +37,9 @@ function init() {
   $("btnSave").addEventListener("click", saveEvaluation);
   $("btnCancel").addEventListener("click", function () { resetForm(); });
 
-  $("btnSaveFile").addEventListener("click", function () { saveToFile(false); });
-  $("btnSaveFileAs").addEventListener("click", function () { saveToFile(true); });
-  $("btnOpenFile").addEventListener("click", function () { pickFile("open"); });
   $("btnMergeFile").addEventListener("click", function () { pickFile("merge"); });
+  $("btnMergeFileOff").addEventListener("click", function () { pickFile("merge"); });
+  $("status").addEventListener("click", onStatusClick);
   $("btnExportCsv").addEventListener("click", exportCSV);
   $("btnCopy").addEventListener("click", copyTable);
   $("btnClearSession").addEventListener("click", clearSession);
@@ -128,17 +119,10 @@ function init() {
     e.returnValue = "";
   });
 
-  if (!canPickFiles) {
-    showNotice(
-      "info",
-      "Deze browser slaat op via downloaden",
-      "Voor een echte Opslaan-knop die rechtstreeks naar je schijf schrijft, open je dit bestand in Chrome of Edge. Hier werkt opslaan via een download, en openen via Bladeren.",
-    );
-  }
-
   updateStatus();
-  restoreFolder();
-  initSetupWizard();
+  initKoppelen();
+  initAutoSync();
+  initHelp();
   initAiRubricHelper();
   initScoringShortcuts();
   initEvalCombo();
@@ -151,92 +135,7 @@ function init() {
 
 
 
-/* ------------------------------------------------------------------ */
-/* Opstartwizard — enkel bij de allereerste keer openen                */
-/* ------------------------------------------------------------------ */
-
-function initSetupWizard() {
-  if (!freshStart) return;
-
-  $("setupWizard").classList.remove("hidden");
-  document.body.classList.add("wizard-open");
-  $("wizardInitials").focus();
-
-  if (!FOLDER_SUPPORTED) {
-    $("wizardFolderGroup").classList.add("hidden");
-  }
-
-  function updateFinishState() {
-    $("wizardFinish").disabled = !cleanAssessor($("wizardInitials").value);
-  }
-  $("wizardInitials").addEventListener("input", updateFinishState);
-  updateFinishState();
-
-  $("wizardPickFolder").addEventListener("click", function () {
-    var initials = cleanAssessor($("wizardInitials").value);
-    var stateHost = $("wizardFolderState");
-    stateHost.innerHTML = "";
-
-    if (!initials) {
-      var warn = el("div", "notice warn");
-      warn.appendChild(el("strong", null, "Vul eerst je initialen in"));
-      warn.appendChild(document.createTextNode("Die bepalen hoe je bestand in de gedeelde map gaat heten."));
-      stateHost.appendChild(warn);
-      return;
-    }
-
-    $("assessor").value = initials;
-    db.assessor = initials;
-
-    connectToFolder(
-      function (name) {
-        stateHost.innerHTML = "";
-        var ok = el("div", "notice good");
-        ok.appendChild(el("strong", null, "Map gekoppeld"));
-        ok.appendChild(document.createTextNode(name));
-        stateHost.appendChild(ok);
-      },
-      function (title, body) {
-        stateHost.innerHTML = "";
-        var w = el("div", "notice warn");
-        w.appendChild(el("strong", null, title));
-        w.appendChild(document.createTextNode(body));
-        stateHost.appendChild(w);
-      },
-    );
-  });
-
-  function finishWizard() {
-    var initials = cleanAssessor($("wizardInitials").value);
-    if (initials) {
-      $("assessor").value = initials;
-      db.assessor = initials;
-      try { localStorage.setItem(ASSESSOR_KEY, initials); } catch (e) {}
-
-      var name = $("wizardName").value.trim();
-      if (name) {
-        if (!db.team) db.team = emptyTeam();
-        if (!db.team.members[initials]) db.team.members[initials] = { name: "" };
-        db.team.members[initials].name = name;
-        db.team.updatedAt = Date.now();
-      }
-    }
-    persist();
-    updateStatus();
-    $("setupWizard").classList.add("hidden");
-    document.body.classList.remove("wizard-open");
-  }
-
-  $("wizardFinish").addEventListener("click", finishWizard);
-  $("wizardSkip").addEventListener("click", function () {
-    // Overslaan mag zonder initialen; alleen een lege start vastleggen zodat
-    // de wizard niet bij elke volgende opstart terugkomt.
-    persist();
-    $("setupWizard").classList.add("hidden");
-    document.body.classList.remove("wizard-open");
-  });
-}
-
+/* De opstartwizard staat sinds 1.32.0 in js/koppelen.js. */
 
 
 
@@ -246,15 +145,15 @@ function initSetupWizard() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard", user: "userCard", help: "helpCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects", user: "btnSettingsUser", help: "btnSettingsHelp" }
 
 /* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
    een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
    er later instellingen bijkomen: voeg die hier en in openSettingsView()
    toe, niet bovenaan. */
-var SETTINGS_VIEWS = ["general", "roster", "subjects", "team"];
+var SETTINGS_VIEWS = ["general", "user", "roster", "subjects", "team", "help"];
 
 var lastSettingsView = "general";
 
@@ -308,6 +207,8 @@ function openSettingsView(name) {
   if (name === "roster") openRoster();
   else if (name === "team") openTeam();
   else if (name === "subjects") openSubjects();
+  else if (name === "user") openUser();
+  else if (name === "help") openHelp();
   else openGeneral();
 }
 
