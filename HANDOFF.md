@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.33.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.34.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,33 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.33.0)
+## Volledige featurelijst (huidige stand, 1.34.0)
+
+- **Help: de handleiding in de tool** (1.34.0, `js/help.js`, laadt na
+  `koppelen.js`). Gevraagd door de gebruiker: README.md als onderdeel
+  Help bij Instellingen, altijd bijgewerkt. **Hoe het in sync blijft:**
+  `build.js` vult bij elke build `<script type="text/markdown"
+  id="handleidingBron">` in `index.html` met README.md uit de hoofdmap
+  (weigert als README `</script>` bevat; de structuurcontrole slaat nu
+  elk `<script ...>`-blok over). Er is dus geen kopie om te vergeten; de
+  test "het gebouwde bestand bevat de huidige README, letterlijk" in
+  `tests/help.spec.js` bewaakt dat. In de losse `index.html` is het blok
+  leeg en toont de Help een uitleg.
+  **Omzetten:** `renderMarkdown(md)` is puur en klein, geen bibliotheek
+  (offline, één bestand). Kent koppen (id zoals GitHub, `helpSlug()`),
+  alinea's, lijsten met inspringen (tekst per punt eerst verzameld, want
+  vet loopt soms over twee regels; `continuesList()` laat genummerde
+  stappen doorlopen na een lege regel; `start` bij een lijst die niet bij
+  1 begint), tabellen, citaten, `---`, codeblokken, `**vet**`, `code` en
+  links. Links naar `#kop` springen binnen de Help (`data-help-link`);
+  links naar bestanden worden gewone tekst. Alles vanaf de kop "Voor
+  ontwikkelaars" (`HELP_STOP_HEADING`) blijft weg, en
+  `removeDeadHelpLinks()` haalt dat punt uit de inhoudstafel.
+  **UI:** view `help`, `#helpCard`, `#helpContent`, `#btnSettingsHelp`
+  als laatste in `#settingsTabs`; wordt één keer getekend (`helpRendered`).
+  **Wie de README uitbreidt met nieuwe opmaak** (bv. afbeeldingen of
+  geneste citaten): eerst `renderMarkdown()` uitbreiden, en in de tool
+  nakijken.
 
 - **Bestandsknoppen weg van het Evalueren-scherm** (1.33.0, voorstel B2,
   goedgekeurd door de gebruiker). `#btnSaveFile`, `#btnSaveFileAs`,
@@ -921,6 +947,10 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
   (huidige rubric, gelijke stand, drempel): de tests faalden zoals
   verwacht.
+- `help.spec.js` (1.34.0): de Help is letterlijk de huidige README,
+  elk hoofdstuk staat erin (niet dat voor ontwikkelaars), geen losse
+  markdowntekens, genummerde stappen lopen door, links in de inhoud
+  springen naar het hoofdstuk en lopen nooit dood
 - `bewaren.spec.js` (1.33.0): geen bestandsknoppen op het
   Evalueren-scherm, status klikbaar, Kopie downloaden, Dit toestel
   loskoppelen, automatisch bijwerken (opstarten, focus met drempel, elke

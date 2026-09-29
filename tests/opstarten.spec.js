@@ -83,7 +83,7 @@ test("Instellingen: bovenaan één tab, met Algemeen, Gebruiker, Klaslijsten, Va
 
   await page.click("#btnSettings");
   await expect(page.locator("#settingsTabs")).toBeVisible();
-  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Gebruiker", "Klaslijsten", "Vakken", "Team"]);
+  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Gebruiker", "Klaslijsten", "Vakken", "Team", "Help"]);
   await expect(page.locator("#btnSettingsGeneral")).toHaveClass(/active/);
   await expect(page.locator("#generalCard")).toBeVisible();
   await expect(page.locator("#generalVersion")).toContainText(await page.evaluate(() => APP_VERSION));

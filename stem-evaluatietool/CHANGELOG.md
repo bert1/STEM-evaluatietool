@@ -13,6 +13,17 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.34.0 · 29 september 2026
+
+**De handleiding in de tool: Instellingen, Help**
+
+- Nieuw onderdeel **Help** bij Instellingen, als laatste. Het toont de
+  handleiding (README.md) met koppen, tabellen en lijsten. Klik in de
+  inhoud op een hoofdstuk om ernaartoe te springen.
+- De Help is altijd de huidige handleiding: bij het bouwen van de tool komt
+  README.md er letterlijk in. Een test controleert dat.
+- Het hoofdstuk voor ontwikkelaars staat niet in de Help.
+
 ## 1.33.0 · 29 september 2026
 
 **Geen bestandsknoppen meer op het Evalueren-scherm**

@@ -35,11 +35,20 @@ if (/<\/script/i.test(js)) throw new Error("Samengevoegde JS bevat </script>");
 
 html = html.replace(scriptBlock, () => "<script>\n" + js + "\n</script>\n");
 
+// --- De handleiding (README.md uit de hoofdmap) als Help in de tool
+//     (sinds 1.34.0, zie js/help.js). Bij elke build opnieuw, dus de Help
+//     is altijd dezelfde tekst als de README. ---
+const readme = fs.readFileSync(path.join(root, "..", "README.md"), "utf8");
+if (/<\/script/i.test(readme)) throw new Error("README.md bevat </script>");
+const helpSlot = '<script type="text/markdown" id="handleidingBron"></script>';
+if (!html.includes(helpSlot)) throw new Error("Geen plaats voor de handleiding gevonden in index.html");
+html = html.replace(helpSlot, () => '<script type="text/markdown" id="handleidingBron">\n' + readme + "</script>");
+
 // Structuurcontrole: mis-geneste tags worden door de browser stilzwijgend
 // "gerepareerd", wat hele stukken van de pagina kan verplaatsen.
 (function checkNesting(fullHtml) {
   const body = fullHtml.slice(fullHtml.indexOf("<body>") + 6, fullHtml.indexOf("</body>"));
-  const stripped = body.replace(/<script>[\s\S]*?<\/script>/g, "").replace(/<!--[\s\S]*?-->/g, "");
+  const stripped = body.replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, "").replace(/<!--[\s\S]*?-->/g, "");
   const voids = new Set(["input", "img", "br", "hr", "meta", "link", "source", "area", "col"]);
   const stack = [];
   const re = /<(\/?)([a-zA-Z][a-zA-Z0-9]*)\b[^>]*?(\/?)>/g;

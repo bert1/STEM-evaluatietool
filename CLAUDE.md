@@ -14,6 +14,15 @@ Lees eerst `HANDOFF.md` voor de opbouw en de geschiedenis van de tool.
    - Beschrijf nieuwe of gewijzigde knoppen, schermen en werkwijzen in het
      juiste hoofdstuk, met de namen zoals ze in de tool staan.
    - Verwijderde functies ook uit de handleiding halen.
+   - De README staat ook in de tool zelf, bij Instellingen, Help
+     (sinds 1.34.0). `build.js` plakt ze bij elke build in het bestand,
+     dus de README bijwerken is genoeg; een test in `tests/help.spec.js`
+     controleert dat de Help letterlijk de huidige README is. Alles vanaf
+     het hoofdstuk "Voor ontwikkelaars" blijft uit de Help: zet
+     technische uitleg daar, en schrijf de rest voor leerkrachten.
+   - De Help kent enkel eenvoudige opmaak (koppen, lijsten, tabellen,
+     citaten, vet, `code`, links naar een kop). Kijk na een grotere
+     wijziging even in de tool of alles goed staat.
    - Schrijf voor leerkrachten die niet technisch zijn: korte stappen,
      geen vaktermen.
 4. **`HANDOFF.md`** bijwerken voor een volgende ontwikkelsessie.

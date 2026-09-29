@@ -122,6 +122,7 @@ function init() {
   updateStatus();
   initKoppelen();
   initAutoSync();
+  initHelp();
   initAiRubricHelper();
   initScoringShortcuts();
   initEvalCombo();
@@ -144,15 +145,15 @@ function init() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard", user: "userCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard", user: "userCard", help: "helpCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects", user: "btnSettingsUser" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects", user: "btnSettingsUser", help: "btnSettingsHelp" }
 
 /* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
    een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
    er later instellingen bijkomen: voeg die hier en in openSettingsView()
    toe, niet bovenaan. */
-var SETTINGS_VIEWS = ["general", "user", "roster", "subjects", "team"];
+var SETTINGS_VIEWS = ["general", "user", "roster", "subjects", "team", "help"];
 
 var lastSettingsView = "general";
 
@@ -207,6 +208,7 @@ function openSettingsView(name) {
   else if (name === "team") openTeam();
   else if (name === "subjects") openSubjects();
   else if (name === "user") openUser();
+  else if (name === "help") openHelp();
   else openGeneral();
 }
 

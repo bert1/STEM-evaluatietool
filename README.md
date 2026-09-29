@@ -5,8 +5,9 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.33.0.** Het versienummer staat ook rechtsboven in de
-> tool. Wat er per versie veranderd is, lees je in
+> **Huidige versie: 1.34.0.** Het versienummer staat ook rechtsboven in de
+> tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
+> Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
 ---
@@ -104,7 +105,7 @@ Bovenaan zie je vijf tabbladen:
 | **Rubrics** | Evaluaties en hun criteria maken en ordenen in mappen |
 | **Controle** | Wat ontbreekt er nog of klopt er niet? |
 | **Skore** | Welke punten je per periode (GE1 tot GE4) in Skore zet |
-| **Instellingen** | Alles wat je af en toe instelt, in vijf onderdelen |
+| **Instellingen** | Alles wat je af en toe instelt, en deze handleiding |
 
 Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 
@@ -115,6 +116,7 @@ Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 | **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Vakken** | Vakken maken en aanduiden welke klassen ze volgen |
 | **Team** | Het werk van je collega's ophalen, wie welke klas geeft, en reservekopieën |
+| **Help** | Deze handleiding. Klik in de inhoud op een hoofdstuk om ernaartoe te gaan. |
 
 Instellingen opent altijd het onderdeel dat je het laatst bekeek. Rechtsboven
 naast **Beoordelaar** staan je initialen. Klik erop om naar **Gebruiker** te

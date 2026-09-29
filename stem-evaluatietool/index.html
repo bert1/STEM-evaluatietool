@@ -128,6 +128,7 @@
           <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
           <button type="button" class="nav-btn" id="btnSubjects">Vakken</button>
           <button type="button" class="nav-btn" id="btnTeam">Team</button>
+          <button type="button" class="nav-btn" id="btnSettingsHelp">Help</button>
         </div>
       </nav>
 
@@ -232,6 +233,17 @@
             start de tool daarna opnieuw met het welkomstscherm.
           </p>
         </section>
+      </div>
+
+      <div class="card hidden" id="helpCard">
+        <h2>
+          Help
+          <span class="sub">De handleiding van de tool</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseHelp" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+        <div id="helpContent" class="help-content"></div>
       </div>
 
       <div class="card hidden" id="rosterCard">
@@ -965,6 +977,8 @@
 
     <div id="printArea"></div>
 
+    <!-- De handleiding (README.md), ingevuld door build.js. Zie js/help.js. -->
+    <script type="text/markdown" id="handleidingBron"></script>
     <script src="data/curriculum.js"></script>
     <script src="data/roster-seed.js"></script>
     <script src="js/ui.js"></script>
@@ -983,6 +997,7 @@
     <script src="js/sync.js"></script>
     <script src="js/backups.js"></script>
     <script src="js/koppelen.js"></script>
+    <script src="js/help.js"></script>
     <script src="js/feedback.js"></script>
     <script src="js/skore.js"></script>
     <script src="js/controle.js"></script>
