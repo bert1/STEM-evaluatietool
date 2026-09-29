@@ -324,6 +324,15 @@ function validateEvaluation(draft, db, originalName) {
     problems.push('Er bestaat al een evaluatie "' + name + '" in ' + draft.year + ".");
   }
 
+  // Sinds 1.31.0: een nieuwe evaluatie (ook een kopie) hoort altijd bij
+  // een vak. Bestaande evaluaties zonder vak blijven bewerkbaar.
+  if (!originalName && !draft.subject) {
+    problems.push(subjectNames(db, draft.year).length
+      ? "Kies bij Vak het vak waar deze evaluatie bij hoort."
+      : "Kies een vak. Er zijn nog geen vakken voor " + draft.year +
+        ": voeg ze eerst toe bij Instellingen, Vakken.");
+  }
+
   if (!draft.rubrics.length) problems.push("Voeg minstens één criterium toe.");
 
   var seenIds = [];

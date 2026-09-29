@@ -1014,12 +1014,18 @@ function fillEvalListSubjectOptions(year) {
 function fillDraftSubjectOptions(value) {
   var sel = $("draftSubject");
   var names = subjectNames(db, $("draftYear").value);
+  // Een nieuwe evaluatie moet een vak krijgen (zie validateEvaluation()),
+  // dus daar geen keuze "Geen vak", enkel een lege eerste regel.
+  var isNew = !draftOriginalName;
   sel.innerHTML = "";
-  sel.appendChild(new Option("Geen vak", ""));
+  sel.appendChild(new Option(isNew ? "Kies een vak" : "Geen vak", ""));
   names.forEach(function (n) { sel.appendChild(new Option(n, n)); });
   sel.value = names.indexOf(value) !== -1 ? value : "";
   sel.disabled = !names.length;
-  $("draftSubjectHint").textContent = names.length
-    ? "Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
-    : "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Instellingen, Vakken.";
+  $("draftSubjectHint").textContent = !names.length
+    ? "Nog geen vakken voor dit leerjaar. Voeg ze toe bij Instellingen, Vakken." +
+      (isNew ? " Zonder vak kan je deze evaluatie niet opslaan." : "")
+    : isNew
+      ? "Verplicht. Bij Evalueren staat deze evaluatie dan enkel bij dit vak."
+      : "Bij Evalueren staat deze evaluatie dan enkel bij dit vak.";
 }

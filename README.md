@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.30.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.31.1.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -170,7 +170,7 @@ je bij Evalueren enkel de evaluaties die bij je vak horen.
    wordt blauw. Duid je geen klassen aan, dan zie je bij dat vak alle
    klassen.
 4. Ga naar **Rubrics** en kies bij elke evaluatie het **vak** (zie
-   [Rubrics](#6-rubrics)).
+   [Rubrics](#6-rubrics)). Voor een nieuwe evaluatie is dat verplicht.
 
 Met **Vak verwijderen** verdwijnt enkel het vak. De evaluaties blijven
 bestaan, maar hebben dan geen vak meer. Vakken gaan mee naar je collega's
@@ -184,8 +184,12 @@ Hier maak je de evaluaties die je bij Evalueren kan kiezen. De knoppen
 **Nieuwe evaluatie**, **+ Nieuwe map** en **Jaaroverzicht afdrukken** staan
 bovenaan, boven de lijst.
 
-- **Vak:** kies bij een nieuwe evaluatie het vak waar ze bij hoort. Bij
-  Evalueren staat ze dan enkel bij dat vak. Een evaluatie die al bestaat,
+- **Vak (verplicht):** kies bij een nieuwe evaluatie het vak waar ze bij
+  hoort. Zonder vak kan je een nieuwe evaluatie niet opslaan; dat geldt ook
+  voor een kopie via **Dupliceer**. Zijn er nog geen vakken voor het
+  leerjaar, voeg ze dan eerst toe bij [Instellingen, Vakken](#5-vakken). Bij
+  Evalueren staat de evaluatie dan enkel bij dat vak. Een oudere evaluatie
+  zonder vak kan je wel nog gewoon bewerken en opslaan. Een evaluatie die al bestaat,
   zet je bij een vak met de keuzelijst **Vak** naast de keuzelijst voor de
   map, of via **Bewerk**. Met het veld **Vak** boven de lijst toon je enkel
   de evaluaties van één vak, of kies je **Geen vak** om te zien welke

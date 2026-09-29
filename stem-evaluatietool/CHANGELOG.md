@@ -13,6 +13,31 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.31.1 · 29 september 2026
+
+**Bugfix: bij Evalueren toonde de klaslijst toch alle klassen**
+
+- Koos je bij Evalueren een vak, dan toonde de lijst bij **Klas** nog
+  altijd alle klassen van het leerjaar. Nu zie je enkel de klassen die je
+  bij Instellingen, Vakken voor dat vak aanduidde. Bestaat geen enkele van
+  die klassen dit schooljaar, dan zegt de lijst dat.
+- Oorzaak: enkel de onzichtbare keuzelijst achter het klaspaneel werd
+  gefilterd. De testen keken naar die onzichtbare lijst; nu kijken ze ook
+  naar wat je echt ziet.
+
+## 1.31.0 · 29 september 2026
+
+**Een nieuwe evaluatie moet een vak hebben**
+
+- Een nieuwe evaluatie (ook een kopie via Dupliceer) kan je pas opslaan als
+  je bij **Vak** een vak kiest. Anders verschijnt bij "Nog even nakijken":
+  "Kies bij Vak het vak waar deze evaluatie bij hoort." Heeft het leerjaar
+  nog geen vakken, dan zegt de melding dat je ze eerst toevoegt bij
+  Instellingen, Vakken.
+- In de editor staat bij een nieuwe evaluatie "Kies een vak" in plaats van
+  "Geen vak", met de uitleg "Verplicht".
+- Bestaande evaluaties zonder vak blijven bewerkbaar en op te slaan.
+
 ## 1.30.0 · 29 september 2026
 
 **Vakken als eigen onderdeel bij Instellingen**
