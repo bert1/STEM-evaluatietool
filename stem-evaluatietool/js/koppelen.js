@@ -333,7 +333,7 @@ function retryOwnFile() {
 /* Terugkomen naar het venster: kijk of een ander toestel intussen iets
    bewaarde. */
 function checkOwnFileOnFocus() {
-  if (document.visibilityState === "hidden" || !ownFileHandle || writing) return;
+  if (document.visibilityState === "hidden" || !ownFileHandle || writing || busyEditing()) return;
   pullOwnFile().catch(function () {});
 }
 
@@ -359,6 +359,8 @@ function restoreFolder() {
           folderName = handle.name;
           return attachOwnFile().then(function () {
             updateStatus();
+            // Meteen het werk van collega's ophalen (sinds 1.33.0).
+            syncTeam("auto");
             return true;
           }, function () {
             updateStatus();
@@ -396,7 +398,7 @@ function reconnectFolder() {
         updateStatus();
         if (currentView === "user") renderUserView();
         if (res !== "ok") return;
-        syncTeam(true);
+        syncTeam("auto");
         showNotice("good", "Map weer verbonden", "Je werk is bewaard in " + fileName + " in " + folderName + ".");
       });
     })
@@ -412,6 +414,9 @@ function initKoppelen() {
   $("btnUserCancel").addEventListener("click", closeUserEdit);
   $("btnUserSave").addEventListener("click", saveUserEdit);
   $("btnRelink").addEventListener("click", function () { openWizard("opnieuw"); });
+  $("btnDownloadCopy").addEventListener("click", downloadCopy);
+  $("btnUnlinkDevice").addEventListener("click", unlinkDevice);
+  $("btnMergeWorkFile").addEventListener("click", function () { pickFile("merge"); });
 
   $("wizardNew").addEventListener("click", function () { showWizardStep("nieuw"); });
   $("wizardExisting").addEventListener("click", function () { showWizardStep("bestaand"); });
@@ -922,7 +927,7 @@ function showColleagueRecovery(p, host, afterBackups) {
   var text = [
     (afterBackups ? "" : "Je bestand en je reservekopieën zijn niet gevonden. ") +
       "Je kan je werk terughalen uit de bestanden van je collega's in deze map.",
-    "Let op: die bevatten enkel wat zij de laatste keer van jou overnamen met Team bijwerken. Wat je daarna nog deed, zit er niet in.",
+    "Let op: die bevatten enkel wat zij de laatste keer van jou overnamen. Wat je daarna nog deed, zit er niet in.",
     n ? "In hun bestanden staan " + n + " beoordeling(en) van jou." : "In hun bestanden staat geen enkele beoordeling van jou.",
   ];
   var buttons = [];
@@ -961,6 +966,7 @@ function linkDone(host, typedName) {
   }).then(function () {
     wiz.linked = true;
     persist();
+    syncTeam("auto");
     renderAssessor();
     refreshAll();
     updateStatus();
@@ -1074,7 +1080,7 @@ function wizardDownload() {
 /* Via handleIncoming() in js/storage.js, na "Mijn werkbestand openen". */
 function wizardOpenedFile(read, name) {
   var host = $("wizardExistingState");
-  var initials = cleanAssessor(read.db.assessor) || assessorFromFileName(String(name).replace(/^stem-/, ""));
+  var initials = cleanAssessor(read.db.assessor) || assessorFromFileName(String(name).replace(/^(stem-|kopie-)/, ""));
   if (!initials) {
     var m = /^stem-evaluaties-([A-Za-z0-9]{1,6})/.exec(name);
     initials = m ? m[1].toUpperCase() : "";
@@ -1237,6 +1243,54 @@ function renameMyInitials(next) {
 }
 
 /* ------------------------------------------------------------------
+   DIT TOESTEL LOSKOPPELEN (sinds 1.33.0)
+
+   Voor een gedeelde computer (klas, leraarskamer): je werk blijft in de
+   gedeelde map, maar deze browser vergeet alles. Enkel als je werk echt
+   veilig bewaard is. Enkel de sleutels van de tool (STEM_EVAL_...):
+   pagina's vanaf file:// delen dezelfde browseropslag.
+   ------------------------------------------------------------------ */
+
+function unlinkDevice() {
+  var reason = "";
+  if (FOLDER_SUPPORTED) {
+    if (pendingFolder && !folderHandle) reason = "Verbind eerst met de gedeelde map, zodat je laatste werk daar staat.";
+    else if (!ownFileHandle || ownFileProblem || saveError) reason = "Je werk staat nog niet veilig in de gedeelde map. Los eerst de melding bovenaan op.";
+  } else if (dirty) {
+    reason = "Je laatste wijzigingen zijn nog niet gedownload. Klik eerst rechtsboven op Opslaan (download).";
+  }
+  if (reason) {
+    showNotice("warn", "Nog niet loskoppelen", reason);
+    return;
+  }
+  if (!confirm(
+    "Dit toestel loskoppelen?\n\n" +
+    (FOLDER_SUPPORTED
+      ? "Je werk blijft bewaard in " + fileName + " in de gedeelde map. "
+      : "Je werk blijft bewaard in je werkbestand " + fileName + ". ") +
+    "In deze browser wordt alles van de tool gewist. De volgende keer start de tool met het welkomstscherm. " +
+    "Kies dan \"Ik heb de tool al gebruikt\" om verder te werken.",
+  )) return;
+
+  var save = FOLDER_SUPPORTED ? (clearTimeout(autoSaveTimer), writeHandle()) : Promise.resolve();
+  save.then(function () {
+    if (FOLDER_SUPPORTED && (saveError || ownFileProblem)) {
+      showNotice("warn", "Nog niet loskoppelen", "Opslaan is net mislukt. Probeer het zo meteen opnieuw.");
+      return;
+    }
+    return idbDelete("teamFolder").catch(function () {}).then(function () {
+      try {
+        Object.keys(localStorage).forEach(function (k) {
+          if (k.indexOf("STEM_EVAL") === 0) localStorage.removeItem(k);
+        });
+      } catch (e) {}
+      dirty = false;
+      location.reload();
+    });
+  });
+}
+
+/* ------------------------------------------------------------------
    INSTELLINGEN, GEBRUIKER
    ------------------------------------------------------------------ */
 
@@ -1247,6 +1301,7 @@ function openUser() {
 }
 
 function renderUserView() {
+  $("userMergeWorkFile").classList.toggle("hidden", FOLDER_SUPPORTED);
   $("userInitials").textContent = db.assessor || "?";
   $("userName").textContent = myName() || "nog niet ingevuld";
 
@@ -1310,7 +1365,7 @@ function saveUserEdit() {
   var from = db.assessor;
   if (next !== from && !confirm(
     "Je initialen wijzigen van " + from + " naar " + next + "?\n\n" +
-    "Al je beoordelingen krijgen de nieuwe initialen, ook bij je collega's na Team bijwerken. " +
+    "Al je beoordelingen krijgen de nieuwe initialen, ook bij je collega's zodra hun tool bijwerkt. " +
     (folderHandle ? "Je bestand in de gedeelde map heet voortaan " + teamFileName(next) + ". " : "Je downloadt een nieuw werkbestand met de nieuwe naam. ") +
     "De tool maakt eerst een reservekopie. Er gaat niets verloren.",
   )) return;
@@ -1328,9 +1383,9 @@ function saveUserEdit() {
     renderUserView();
     refreshAll();
     if (next !== from) {
-      showNotice("good", "Initialen gewijzigd naar " + next, "Je werk staat nu in " + fileName + ". Je collega's zien de nieuwe initialen na Team bijwerken.");
+      showNotice("good", "Initialen gewijzigd naar " + next, "Je werk staat nu in " + fileName + ". Je collega's zien de nieuwe initialen zodra hun tool bijwerkt.");
     } else if (nameChanged) {
-      showNotice("good", "Naam gewijzigd", "Je collega's zien je nieuwe naam na Team bijwerken.");
+      showNotice("good", "Naam gewijzigd", "Je collega's zien je nieuwe naam zodra hun tool bijwerkt.");
     }
   });
 }

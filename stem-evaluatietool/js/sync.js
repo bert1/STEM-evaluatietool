@@ -21,6 +21,7 @@ function openTeam() {
     if (chosen) $("teamYear").value = chosen;
   }
   ensureSelfInTeam();
+  renderSyncState();
   renderBackupList();
   renderMembers();
   renderTeamClasses();
@@ -208,18 +209,35 @@ function renderTeamClasses() {
 
 /* --- het werk van iedereen ophalen --- */
 
+/* Sinds 1.33.0 gebeurt dit ook vanzelf (autoSyncTeam() hieronder): bij
+   het opstarten, bij terugkeren naar het venster en om de tien minuten.
+   quiet: geen melding als er niets nieuws is. "auto": nooit een melding
+   (een melding schuift het scherm, en dat mag niet midden in het werk).
+   Geeft altijd een Promise. */
+var lastSyncAt = 0;
+var syncBusy = null;
+
 function syncTeam(quiet) {
   if (!folderHandle) {
-    showNotice("info", "Nog geen gedeelde map", "Koppel eerst de gedeelde map bij Instellingen, Gebruiker.");
-    return;
+    if (quiet !== "auto") showNotice("info", "Nog geen gedeelde map", "Koppel eerst de gedeelde map bij Instellingen, Gebruiker.");
+    return Promise.resolve(false);
   }
+  if (syncBusy) return syncBusy;
+  var auto = quiet === "auto";
+  var btn = $("btnSyncTeam");
+  btn.disabled = true;
+  btn.textContent = "Bezig…";
 
-  $("btnSyncTeam").disabled = true;
-  $("btnSyncTeam").textContent = "Bezig…";
+  function done() {
+    btn.disabled = false;
+    btn.textContent = "Nu bijwerken";
+    syncBusy = null;
+    renderSyncState();
+  }
 
   // Eerst je eigen bestand: een ander toestel kan het intussen aangevuld
   // hebben (sinds 1.32.0, zie js/koppelen.js).
-  pullOwnFile()
+  syncBusy = pullOwnFile()
     .then(function () { return readTeamFolder(folderHandle, teamFileName(db.assessor), CONFIG); })
     .then(function (result) {
       var totals = { added: 0, updated: 0, skipped: 0 };
@@ -241,24 +259,27 @@ function syncTeam(quiet) {
         }
       });
 
-      // Alleen opslaan wanneer er echt iets veranderd is. Anders zou de
-      // status onterecht op "Niet opgeslagen" springen na een sync.
+      // Alleen opslaan en hertekenen wanneer er echt iets veranderd is.
+      // Anders zou de status onterecht op "Niet opgeslagen" springen, en
+      // zou een halve beoordeling op het scherm gewist worden.
       var changed = totals.added || totals.updated || classes.length || evaluations.length || teamChanged;
-      if (changed) persist();
-      refreshAll();
-
-      $("btnSyncTeam").disabled = false;
-      $("btnSyncTeam").textContent = "Team bijwerken";
+      if (changed) {
+        persist();
+        refreshAll();
+      }
+      lastSyncAt = Date.now();
+      done();
+      if (auto) return true;
 
       if (!result.files.length) {
         if (!quiet) {
           showNotice(
             "info",
             "Nog geen bestanden van collega's",
-            "In " + folderName + " staat alleen jouw bestand. Laat je collega's hun map op dezelfde plek koppelen.",
+            "In " + folderName + " staat alleen jouw bestand. Laat je collega's de tool aan dezelfde map koppelen.",
           );
         }
-        return;
+        return true;
       }
 
       var bits = [];
@@ -277,7 +298,7 @@ function syncTeam(quiet) {
               (result.problems.length ? " Wel: " + result.problems.join(", ") + "." : ""),
           );
         }
-        return;
+        return true;
       }
 
       showNotice(
@@ -287,16 +308,61 @@ function syncTeam(quiet) {
           (perColleague.length ? " Van " + perColleague.join(", ") + "." : "") +
           (result.problems.length ? " Niet gelukt: " + result.problems.join(", ") + "." : ""),
       );
+      return true;
     })
     .catch(function (err) {
-      $("btnSyncTeam").disabled = false;
-      $("btnSyncTeam").textContent = "Team bijwerken";
+      done();
+      if (auto) return false;
       showNotice(
         "warn",
         "Map kon niet gelezen worden",
-        (err && err.message ? err.message + ". " : "") + "Koppel de map opnieuw via het Teamscherm.",
+        (err && err.message ? err.message + ". " : "") + "Controleer of OneDrive werkt, of stel de koppeling opnieuw in bij Instellingen, Gebruiker.",
       );
+      return false;
     });
+  return syncBusy;
+}
+
+/* Is de leerkracht iets aan het invullen? Dan niet samenvoegen: dat
+   tekent het scherm opnieuw en zou de halve beoordeling wissen. De
+   volgende keer lukt het wel. */
+function busyEditing() {
+  if (typeof draft !== "undefined" && draft) return true;
+  if (form && (form.editId || Object.keys(form.scores || {}).length)) return true;
+  return !!document.querySelector(".student-cb:checked");
+}
+
+var AUTO_SYNC_EVERY_MS = 10 * 60 * 1000;
+var AUTO_SYNC_ON_FOCUS_MS = 5 * 60 * 1000;
+
+function autoSyncTeam(minGap) {
+  if (!folderHandle || ownFileProblem || syncBusy || busyEditing()) return Promise.resolve(false);
+  if (minGap && lastSyncAt && Date.now() - lastSyncAt < minGap) return Promise.resolve(false);
+  return syncTeam("auto");
+}
+
+function initAutoSync() {
+  setInterval(function () { autoSyncTeam(AUTO_SYNC_EVERY_MS - 30000); }, AUTO_SYNC_EVERY_MS);
+  function onFocus() {
+    if (document.visibilityState === "hidden") return;
+    autoSyncTeam(AUTO_SYNC_ON_FOCUS_MS);
+  }
+  window.addEventListener("focus", onFocus);
+  document.addEventListener("visibilitychange", onFocus);
+}
+
+/* Teamscherm: wanneer werd het laatst bijgewerkt? */
+function renderSyncState() {
+  var host = $("syncState");
+  if (!host) return;
+  $("syncSection").classList.toggle("hidden", !folderHandle);
+  $("syncOff").classList.toggle("hidden", !!folderHandle || (typeof FOLDER_SUPPORTED !== "undefined" && FOLDER_SUPPORTED));
+  if (!lastSyncAt) {
+    host.textContent = "Nog niet bijgewerkt in deze sessie.";
+    return;
+  }
+  var d = new Date(lastSyncAt);
+  host.textContent = "Laatst bijgewerkt om " + pad2(d.getHours()) + "u" + pad2(d.getMinutes()) + ".";
 }
 
 /* ---- overgenomen uit core.js ---- */

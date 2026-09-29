@@ -114,7 +114,7 @@
         <button type="button" class="nav-btn" id="btnSkore">Skore</button>
         <button type="button" class="nav-btn" id="btnSettings">Instellingen</button>
       </nav>
-      <span class="status nofile" id="status">Geen bestand gekozen</span>
+      <button type="button" class="status nofile" id="status">Geen bestand gekozen</button>
     </div>
 
     <div class="container">
@@ -186,7 +186,7 @@
             <div class="form-group">
               <label for="userNameInput">Jouw volledige naam</label>
               <input type="text" id="userNameInput" placeholder="Jan Van den Bergh" />
-              <p class="hint" style="margin: 4px 0 0">Je collega's zien je nieuwe naam na Team bijwerken.</p>
+              <p class="hint" style="margin: 4px 0 0">Je collega's zien je nieuwe naam zodra hun tool bijwerkt.</p>
             </div>
             <div class="btn-row">
               <button type="button" class="btn-primary" id="btnUserSave">Opslaan</button>
@@ -204,6 +204,32 @@
           <p class="hint">
             Kies opnieuw de gedeelde map, bijvoorbeeld als die verhuisd is. Je werk in deze browser
             wordt samengevoegd met wat er in de map staat. Er gaat niets verloren.
+          </p>
+          <div id="userMergeWorkFile" class="hidden">
+            <div class="btn-row" style="margin-top: 12px">
+              <button type="button" class="btn-ghost" id="btnMergeWorkFile">Werkbestand openen en samenvoegen</button>
+            </div>
+            <p class="hint">
+              Voegt een recenter werkbestand, bijvoorbeeld van een andere computer, bij je werk. Er gaat niets verloren.
+            </p>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Extra</h3>
+          <div class="btn-row">
+            <button type="button" class="btn-ghost" id="btnDownloadCopy">Kopie downloaden</button>
+          </div>
+          <p class="hint">
+            Downloadt een kopie van al je werk, bijvoorbeeld voor je eigen archief. Je werk blijft
+            gewoon bewaard waar het nu staat.
+          </p>
+          <div class="btn-row" style="margin-top: 12px">
+            <button type="button" class="btn-ghost" id="btnUnlinkDevice">Dit toestel loskoppelen</button>
+          </div>
+          <p class="hint">
+            Voor een computer die je met anderen deelt. Je werk blijft bewaard; op deze computer
+            start de tool daarna opnieuw met het welkomstscherm.
           </p>
         </section>
       </div>
@@ -623,6 +649,33 @@
           </button>
         </h2>
 
+        <div id="syncSection" class="hidden">
+          <span class="add-label">Werk van je collega's</span>
+          <p class="hint" style="margin: 6px 0 12px">
+            De tool haalt het werk van je collega's vanzelf op: bij het opstarten, als je terugkomt
+            naar dit venster en om de tien minuten. Nu bijwerken haalt het meteen op. Er gaat niets
+            verloren.
+          </p>
+          <div class="btn-row">
+            <button type="button" class="btn-primary" id="btnSyncTeam">Nu bijwerken</button>
+            <span class="hint" id="syncState"></span>
+          </div>
+          <details class="sync-extra">
+            <summary>Een bestand van buiten de map toevoegen</summary>
+            <p class="hint">
+              Kreeg je een bestand van iemand die niet in de gedeelde map werkt? Dit voegt het werk
+              uit dat bestand toe aan het jouwe. Er gaat niets verloren.
+            </p>
+            <button type="button" class="btn-ghost" id="btnMergeFile">Bestand kiezen en toevoegen</button>
+          </details>
+          <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0" />
+        </div>
+        <p class="hint hidden" id="syncOff">
+          In deze browser kan de tool het werk van je collega's niet vanzelf ophalen. Gebruik Chrome
+          of Edge, of voeg hun werkbestand toe:
+          <button type="button" class="btn-link" id="btnMergeFileOff">bestand kiezen en toevoegen</button>.
+        </p>
+
         <div id="backupSection" class="hidden">
           <span class="add-label">Reservekopieën</span>
           <p class="hint" style="margin: 6px 0 12px">
@@ -641,7 +694,7 @@
 
         <span class="add-label">Collega's</span>
         <p class="hint" style="margin: 6px 0 12px">
-          Voeg je collega's toe met hun initialen, dezelfde die zij bovenaan invullen. Dat is wat
+          Voeg je collega's toe met hun initialen, dezelfde die zij in de tool gebruiken. Dat is wat
           hun evaluaties aan hun naam koppelt.
         </p>
         <div id="memberRows"></div>
@@ -751,38 +804,7 @@
       <div id="archivedYearBar" class="hidden"></div>
 
       <div id="safetyBar" class="hidden"></div>
-
-      <div class="card" style="padding: 14px 22px">
-        <div class="file-groups">
-          <div class="file-group">
-            <span class="add-label">Jouw bestand</span>
-            <div class="btn-row">
-              <button type="button" class="btn-primary" id="btnSaveFile">Opslaan</button>
-              <button type="button" class="btn-ghost" id="btnSaveFileAs">Opslaan als…</button>
-            </div>
-          </div>
-
-          <div class="file-group hidden" id="folderGroup">
-            <span class="add-label">Gedeelde map</span>
-            <div class="btn-row">
-              <button type="button" class="btn-primary" id="btnSyncTeam">Team bijwerken</button>
-            </div>
-          </div>
-
-          <div class="file-group">
-            <span class="add-label">Bestand inlezen</span>
-            <div class="btn-row">
-              <button type="button" class="btn-ghost" id="btnMergeFile">
-                Werk van collega toevoegen
-              </button>
-              <button type="button" class="btn-ghost" id="btnOpenFile">Ander bestand openen</button>
-            </div>
-          </div>
-        </div>
-
-        <p class="hint" id="fileHint"></p>
-        <input type="file" id="fallbackInput" accept=".json,application/json" class="hidden" />
-      </div>
+      <input type="file" id="fallbackInput" accept=".json,application/json" class="hidden" />
 
       <div class="card selection-grid">
         <div class="form-group" style="margin: 0">

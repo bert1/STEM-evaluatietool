@@ -35,8 +35,10 @@ function updateStatus() {
     s.textContent = "Map niet verbonden";
   } else if (!canPickFiles && fileName) {
     // Browser zonder File System Access API: bewaren gaat via downloaden.
+    // Zolang er iets niet gedownload is, is de status zelf de knop.
     s.classList.add(dirty ? "dirty" : "saved");
-    s.textContent = dirty ? "Nog niet gedownload" : "Gedownload als " + fileName;
+    if (dirty) s.classList.add("status-action");
+    s.textContent = dirty ? "Opslaan (download)" : "Gedownload als " + fileName;
   } else if (dirty) {
     s.classList.add("dirty");
     s.textContent = "Alleen in deze browser";
@@ -44,8 +46,19 @@ function updateStatus() {
     s.classList.add("nofile");
     s.textContent = "Geen bestand gekozen";
   }
-  updateFileButtons();
+  s.title = !canPickFiles && fileName && dirty
+    ? "Downloadt je werkbestand. Vervang daarmee het vorige, dan gaat er niets verloren."
+    : "Waar je werk bewaard wordt: klik voor Instellingen, Gebruiker.";
   updateSafetyBar();
+}
+
+/* De status rechtsboven is klikbaar (sinds 1.33.0). */
+function onStatusClick() {
+  if (!canPickFiles && fileName && dirty) {
+    downloadDb();
+    return;
+  }
+  openSettingsView("user");
 }
 
 
@@ -63,11 +76,8 @@ function updateSafetyBar() {
   var unreadable = !!ownFileProblem;
   var failed = !!(saveError && fileHandle);
   var needsFolder = pendingFolder && !folderHandle;
-  // Zonder opgeslagen werk valt er niets te verliezen; dan is een
-  // waarschuwing alleen maar ruis bij het eerste gebruik.
-  var needsFile = !fileHandle && !(!canPickFiles && fileName) && rowCount > 0;
 
-  if (!rescued && !unreadable && !failed && !needsFolder && !needsFile) {
+  if (!rescued && !unreadable && !failed && !needsFolder) {
     bar.classList.add("hidden");
     return;
   }
@@ -82,12 +92,14 @@ function updateSafetyBar() {
   if (rescued) {
     txt.appendChild(el("strong", null, "Je werk in deze browser kon niet gelezen worden"));
     txt.appendChild(document.createTextNode(
-      "De tool is leeg gestart. Open je laatste werkbestand (bijvoorbeeld uit OneDrive) om verder te werken. " +
+      (canPickFiles
+        ? "Je werk is opgehaald uit je bestand in de gedeelde map. "
+        : "Open je laatste werkbestand (bijvoorbeeld uit OneDrive): het wordt bij je werk gevoegd. ") +
       "De onleesbare gegevens zijn apart bewaard; download ze als reservekopie voor je deze melding verbergt.",
     ));
     var open = el("button", "btn-primary", "Werkbestand openen…");
     open.type = "button";
-    open.addEventListener("click", function () { pickFile("open"); });
+    open.addEventListener("click", function () { pickFile("merge"); });
     var dl = el("button", "btn-ghost", "Reservekopie downloaden");
     dl.type = "button";
     dl.addEventListener("click", downloadStorageRescue);
@@ -118,11 +130,12 @@ function updateSafetyBar() {
     var retry = el("button", "btn-primary", "Opnieuw proberen");
     retry.type = "button";
     retry.addEventListener("click", function () { writeHandle(); });
-    var saveAsBtn = el("button", "btn-ghost", "Opslaan als…");
-    saveAsBtn.type = "button";
-    saveAsBtn.addEventListener("click", function () { saveToFile(true); });
+    var copyBtn = el("button", "btn-ghost", "Kopie downloaden");
+    copyBtn.type = "button";
+    copyBtn.title = "Downloadt een kopie van al je werk, zodat het ergens veilig staat.";
+    copyBtn.addEventListener("click", downloadCopy);
     btns.appendChild(retry);
-    btns.appendChild(saveAsBtn);
+    btns.appendChild(copyBtn);
   } else if (needsFolder) {
     txt.appendChild(el("strong", null, "Gedeelde map niet verbonden"));
     txt.appendChild(document.createTextNode(
@@ -134,17 +147,6 @@ function updateSafetyBar() {
     re.type = "button";
     re.addEventListener("click", reconnectFolder);
     btns.appendChild(re);
-  } else {
-    txt.appendChild(el("strong", null, "Je werk staat alleen in deze browser"));
-    txt.appendChild(document.createTextNode(
-      "Er is nog geen werkbestand gekozen. " +
-      (rowCount ? "Je " + rowCount + " evaluatie(s) zijn " : "Je werk is ") +
-      "weg zodra je je browsergegevens wist of op een ander toestel werkt.",
-    ));
-    var mk = el("button", "btn-primary", canPickFiles ? "Werkbestand aanmaken…" : "Opslaan (download)");
-    mk.type = "button";
-    mk.addEventListener("click", function () { saveToFile(false); });
-    btns.appendChild(mk);
   }
 
   bar.appendChild(txt);
@@ -152,55 +154,6 @@ function updateSafetyBar() {
 }
 
 
-
-/* De knoppen zeggen wat ze op dit moment doen. Zolang er nog geen
-   bestand is, zouden "Opslaan" en "Opslaan als…" hetzelfde doen —
-   dan tonen we er maar één. */
-function updateFileButtons() {
-  var hasFile = !!fileHandle || (!canPickFiles && !!fileName);
-  var save = $("btnSaveFile");
-  var saveAs = $("btnSaveFileAs");
-  var hint = $("fileHint");
-
-  saveAs.classList.toggle("hidden", !hasFile);
-  $("folderGroup").classList.toggle("hidden", !folderHandle);
-
-  if (!hasFile && canPickFiles) {
-    save.textContent = "Werkbestand aanmaken…";
-    save.title = "Maakt een nieuw bestand waarin je werk bewaard wordt";
-  } else if (!canPickFiles) {
-    save.textContent = "Opslaan (download)";
-    save.title = "Deze browser bewaart via een download";
-  } else {
-    save.textContent = "Opslaan";
-    save.title = "Schrijft naar " + fileName;
-  }
-
-  hint.innerHTML = "";
-  function part(label, text) {
-    hint.appendChild(el("strong", null, label));
-    hint.appendChild(document.createTextNode(" " + text + " "));
-  }
-
-  if (!hasFile) {
-    if (canPickFiles) {
-      part("Werkbestand aanmaken…", "maakt een nieuw, leeg bestand waarin je werk bewaard wordt. Je kiest zelf de map en de naam. Daarna slaat de tool automatisch op bij elke wijziging.");
-    } else {
-      part("Opslaan (download)", "maakt je werkbestand aan en downloadt het. Deze browser kan niet rechtstreeks naar je schijf schrijven, dus klik na elke les zelf even op opslaan.");
-    }
-  } else if (!canPickFiles) {
-    part("Opslaan (download)", "downloadt " + fileName + " opnieuw. Automatisch opslaan kan hier niet, dus doe het na elke les zelf.");
-    part("Opslaan als…", "maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.");
-  } else {
-    part("Opslaan", "schrijft naar " + fileName + ". Dat gebeurt ook vanzelf.");
-    part("Opslaan als…", "maakt een nieuw bestand, bijvoorbeeld bij een nieuw schooljaar.");
-  }
-  if (folderHandle) {
-    part("Team bijwerken", "leest de bestanden van je collega's uit " + folderName + " en voegt ze bij de jouwe.");
-  }
-  part("Werk van collega toevoegen", "voegt hun evaluaties bij de jouwe; niets gaat verloren.");
-  part("Ander bestand openen", "vervangt alles wat je nu hebt.");
-}
 
 var autoSaveTimer = null;
 
@@ -216,9 +169,11 @@ function scheduleAutoSave() {
 /* Bestanden                                                           */
 /* ------------------------------------------------------------------ */
 
+/* Sinds 1.33.0 dezelfde naam als in de gedeelde map: zet een collega
+   zonder Chrome of Edge zijn werkbestand in die map, dan leest Team
+   bijwerken het gewoon mee. */
 function defaultFileName() {
-  var who = db.assessor ? "-" + db.assessor : "";
-  return "stem-evaluaties" + who + ".json";
+  return teamFileName(db.assessor);
 }
 
 function dbBlob() {
@@ -246,59 +201,6 @@ function dbBlob() {
   return new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
 }
 
-function saveToFile(forceNew) {
-  if (canPickFiles) {
-    if (fileHandle && !forceNew) return writeHandle();
-    // Met een gedeelde map blijft je werk daar bewaard; "Opslaan als"
-    // schrijft dan enkel een kopie (sinds 1.32.0).
-    if (ownFileHandle && forceNew) return saveCopyAs();
-    window
-      .showSaveFilePicker({
-        suggestedName: defaultFileName(),
-        types: [{ description: "STEM-evaluaties", accept: { "application/json": [".json"] } }],
-      })
-      .then(function (handle) {
-        fileHandle = handle;
-        fileName = handle.name;
-        return writeHandle();
-      })
-      .catch(function (err) {
-        if (err && err.name === "AbortError") return;
-        canPickFiles = false;
-        downloadDb();
-        showNotice("info", "Rechtstreeks opslaan lukt hier niet", "Je bestand is in plaats daarvan gedownload. Dat werkt even goed, je moet het alleen zelf op de juiste plek zetten.");
-      });
-    return;
-  }
-  downloadDb();
-}
-
-/* Een kopie van je werk in een bestand naar keuze. Je eigen bestand in
-   de gedeelde map blijft het werkbestand. */
-function saveCopyAs() {
-  return window
-    .showSaveFilePicker({
-      suggestedName: defaultFileName(),
-      types: [{ description: "STEM-evaluaties", accept: { "application/json": [".json"] } }],
-    })
-    .then(function (handle) {
-      return handle.createWritable().then(function (w) {
-        return w.write(dbBlob()).then(function () { return w.close(); });
-      }).then(function () {
-        showNotice("good", "Kopie bewaard", "Een kopie van je werk staat in " + handle.name + ". Je werk blijft gewoon bewaard in " + fileName + ".");
-      });
-    })
-    .catch(function (err) {
-      if (err && err.name === "AbortError") return;
-      downloadCopy();
-    });
-}
-
-/* Schrijft naar het werkbestand. Nooit twee schrijfacties tegelijk: loopt
-   er al een, dan volgt er na afloop nog precies één met de nieuwste
-   stand. De status gaat pas op "opgeslagen" als er tijdens het schrijven
-   niets meer veranderd is, anders zou het tabblad sluiten zonder
-   waarschuwing terwijl de laatste wijziging nog niet op schijf staat. */
 /* Sinds 1.32.0 kijkt de tool vóór elke schrijfactie naar je eigen
    bestand in de gedeelde map (pullOwnFile() in js/koppelen.js): heeft
    een ander toestel het intussen gewijzigd, dan eerst inlezen en
@@ -331,7 +233,7 @@ function writeHandle() {
       maybeBackup();
     })
     .catch(function () {
-      saveError = "Controleer of het bestand niet ergens anders openstaat (bijvoorbeeld in OneDrive) en probeer opnieuw, of kies Opslaan als.";
+      saveError = "Controleer of het bestand niet ergens anders openstaat (bijvoorbeeld in OneDrive) en probeer opnieuw, of klik op Kopie downloaden.";
       updateStatus();
       showNotice("warn", "Opslaan mislukt", saveError);
     })
@@ -364,11 +266,13 @@ function downloadStorageRescue() {
 }
 
 /* Enkel een kopie downloaden, zonder dat de tool denkt dat dit je
-   werkbestand is. */
+   werkbestand is. Een andere naam dan je werkbestand, met de datum, zodat
+   niemand ze verwart. */
 function downloadCopy() {
   var a = document.createElement("a");
+  var d = new Date();
   a.href = URL.createObjectURL(dbBlob());
-  a.download = defaultFileName();
+  a.download = "kopie-evaluaties-" + (db.assessor || "XX") + "-" + d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()) + ".json";
   a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
 }
@@ -387,9 +291,6 @@ var pendingMode = "merge";
 
 function pickFile(mode) {
   pendingMode = mode;
-  if (mode === "open" && dirty) {
-    if (!confirm("Je hebt wijzigingen die nog niet in een bestand staan.\n\nBestand openen vervangt alles wat er nu is. Toch doorgaan?")) return;
-  }
 
   if (canPickFiles) {
     window
@@ -401,7 +302,7 @@ function pickFile(mode) {
         var handle = handles[0];
         return handle.getFile().then(function (file) {
           return file.text().then(function (text) {
-            handleIncoming(text, file.name, mode === "open" ? handle : null);
+            handleIncoming(text, file.name);
           });
         });
       })
@@ -419,12 +320,15 @@ function onFallbackFile(e) {
   var file = e.target.files[0];
   if (!file) return;
   var reader = new FileReader();
-  reader.onload = function (ev) { handleIncoming(ev.target.result, file.name, null); };
+  reader.onload = function (ev) { handleIncoming(ev.target.result, file.name); };
   reader.readAsText(file);
   e.target.value = "";
 }
 
-function handleIncoming(text, name, handleForOpen) {
+/* "Ander bestand openen", dat alles verving, bestaat niet meer sinds
+   1.33.0: de ophaalweg in de wizard en Reservekopie terugzetten nemen
+   het over. Een bestand inlezen voegt dus altijd samen. */
+function handleIncoming(text, name) {
   var parsed;
   try {
     parsed = JSON.parse(text);
@@ -441,37 +345,6 @@ function handleIncoming(text, name, handleForOpen) {
 
   if (pendingMode === "wizard") {
     wizardOpenedFile(read, name);
-    return;
-  }
-
-  if (pendingMode === "open") {
-    var me = db.assessor;
-    var linked = !!ownFileHandle;
-    // Met een gedeelde map eerst een reservekopie van hoe het nu is: het
-    // geopende bestand vervangt alles en komt daarna in je eigen bestand.
-    if (linked) makeBackup();
-    db = read.db;
-    db.assessor = me || db.assessor;
-    renderAssessor();
-    if (!linked) {
-      fileHandle = handleForOpen;
-      fileName = name;
-    }
-    if (linked) {
-      persist();
-    } else {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
-      dirty = read.legacy;
-      updateStatus();
-    }
-    refreshAll();
-    showNotice(
-      "good",
-      "Bestand geopend",
-      read.legacy
-        ? "Dit was nog een bestand van de vorige versie. Het is omgezet. Sla het opnieuw op om de nieuwe versie te bewaren."
-        : countRows(db) + " evaluatie(s) ingeladen uit " + name + ".",
-    );
     return;
   }
 
@@ -502,7 +375,7 @@ function handleIncoming(text, name, handleForOpen) {
   showNotice(
     "good",
     "Samengevoegd met " + name,
-    parts.join(", ") + ". Je hebt nu " + after + " evaluaties in totaal (was " + before + "). Sla op als bestand om dit te bewaren.",
+    parts.join(", ") + ". Je hebt nu " + after + " evaluaties in totaal (was " + before + ").",
   );
 }
 

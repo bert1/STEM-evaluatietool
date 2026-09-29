@@ -108,11 +108,11 @@ test.describe("de wizard is verplicht", () => {
     await page.fill("#wizardInitials", "BB");
     await expect(page.locator("#wizardFinish")).toBeDisabled();
     const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#wizardDownload")]);
-    expect(dl.suggestedFilename()).toBe("stem-evaluaties-BB.json");
+    expect(dl.suggestedFilename()).toBe("evaluaties-BB.json");
     await beginnen(page);
     await page.reload();
     await expect(page.locator("#setupWizard")).toBeHidden();
-    await expect(page.locator("#status")).toHaveText("Gedownload als stem-evaluaties-BB.json");
+    await expect(page.locator("#status")).toHaveText("Gedownload als evaluaties-BB.json");
     page.expectNoErrors();
   });
 
@@ -123,7 +123,7 @@ test.describe("de wizard is verplicht", () => {
       db.sessions[key] = [{ id: "BB-ff", assessor: "BB", students: ["X"], scores: {}, createdAt: 1, updatedAt: 1 }];
       persist();
     });
-    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#btnSaveFile")]);
+    const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#status")]);
     const pad = await dl.path();
 
     const b = await nieuweBrowser(browser, nieuweSchijf(), { fsa: false });
@@ -340,7 +340,6 @@ test.describe("het eigen bestand ontbreekt", () => {
     const m = await tweedeToestel(browser, schijf, { initialen: "MD", naam: "Marie Dubois" });
     await rij(m, "MD-1");
     await m.evaluate(() => syncTeam(true));
-    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     await m.evaluate(async () => { clearTimeout(autoSaveTimer); await writeHandle(); });
     schijf.wis("Gedeeld/evaluaties-BB.json");
     schijf.namen("Gedeeld/backups").filter((n) => n.startsWith("evaluaties-BB-")).forEach((n) => schijf.wis("Gedeeld/backups/" + n));
@@ -397,8 +396,10 @@ test.describe("twee toestellen van dezelfde leerkracht", () => {
     await haalOp(school, "Bert Bollen");
     await beginnen(school);
     await rij(laptop, "BB-laptop-1");
+    await school.click("#btnSettings");
+    await school.click("#btnTeam");
     await school.click("#btnSyncTeam");
-    await expect(school.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
+    await expect(school.locator("#syncState")).toContainText("Laatst bijgewerkt om");
     expect(await rijenInTool(school)).toEqual(["BB-laptop-1"]);
     school.expectNoErrors();
   });
@@ -472,7 +473,6 @@ test.describe("Instellingen, Gebruiker", () => {
     const a = await tweedeToestel(browser, schijf, { initialen: "BB", naam: "Bert Bollen" });
     const m = await tweedeToestel(browser, schijf, { initialen: "MD", naam: "Marie Dubois" });
     await m.evaluate(() => syncTeam(true));
-    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     expect(await m.evaluate(() => memberName(db, "BB"))).toBe("Bert Bollen");
 
     await a.click("#assessor");
@@ -483,7 +483,6 @@ test.describe("Instellingen, Gebruiker", () => {
     await a.evaluate(async () => { clearTimeout(autoSaveTimer); await writeHandle(); });
 
     await m.evaluate(() => syncTeam(true));
-    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     expect(await m.evaluate(() => memberName(db, "BB"))).toBe("Bert Bollen-Peeters");
     a.expectNoErrors();
     m.expectNoErrors();
@@ -526,9 +525,8 @@ test.describe("initialen wijzigen", () => {
     await m.evaluate(() => {
       db.team.classes["1ste jaar||1WA"] = ["BB", "MD"];
       persist();
-      syncTeam(true);
+      return syncTeam(true);
     });
-    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     await m.evaluate(async () => { clearTimeout(autoSaveTimer); await writeHandle(); });
     const kopieenVoor = schijf.namen("Gedeeld/backups").filter((n) => n.startsWith("evaluaties-BB-")).length;
 
@@ -556,7 +554,6 @@ test.describe("initialen wijzigen", () => {
 
     // Marie: geen dubbele persoon, geen foutmelding, de rij heet nu BX.
     await m.evaluate(() => syncTeam(false));
-    await expect(m.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     await expect(m.locator("#notice")).not.toContainText("Niet gelukt");
     const bijMarie = await m.evaluate(() => ({
       leden: memberList(db),
@@ -566,7 +563,6 @@ test.describe("initialen wijzigen", () => {
     expect(bijMarie).toEqual({ leden: ["BX", "MD"], klas: ["BX", "MD"], rij: "BX" });
     // Ook na nog een keer samenvoegen met het oude team van Marie komt BB niet terug.
     await a.evaluate(() => syncTeam(true));
-    await expect(a.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     expect(await a.evaluate(() => memberList(db))).toEqual(["BX", "MD"]);
     a.expectNoErrors();
     m.expectNoErrors();
@@ -601,7 +597,7 @@ test.describe("initialen wijzigen", () => {
     await page.fill("#userInitialsInput", "BX");
     page.once("dialog", (d) => d.accept());
     const [dl] = await Promise.all([page.waitForEvent("download"), page.click("#btnUserSave")]);
-    expect(dl.suggestedFilename()).toBe("stem-evaluaties-BX.json");
+    expect(dl.suggestedFilename()).toBe("evaluaties-BX.json");
     await expect(page.locator("#assessor")).toHaveText("BX");
     const r = await page.evaluate(() => [Object.values(db.sessions).flat()[0].assessor, Object.values(db.sessions).flat()[0].id]);
     expect(r).toEqual(["BX", "BB-1"]);

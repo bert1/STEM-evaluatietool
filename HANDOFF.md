@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.32.0**.
+Laatst bijgewerkt: 29 september 2026, versie **1.33.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,42 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.32.0)
+## Volledige featurelijst (huidige stand, 1.33.0)
+
+- **Bestandsknoppen weg van het Evalueren-scherm** (1.33.0, voorstel B2,
+  goedgekeurd door de gebruiker). `#btnSaveFile`, `#btnSaveFileAs`,
+  `#btnOpenFile`, `#fileHint`, `#folderGroup` en `updateFileButtons()`
+  bestaan niet meer; ook `saveToFile()`, `saveCopyAs()` en de stand
+  "open" van `handleIncoming()` (een bestand inlezen voegt altijd samen).
+  `#fallbackInput` staat nu los onder `#safetyBar`.
+  **Automatisch bijwerken** (`js/sync.js`): `syncTeam(quiet)` geeft altijd
+  een Promise (`syncBusy`), met `quiet === "auto"` nooit een melding
+  (`showNotice()` scrolt). Enkel `persist()` en `refreshAll()` als er iets
+  veranderde. `autoSyncTeam(minGap)` slaat over zolang `busyEditing()`
+  (een open rubric-editor, scores of aangevinkte leerlingen): `refreshAll()`
+  roept `resetForm()` aan en zou een halve beoordeling wissen. Ook
+  `checkOwnFileOnFocus()` in `js/koppelen.js` wacht daarop.
+  `initAutoSync()`: `setInterval` om de 10 minuten, en bij `focus` of
+  `visibilitychange` hoogstens om de 5 minuten (`lastSyncAt`). Bij het
+  opstarten en na het koppelen `syncTeam("auto")`.
+  **Team** (`#syncSection`, verborgen zonder map): `#btnSyncTeam` "Nu
+  bijwerken", `#syncState` met `renderSyncState()`, en een `<details>`
+  met `#btnMergeFile`. Zonder FSA de tekst `#syncOff` met
+  `#btnMergeFileOff`.
+  **Gebruiker:** `#btnDownloadCopy` (`downloadCopy()`, naam
+  `kopie-evaluaties-XX-JJJJ-MM-DD.json`, verandert niets aan de status),
+  `#btnUnlinkDevice` (`unlinkDevice()`: weigert zonder veilige opslag,
+  schrijft eerst nog, wist `teamFolder` in IndexedDB en enkel de
+  localStorage-sleutels die met `STEM_EVAL` beginnen: pagina's vanaf
+  `file://` delen dezelfde opslag), en zonder FSA `#btnMergeWorkFile`.
+  **Status** `#status` is een `<button>` (`onStatusClick()`): zonder FSA en
+  met niet-gedownloade wijzigingen is het "Opslaan (download)", anders
+  opent het Gebruiker. `defaultFileName()` = `teamFileName()`.
+  **Testen:** `tests/bewaren.spec.js` (14 testen). Getoetst door telkens
+  uit te schakelen: de bescherming van een open beoordeling, het
+  interval, de drempel bij focus, bijwerken bij het opstarten, de controle
+  bij loskoppelen. Telkens één test rood.
+
 
 - **Koppelen is verplicht, ophaalweg, nooit blind overschrijven**
   (1.32.0, nieuwe module `js/koppelen.js`, laadt na `backups.js`).
@@ -886,6 +921,11 @@ beschikbaar. Sinds 1.20.0 is er een nieuwe reeks in de repository zelf,
   gearchiveerd jaar). Getoetst door tijdelijk fouten in te bouwen
   (huidige rubric, gelijke stand, drempel): de tests faalden zoals
   verwacht.
+- `bewaren.spec.js` (1.33.0): geen bestandsknoppen op het
+  Evalueren-scherm, status klikbaar, Kopie downloaden, Dit toestel
+  loskoppelen, automatisch bijwerken (opstarten, focus met drempel, elke
+  tien minuten, wacht tijdens het beoordelen), Nu bijwerken, Firefox en
+  Safari (status als downloadknop, samenvoegen)
 - `koppelen.spec.js` (1.32.0): verplichte wizard, verlopen toestemming,
   Firefox en Safari, gebruiker van 1.31.1, ophalen in een nieuwe browser
   (lijst en zelfde initialen), collega met dezelfde initialen, niet
@@ -1006,8 +1046,10 @@ geen test.
 ## Suggesties voor een volgende sessie (niet gevraagd, enkel ter overweging)
 
 - De testreeks uitbreiden met de onderdelen onder "Nog niet gedekt"
-- Reservekopieën ook zonder gedeelde map (bv. een download-knop voor
-  wie enkel een los werkbestand heeft)
+- Tombstones voor beoordelingen, zodat een verwijderde beoordeling niet
+  terugkomt van een ander toestel of een collega
+- Een eigen `.wizard-card`-component voor `askDeleteScope()` en de
+  wizard (nu twee keer gelijkaardige opmaak)
 - Laatst gebruikte evaluatie bovenaan in de zoeklijsten
 - Resultaten per map exporteren naar Excel
 - De groeigrafiek elders terugzetten (functies staan nog in js/goals.js)

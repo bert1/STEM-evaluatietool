@@ -373,7 +373,7 @@ function restoreBackup(name) {
         showNotice(
           "good",
           "Vorige versie teruggezet",
-          "Je werk staat terug zoals het was op " + when + ". Klik op Team bijwerken om nieuw werk van je collega's weer op te halen.",
+          "Je werk staat terug zoals het was op " + when + ". Nieuw werk van je collega's komt vanzelf weer binnen.",
         );
       });
     })

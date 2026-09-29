@@ -427,7 +427,7 @@ function renderTeamProgress(list) {
   var me = cleanAssessor(db.assessor);
   if (me && assigned.length && assigned.indexOf(me) === -1) {
     var warn = el("span", "who-chip none", "jij staat niet ingeschreven voor " + cur.klassen.join(" + "));
-    warn.title = "Je kan gewoon verder werken. Pas dit aan in het Teamscherm.";
+    warn.title = "Je kan gewoon verder werken. Pas dit aan bij Instellingen, Team.";
     host.appendChild(warn);
   }
 }

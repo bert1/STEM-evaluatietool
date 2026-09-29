@@ -13,6 +13,35 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.33.0 · 29 september 2026
+
+**Geen bestandsknoppen meer op het Evalueren-scherm**
+
+- De blokken "Jouw bestand", "Gedeelde map" en "Bestand inlezen" zijn weg
+  van het Evalueren-scherm. Er blijft enkel de veiligheidsbalk als er iets
+  moet gebeuren.
+- **Team bijwerken gaat vanzelf:** bij het opstarten, bij terugkeren naar
+  het venster (hoogstens om de vijf minuten) en om de tien minuten. Ben je
+  een leerling aan het beoordelen, dan wacht de tool. Geen melding die het
+  scherm verschuift. Handmatig: Instellingen, Team, **Nu bijwerken**, met
+  het tijdstip van de laatste keer.
+- **Opslaan** is weg: alles wordt vanzelf bewaard. In Firefox en Safari
+  wordt de status rechtsboven de knop **Opslaan (download)** zolang er
+  iets niet gedownload is.
+- **Opslaan als…** is vervangen door **Kopie downloaden** (Gebruiker). De
+  rode balk bij mislukte opslag biedt ook een kopie aan.
+- **Werk van collega toevoegen** staat nu bij Team, ingeklapt: "Een bestand
+  van buiten de map toevoegen".
+- **Ander bestand openen** (verving alles) en **Werkbestand aanmaken** zijn
+  weg: de wizard en Reservekopie terugzetten nemen dat over.
+- Nieuw bij Gebruiker: **Dit toestel loskoppelen** (voor een gedeelde
+  computer; enkel als je werk veilig bewaard is) en, in Firefox en
+  Safari, **Werkbestand openen en samenvoegen**.
+- De status rechtsboven is klikbaar en opent Instellingen, Gebruiker.
+- Het werkbestand in Firefox en Safari heet nu `evaluaties-XX.json`, zoals
+  in de gedeelde map. Zet je het daar, dan zien je collega's je werk.
+- Team bijwerken tekent het scherm enkel opnieuw als er iets nieuws is.
+
 ## 1.32.0 · 29 september 2026
 
 **Koppelen is verplicht, en je werk komt terug op een nieuwe computer**

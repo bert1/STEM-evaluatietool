@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.32.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.33.0.** Het versienummer staat ook rechtsboven in de
 > tool. Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
 
@@ -114,7 +114,7 @@ Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 | **Gebruiker** | Je initialen en naam, en waar je werk bewaard wordt |
 | **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Vakken** | Vakken maken en aanduiden welke klassen ze volgen |
-| **Team** | Wie geeft welke klas, en reservekopieën |
+| **Team** | Het werk van je collega's ophalen, wie welke klas geeft, en reservekopieën |
 
 Instellingen opent altijd het onderdeel dat je het laatst bekeek. Rechtsboven
 naast **Beoordelaar** staan je initialen. Klik erop om naar **Gebruiker** te
@@ -126,16 +126,19 @@ gaan.
 
 Je werk staat in **je eigen bestand** in de gedeelde map, bijvoorbeeld
 `evaluaties-JVDB.json`. De tool bewaart elke wijziging vanzelf. Je hoeft
-nooit zelf op opslaan te klikken.
+nooit zelf op opslaan te klikken, en er staan geen opslagknoppen op het
+Evalueren-scherm. Zie je bovenaan toch een gekleurde balk, volg dan wat
+erin staat.
 
-Rechtsboven zie je altijd of je werk veilig staat:
+Rechtsboven zie je altijd of je werk veilig staat. Klik erop om naar
+**Instellingen**, **Gebruiker** te gaan.
 
 | Status | Betekenis |
 |---|---|
 | 🟢 **Opgeslagen in …** | Alles staat in je bestand. |
 | 🟠 **Niet opgeslagen** | Er is een wijziging die nog weggeschreven wordt. Dat gebeurt binnen een seconde vanzelf. |
 | 🟠 **Map niet verbonden** | De browser vraagt opnieuw toestemming. Klik in de oranje balk op **Verbinden met …**. |
-| 🔴 **Niet opgeslagen!** | Opslaan is mislukt. Volg de rode balk: "Opnieuw proberen". |
+| 🔴 **Niet opgeslagen!** | Opslaan is mislukt. Volg de rode balk: "Opnieuw proberen", of "Kopie downloaden" om je werk ergens veilig te zetten. |
 | 🔴 **Bestand onleesbaar** | Je bestand kon niet gelezen worden, misschien is OneDrive nog bezig. De tool schrijft er niets naar. Wacht even en klik op **Opnieuw proberen**. |
 
 ### Instellingen, Gebruiker
@@ -146,14 +149,14 @@ Hier zie je:
 - **waar je werk bewaard wordt**: de gedeelde map en de naam van je bestand.
 
 **Je naam wijzigen:** klik op **Wijzigen**, pas je naam aan en klik op
-**Opslaan**. Je collega's zien je nieuwe naam na Team bijwerken.
+**Opslaan**. Je collega's zien je nieuwe naam zodra hun tool bijwerkt.
 
 **Je initialen wijzigen:** doe dit enkel als het echt nodig is.
 
 1. Klik op **Wijzigen** en vul je nieuwe initialen in.
 2. Klik op **Opslaan** en bevestig.
 3. Al je beoordelingen krijgen de nieuwe initialen. Je bestand krijgt een
-   nieuwe naam. Je collega's zien het na Team bijwerken.
+   nieuwe naam. Je collega's zien het zodra hun tool bijwerkt.
 
 Initialen die een collega al gebruikt, kan je niet kiezen. De tool maakt
 eerst een reservekopie. Er gaat niets verloren.
@@ -161,6 +164,20 @@ eerst een reservekopie. Er gaat niets verloren.
 **Koppeling opnieuw instellen:** kies opnieuw de gedeelde map, bijvoorbeeld
 als die verhuisd is. Je werk wordt samengevoegd met wat er in de map staat.
 Er gaat niets verloren.
+
+**Kopie downloaden:** downloadt een kopie van al je werk, bijvoorbeeld voor
+je eigen archief. Je werk blijft gewoon bewaard waar het nu staat.
+
+**Dit toestel loskoppelen:** gebruik dit op een computer die je met anderen
+deelt, zoals in de klas of de leraarskamer.
+
+1. Klik op **Dit toestel loskoppelen** en bevestig.
+2. Je werk blijft bewaard in de gedeelde map.
+3. Op deze computer wordt alles van de tool gewist. De volgende keer start
+   de tool met het welkomstscherm. Kies dan **Ik heb de tool al gebruikt …**
+   en klik op je naam.
+
+De tool doet dit enkel als je werk echt veilig in de map staat.
 
 ### Op twee computers werken
 
@@ -178,21 +195,16 @@ een ander toestel aangepast".
 
 In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
 
-- De eerste keer klik je op **Werkbestand downloaden**. Zet dat bestand op
-  een veilige plek, bijvoorbeeld in OneDrive.
-- Klik na elke les op **Opslaan (download)** en vervang het oude bestand.
+- De eerste keer klik je op **Werkbestand downloaden**. Het heet
+  bijvoorbeeld `evaluaties-JVDB.json`. Zet het op een veilige plek, het
+  liefst in de gedeelde map van je vakgroep: dan zien je collega's je werk.
+- Heb je iets gewijzigd, dan staat rechtsboven de knop **Opslaan
+  (download)**. Klik erop na elke les en vervang het oude bestand.
 - Op een andere computer kies je **Ik heb de tool al gebruikt …** en dan
   **Mijn werkbestand openen**.
-
-**Knoppen op het Evalueren-scherm:**
-
-- **Opslaan**: schrijft meteen naar je bestand (gebeurt ook automatisch).
-- **Opslaan als…**: bewaart een kopie van je werk in een bestand naar keuze.
-  Je bestand in de gedeelde map blijft je werkbestand.
-- **Werk van collega toevoegen**: voegt het bestand van een collega bij het
-  jouwe. Er gaat nooit iets verloren.
-- **Ander bestand openen**: vervangt alles wat je nu hebt door een ander
-  werkbestand. De tool maakt eerst een reservekopie.
+- Werkte je intussen op een andere computer? Kies bij **Instellingen**,
+  **Gebruiker** de knop **Werkbestand openen en samenvoegen**. Het werk van
+  daar komt bij het jouwe. Er gaat niets verloren.
 
 ---
 
@@ -274,7 +286,7 @@ je bij Evalueren enkel de evaluaties die bij je vak horen.
 
 Met **Vak verwijderen** verdwijnt enkel het vak. De evaluaties blijven
 bestaan, maar hebben dan geen vak meer. Vakken gaan mee naar je collega's
-bij **Team bijwerken**, net als de rubrics.
+als hun tool bijwerkt, net als de rubrics.
 
 ---
 
@@ -592,8 +604,16 @@ OneDrive** (zie [De eerste keer](#de-eerste-keer)). Elke leerkracht heeft daar
 een eigen bestand met zijn initialen. Niemand schrijft in het bestand van een
 ander.
 
-Klik op het Evalueren-scherm op **Team bijwerken** om het werk van je
-collega's op te halen.
+**Het werk van je collega's komt vanzelf binnen:** bij het opstarten, als je
+terugkomt naar het venster van de tool, en om de tien minuten. Ben je een
+leerling aan het beoordelen, dan wacht de tool tot je klaar bent.
+
+Wil je het meteen? Open **Instellingen**, **Team** en klik op **Nu
+bijwerken**. Daarnaast staat wanneer het laatst gebeurde.
+
+Kreeg je een bestand van iemand die niet in de gedeelde map werkt? Klik bij
+**Team** op **Een bestand van buiten de map toevoegen**. Het werk uit dat
+bestand komt bij het jouwe. Er gaat niets verloren.
 
 Bij **Instellingen**, **Team** vul je ook in **wie welke klas geeft**. Zo zie je bij Evalueren
 wie hoeveel leerlingen van een klas al beoordeeld heeft.
@@ -621,8 +641,8 @@ Als je met een gedeelde map werkt, bewaart de tool vanzelf een
 1. Open **Instellingen** en kies **Team**.
 2. Zoek onder **Reservekopieën** de datum en het uur van vóór de fout.
 3. Klik op **Terugzetten** en bevestig.
-4. Klik daarna op **Team bijwerken** om nieuw werk van je collega's weer op
-   te halen.
+4. Nieuw werk van je collega's komt daarna vanzelf weer binnen. Wil je het
+   meteen, klik dan bij **Team** op **Nu bijwerken**.
 
 Wat je na dat tijdstip veranderde, is dan weg. Geen paniek als je de
 verkeerde kiest: de tool maakt eerst nog een kopie van hoe het was. Die staat
@@ -632,7 +652,7 @@ Ga je iets groots doen, zoals een klaslijst opnieuw inlezen? Klik dan eerst
 op **Nu een reservekopie maken**.
 
 > Je ziet enkel je eigen reservekopieën. Het teruggezette werk komt ook bij je
-> collega's terecht zodra zij op Team bijwerken klikken.
+> collega's terecht zodra hun tool bijwerkt (vanzelf, of met Nu bijwerken).
 
 ---
 
@@ -660,7 +680,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 | Een leerling moet een evaluatie niet krijgen | Controle, Details, "Niet te beoordelen". |
 | Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes onderaan het tabblad Skore. |
 | Ik heb per ongeluk iets gewist of overschreven | Team, Reservekopieën: klik op "Terugzetten" bij een tijdstip van vóór de fout. |
-| Ik zie de evaluaties van een collega niet | Klik op "Team bijwerken", of voeg hun bestand toe met "Werk van collega toevoegen". |
+| Ik zie de evaluaties van een collega niet | Instellingen, Team: klik op "Nu bijwerken". Werkt je collega niet in de gedeelde map, voeg hun bestand toe met "Een bestand van buiten de map toevoegen". |
 | Er staat een nieuwe versie van de tool klaar | Download het nieuwe bestand en open het. Je werkbestand blijft gewoon werken. |
 
 ---

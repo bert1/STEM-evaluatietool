@@ -305,7 +305,6 @@ test.describe("terugzetten", () => {
     await expect(page.locator("#notice")).toContainText("Vorige versie teruggezet");
 
     await page.evaluate(() => syncTeam(true));
-    await expect(page.locator("#btnSyncTeam")).toHaveText("Team bijwerken");
     const na = await page.evaluate(({ key, klas, crit, ev }) => ({
       score: db.sessions[key][0].scores[crit],
       klas: !!db.roster["1ste jaar"][klas],

@@ -37,10 +37,9 @@ function init() {
   $("btnSave").addEventListener("click", saveEvaluation);
   $("btnCancel").addEventListener("click", function () { resetForm(); });
 
-  $("btnSaveFile").addEventListener("click", function () { saveToFile(false); });
-  $("btnSaveFileAs").addEventListener("click", function () { saveToFile(true); });
-  $("btnOpenFile").addEventListener("click", function () { pickFile("open"); });
   $("btnMergeFile").addEventListener("click", function () { pickFile("merge"); });
+  $("btnMergeFileOff").addEventListener("click", function () { pickFile("merge"); });
+  $("status").addEventListener("click", onStatusClick);
   $("btnExportCsv").addEventListener("click", exportCSV);
   $("btnCopy").addEventListener("click", copyTable);
   $("btnClearSession").addEventListener("click", clearSession);
@@ -120,16 +119,9 @@ function init() {
     e.returnValue = "";
   });
 
-  if (!canPickFiles) {
-    showNotice(
-      "info",
-      "Deze browser slaat op via downloaden",
-      "Voor een echte Opslaan-knop die rechtstreeks naar je schijf schrijft, open je dit bestand in Chrome of Edge. Hier werkt opslaan via een download, en openen via Bladeren.",
-    );
-  }
-
   updateStatus();
   initKoppelen();
+  initAutoSync();
   initAiRubricHelper();
   initScoringShortcuts();
   initEvalCombo();
