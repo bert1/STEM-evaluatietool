@@ -18,7 +18,10 @@ var canPickFiles = typeof window.showSaveFilePicker === "function";
 function updateStatus() {
   var s = $("status");
   s.className = "status";
-  if (saveError && fileHandle) {
+  if (ownFileProblem) {
+    s.classList.add("error");
+    s.textContent = "Bestand onleesbaar";
+  } else if (saveError && fileHandle) {
     s.classList.add("error");
     s.textContent = "Niet opgeslagen!";
   } else if (fileHandle && !dirty) {
@@ -30,6 +33,10 @@ function updateStatus() {
   } else if (pendingFolder && !folderHandle) {
     s.classList.add("dirty");
     s.textContent = "Map niet verbonden";
+  } else if (!canPickFiles && fileName) {
+    // Browser zonder File System Access API: bewaren gaat via downloaden.
+    s.classList.add(dirty ? "dirty" : "saved");
+    s.textContent = dirty ? "Nog niet gedownload" : "Gedownload als " + fileName;
   } else if (dirty) {
     s.classList.add("dirty");
     s.textContent = "Alleen in deze browser";
@@ -53,19 +60,20 @@ function updateSafetyBar() {
   }, 0);
 
   var rescued = storageRescueData();
+  var unreadable = !!ownFileProblem;
   var failed = !!(saveError && fileHandle);
   var needsFolder = pendingFolder && !folderHandle;
   // Zonder opgeslagen werk valt er niets te verliezen; dan is een
   // waarschuwing alleen maar ruis bij het eerste gebruik.
   var needsFile = !fileHandle && !(!canPickFiles && fileName) && rowCount > 0;
 
-  if (!rescued && !failed && !needsFolder && !needsFile) {
+  if (!rescued && !unreadable && !failed && !needsFolder && !needsFile) {
     bar.classList.add("hidden");
     return;
   }
 
   bar.classList.remove("hidden");
-  bar.classList.toggle("error", !!(rescued || failed));
+  bar.classList.toggle("error", !!(rescued || unreadable || failed));
   bar.innerHTML = "";
 
   var txt = el("div", "txt");
@@ -94,6 +102,14 @@ function updateSafetyBar() {
     btns.appendChild(open);
     btns.appendChild(dl);
     btns.appendChild(hide);
+  } else if (unreadable) {
+    // Sinds 1.32.0: nooit een lege start die het bestand daarna overschrijft.
+    txt.appendChild(el("strong", null, "Je bestand " + fileName + " kon niet gelezen worden"));
+    txt.appendChild(document.createTextNode(ownFileProblem));
+    var again = el("button", "btn-primary", "Opnieuw proberen");
+    again.type = "button";
+    again.addEventListener("click", retryOwnFile);
+    btns.appendChild(again);
   } else if (failed) {
     txt.appendChild(el("strong", null, "Automatisch opslaan naar " + fileName + " is mislukt"));
     txt.appendChild(document.createTextNode(
@@ -221,8 +237,11 @@ function dbBlob() {
     tombstones: db.tombstones,
     team: db.team,
     settings: db.settings,
-    // localTombstones bewust NIET mee — dat is precies het punt van
-    // "verwijderen voor mezelf": nooit delen met collega's.
+    // Sinds 1.32.0 wel mee, want dit is jouw eigen bestand: op een nieuw
+    // toestel of in een andere browser moet "verwijderd voor mezelf"
+    // verwijderd blijven. Collega's lezen dit bestand ook, maar mergeDb()
+    // neemt enkel de gedeelde tombstones over, nooit localTombstones.
+    localTombstones: db.localTombstones,
   };
   return new Blob([JSON.stringify(out, null, 2)], { type: "application/json" });
 }
@@ -230,6 +249,9 @@ function dbBlob() {
 function saveToFile(forceNew) {
   if (canPickFiles) {
     if (fileHandle && !forceNew) return writeHandle();
+    // Met een gedeelde map blijft je werk daar bewaard; "Opslaan als"
+    // schrijft dan enkel een kopie (sinds 1.32.0).
+    if (ownFileHandle && forceNew) return saveCopyAs();
     window
       .showSaveFilePicker({
         suggestedName: defaultFileName(),
@@ -251,25 +273,58 @@ function saveToFile(forceNew) {
   downloadDb();
 }
 
+/* Een kopie van je werk in een bestand naar keuze. Je eigen bestand in
+   de gedeelde map blijft het werkbestand. */
+function saveCopyAs() {
+  return window
+    .showSaveFilePicker({
+      suggestedName: defaultFileName(),
+      types: [{ description: "STEM-evaluaties", accept: { "application/json": [".json"] } }],
+    })
+    .then(function (handle) {
+      return handle.createWritable().then(function (w) {
+        return w.write(dbBlob()).then(function () { return w.close(); });
+      }).then(function () {
+        showNotice("good", "Kopie bewaard", "Een kopie van je werk staat in " + handle.name + ". Je werk blijft gewoon bewaard in " + fileName + ".");
+      });
+    })
+    .catch(function (err) {
+      if (err && err.name === "AbortError") return;
+      downloadCopy();
+    });
+}
+
 /* Schrijft naar het werkbestand. Nooit twee schrijfacties tegelijk: loopt
    er al een, dan volgt er na afloop nog precies één met de nieuwste
    stand. De status gaat pas op "opgeslagen" als er tijdens het schrijven
    niets meer veranderd is, anders zou het tabblad sluiten zonder
    waarschuwing terwijl de laatste wijziging nog niet op schijf staat. */
+/* Sinds 1.32.0 kijkt de tool vóór elke schrijfactie naar je eigen
+   bestand in de gedeelde map (pullOwnFile() in js/koppelen.js): heeft
+   een ander toestel het intussen gewijzigd, dan eerst inlezen en
+   samenvoegen. Is het onleesbaar, dan wordt er niets geschreven. */
 function writeHandle() {
-  if (!fileHandle) return Promise.resolve();
+  if (!fileHandle || ownFileProblem) return Promise.resolve();
   if (writing) {
     writeAgain = true;
     return writing;
   }
-  var handle = fileHandle;
-  var target = changeCount;
-  writing = handle
-    .createWritable()
-    .then(function (w) {
-      return w.write(dbBlob()).then(function () { return w.close(); });
+  var handle = null;
+  var target = 0;
+  writing = pullOwnFile()
+    .then(function (safe) {
+      if (!safe || !fileHandle) return false;
+      handle = fileHandle;
+      target = changeCount;
+      return handle.createWritable()
+        .then(function (w) {
+          return w.write(dbBlob()).then(function () { return w.close(); });
+        })
+        .then(function () { return rememberOwnStamp(handle); })
+        .then(function () { return true; });
     })
-    .then(function () {
+    .then(function (written) {
+      if (!written) return;
       saveError = "";
       if (changeCount === target && fileHandle === handle) markClean();
       else updateStatus();
@@ -304,6 +359,16 @@ function downloadStorageRescue() {
   var a = document.createElement("a");
   a.href = URL.createObjectURL(new Blob([storageRescueData()], { type: "application/json" }));
   a.download = "stem-evaluaties-reservekopie-" + new Date().toISOString().slice(0, 10) + ".json";
+  a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+}
+
+/* Enkel een kopie downloaden, zonder dat de tool denkt dat dit je
+   werkbestand is. */
+function downloadCopy() {
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(dbBlob());
+  a.download = defaultFileName();
   a.click();
   setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
 }
@@ -374,15 +439,31 @@ function handleIncoming(text, name, handleForOpen) {
     return;
   }
 
+  if (pendingMode === "wizard") {
+    wizardOpenedFile(read, name);
+    return;
+  }
+
   if (pendingMode === "open") {
+    var me = db.assessor;
+    var linked = !!ownFileHandle;
+    // Met een gedeelde map eerst een reservekopie van hoe het nu is: het
+    // geopende bestand vervangt alles en komt daarna in je eigen bestand.
+    if (linked) makeBackup();
     db = read.db;
-    if (!db.assessor) db.assessor = cleanAssessor($("assessor").value);
-    $("assessor").value = db.assessor;
-    fileHandle = handleForOpen;
-    fileName = name;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
-    dirty = read.legacy;
-    updateStatus();
+    db.assessor = me || db.assessor;
+    renderAssessor();
+    if (!linked) {
+      fileHandle = handleForOpen;
+      fileName = name;
+    }
+    if (linked) {
+      persist();
+    } else {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); } catch (e) {}
+      dirty = read.legacy;
+      updateStatus();
+    }
     refreshAll();
     showNotice(
       "good",
@@ -603,25 +684,4 @@ function readTeamFolder(dirHandle, ownFileName, config) {
     found.sort(function (a, b) { return a.name.localeCompare(b.name, "nl"); });
     return { files: found, problems: problems };
   })();
-}
-
-
-
-/* Waarschuwing tegen stil overschrijven: staat er al een bestand met
-   jouw initialen dat van een ander toestel komt? */
-function checkOwnFile(dirHandle, ownFileName, myInstanceId) {
-  return dirHandle
-    .getFileHandle(ownFileName)
-    .then(function (handle) { return handle.getFile(); })
-    .then(function (file) { return file.text(); })
-    .then(function (text) {
-      var parsed = JSON.parse(text);
-      if (parsed.instanceId && parsed.instanceId !== myInstanceId) {
-        return { conflict: true, name: ownFileName };
-      }
-      return { conflict: false };
-    })
-    .catch(function () {
-      return { conflict: false }; // bestaat nog niet, of onleesbaar
-    });
 }

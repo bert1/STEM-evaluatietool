@@ -123,7 +123,6 @@ test("periodes aanpassen, met controle op de volgorde", async ({ page }) => {
 
 test("een bewerkte beoordeling houdt haar oorspronkelijke datum", async ({ page }) => {
   await openTool(page);
-  await page.fill("#assessor", "TST");
   await page.selectOption("#yearSelect", "1ste jaar");
   await page.click("#klasMultiInput");
   await page.locator("#klasMultiPanel .klas-multi-option").first().click();

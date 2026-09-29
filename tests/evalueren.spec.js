@@ -11,7 +11,6 @@ async function kiesKlasEnEvaluatie(page) {
 
 test("een leerling beoordelen, opslaan en terugzien bij Controle", async ({ page }) => {
   await openTool(page);
-  await page.fill("#assessor", "TST");
   await kiesKlasEnEvaluatie(page);
 
   const leerling = (await page.locator("#studentGrid .student").first().innerText()).split("\n")[0].trim();
@@ -39,7 +38,6 @@ test("een leerling beoordelen, opslaan en terugzien bij Controle", async ({ page
 
 test("opslaan zonder alle criteria geeft een duidelijke melding", async ({ page }) => {
   await openTool(page);
-  await page.fill("#assessor", "TST");
   await kiesKlasEnEvaluatie(page);
   await page.locator("#studentGrid .student-cb").first().check();
   await page.click("#btnSave");

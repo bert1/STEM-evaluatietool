@@ -28,6 +28,10 @@ var form = { editId: null, scores: {}, corrections: {} }
 
 var freshStart = false;
 
+// Werd er in deze sessie al iets bewaard? Zie browserHasWork() in
+// js/koppelen.js.
+var persistedThisSession = false;
+
 function loadFromStorage() {
   var raw = null;
   try { raw = localStorage.getItem(STORAGE_KEY); } catch (e) {}
@@ -82,6 +86,7 @@ function loadFromStorage() {
 }
 
 function persist() {
+  persistedThisSession = true;
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
   } catch (e) {

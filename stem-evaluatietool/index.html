@@ -13,43 +13,83 @@
   <body>
     <div id="setupWizard" class="hidden">
       <div class="wizard-overlay"></div>
-      <div class="wizard-card">
-        <h2>Welkom</h2>
-        <p class="hint">
-          Voor je begint, een paar instellingen. Dit hoef je maar één keer te doen. Daarna opent
-          de tool voortaan meteen op het evaluatiescherm.
-        </p>
-
-        <div class="form-group">
-          <label for="wizardInitials">Jouw initialen</label>
-          <input type="text" id="wizardInitials" maxlength="20" placeholder="JVDB" autofocus />
-          <p class="hint" style="margin: 4px 0 0">
-            Dit koppelt je evaluaties aan je naam en is nodig om later samen te werken met
-            collega's.
-          </p>
+      <div class="wizard-card" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+        <h2 id="wizardTitle">Welkom</h2>
+        <p class="hint" id="wizardIntro"></p>
+        <div class="notice warn hidden" id="wizardBrowserWarn">
+          <strong>Gebruik liefst Chrome of Edge</strong>
+          In deze browser kan de tool niet vanzelf bewaren in een gedeelde map. Je werkt dan met een
+          werkbestand dat je zelf downloadt en na elke les opnieuw bewaart.
         </div>
 
-        <div class="form-group">
-          <label for="wizardName">Jouw volledige naam</label>
-          <input type="text" id="wizardName" placeholder="Jan Van den Bergh" />
-          <p class="hint" style="margin: 4px 0 0">Optioneel, maar handig zodat collega's je herkennen in overzichten.</p>
-        </div>
-
-        <div class="form-group" id="wizardFolderGroup">
-          <label>Gedeelde map</label>
-          <p class="hint" style="margin: 0 0 8px">
-            Werk je samen met collega's? Kies de map die jullie delen: een map op OneDrive, of een
-            netwerkschijf van de school. Ken je dit pad niet, vraag het aan je ICT-verantwoordelijke.
-            Dit kan ook later nog, via Instellingen en dan Team.
-          </p>
-          <div class="btn-row">
-            <button type="button" class="btn-ghost" id="wizardPickFolder">Gedeelde map kiezen</button>
+        <div class="wizard-step" data-step="keuze">
+          <div class="wizard-choices">
+            <button type="button" class="wizard-choice" id="wizardNew">
+              <strong>Ik gebruik de tool voor het eerst</strong>
+              <span>Je vult je initialen en je naam in en kiest de gedeelde map.</span>
+            </button>
+            <button type="button" class="wizard-choice" id="wizardExisting">
+              <strong>Ik heb de tool al gebruikt op een andere computer of in een andere browser</strong>
+              <span>Je kiest de gedeelde map en klikt op je naam. Je werk komt terug, je hoeft niets te typen.</span>
+            </button>
           </div>
-          <div id="wizardFolderState" style="margin-top: 10px"></div>
+        </div>
+
+        <div class="wizard-step hidden" data-step="nieuw">
+          <p class="hint" id="wizardNewIntro"></p>
+          <div class="form-group">
+            <label for="wizardInitials">Jouw initialen</label>
+            <input type="text" id="wizardInitials" maxlength="20" placeholder="JVDB" />
+            <p class="hint" style="margin: 4px 0 0">Die komen bij elke beoordeling en in de naam van je bestand.</p>
+            <p class="hint hidden" id="wizardInitialsFixed" style="margin: 4px 0 0">
+              Dit zijn de initialen waarmee je in deze browser werkt.
+            </p>
+          </div>
+          <div class="form-group">
+            <label for="wizardName">Jouw volledige naam</label>
+            <input type="text" id="wizardName" placeholder="Jan Van den Bergh" />
+            <p class="hint" style="margin: 4px 0 0">Zo herkennen je collega's je in de overzichten.</p>
+          </div>
+          <div class="form-group wizard-folder" id="wizardFolderPart">
+            <label>Gedeelde map</label>
+            <p class="hint" id="wizardFolderHelpNew"></p>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="wizardPickFolder">Gedeelde map kiezen</button>
+            </div>
+          </div>
+          <div class="form-group wizard-folder hidden" id="wizardFilePart">
+            <label>Werkbestand</label>
+            <p class="hint">De tool maakt je werkbestand en downloadt het. Bewaar het op een veilige plek, bijvoorbeeld in OneDrive.</p>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="wizardDownload">Werkbestand downloaden</button>
+            </div>
+          </div>
+          <div id="wizardNewState" class="wizard-state"></div>
+          <p class="hint hidden" id="wizardToExistingRow" style="margin-top: 14px">
+            <button type="button" class="btn-link" id="wizardToExisting">Ik heb de tool ook al op een andere computer gebruikt</button>
+          </p>
+        </div>
+
+        <div class="wizard-step hidden" data-step="bestaand">
+          <div class="wizard-folder" id="wizardExistingFolderPart">
+            <p class="hint" id="wizardFolderHelpExisting"></p>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="wizardPickExisting">Gedeelde map kiezen</button>
+            </div>
+            <div id="wizardPeople" class="wizard-people"></div>
+          </div>
+          <div class="wizard-folder hidden" id="wizardExistingFilePart">
+            <p class="hint">Open het werkbestand dat je vroeger downloadde, bijvoorbeeld stem-evaluaties-BB.json.</p>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="wizardOpenFile">Mijn werkbestand openen</button>
+            </div>
+          </div>
+          <div id="wizardExistingState" class="wizard-state"></div>
         </div>
 
         <div class="wizard-actions">
-          <button type="button" class="btn-ghost" id="wizardSkip">Overslaan, ik doe dit later</button>
+          <button type="button" class="btn-ghost" id="wizardBack">Terug</button>
+          <button type="button" class="btn-ghost hidden" id="wizardCancel">Annuleren</button>
           <button type="button" class="btn-primary" id="wizardFinish" disabled>Beginnen</button>
         </div>
       </div>
@@ -64,14 +104,8 @@
         </div>
       </div>
       <div class="assessor-field">
-        <label for="assessor">Beoordelaar</label>
-        <input
-          type="text"
-          id="assessor"
-          maxlength="20"
-          placeholder="JVDB"
-          title="Je initialen. Die komen bij elke evaluatie te staan, zodat je nadien kan samenvoegen met je collega."
-        />
+        <span class="assessor-label">Beoordelaar</span>
+        <button type="button" id="assessor" class="assessor-btn"></button>
       </div>
       <nav class="nav-group">
         <button type="button" class="nav-btn active" id="btnHome">Evalueren</button>
@@ -90,6 +124,7 @@
         <span class="settings-tabs-title">Instellingen</span>
         <div class="nav-group">
           <button type="button" class="nav-btn" id="btnSettingsGeneral">Algemeen</button>
+          <button type="button" class="nav-btn" id="btnSettingsUser">Gebruiker</button>
           <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
           <button type="button" class="nav-btn" id="btnSubjects">Vakken</button>
           <button type="button" class="nav-btn" id="btnTeam">Team</button>
@@ -120,6 +155,48 @@
         <section class="settings-section">
           <h3 class="subject-title">Over deze tool</h3>
           <p class="hint" id="generalVersion"></p>
+        </section>
+      </div>
+
+      <div class="card hidden" id="userCard">
+        <h2>
+          Gebruiker
+          <span class="sub">Wie je bent en waar je werk bewaard wordt</span>
+          <button type="button" class="btn-ghost btn-small" id="btnCloseUser" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Jij</h3>
+          <p class="user-line"><span class="user-label">Initialen</span><code id="userInitials"></code></p>
+          <p class="user-line"><span class="user-label">Naam</span><span id="userName"></span></p>
+          <div class="btn-row">
+            <button type="button" class="btn-ghost" id="btnUserEdit">Wijzigen</button>
+          </div>
+          <div id="userEditForm" class="hidden">
+            <div class="form-group">
+              <label for="userNameInput">Jouw volledige naam</label>
+              <input type="text" id="userNameInput" placeholder="Jan Van den Bergh" />
+              <p class="hint" style="margin: 4px 0 0">Je collega's zien je nieuwe naam na Team bijwerken.</p>
+            </div>
+            <div class="btn-row">
+              <button type="button" class="btn-primary" id="btnUserSave">Opslaan</button>
+              <button type="button" class="btn-ghost" id="btnUserCancel">Annuleren</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h3 class="subject-title">Waar je werk bewaard wordt</h3>
+          <div id="userStorage"></div>
+          <div class="btn-row" style="margin-top: 12px">
+            <button type="button" class="btn-ghost" id="btnRelink">Koppeling opnieuw instellen</button>
+          </div>
+          <p class="hint">
+            Kies opnieuw de gedeelde map, bijvoorbeeld als die verhuisd is. Je werk in deze browser
+            wordt samengevoegd met wat er in de map staat. Er gaat niets verloren.
+          </p>
         </section>
       </div>
 
@@ -538,19 +615,7 @@
           </button>
         </h2>
 
-        <div id="folderSection">
-          <span class="add-label">Gedeelde map op OneDrive of SharePoint</span>
-          <p class="hint" style="margin: 6px 0 12px">
-            Kies één keer de map die jullie delen. De tool schrijft daar jouw eigen bestand in en
-            leest dat van je collega's. Niemand schrijft in andermans bestand, dus OneDrive kan er
-            geen conflictkopieën van maken.
-          </p>
-          <div class="btn-row" id="folderButtons"></div>
-          <div id="folderState" style="margin-top: 12px"></div>
-        </div>
-
         <div id="backupSection" class="hidden">
-          <hr style="border: none; border-top: 1px solid var(--border); margin: 24px 0" />
           <span class="add-label">Reservekopieën</span>
           <p class="hint" style="margin: 6px 0 12px">
             Terwijl je werkt, bewaart de tool elk uur een kopie van jouw bestand in
@@ -887,6 +952,7 @@
     <script src="js/goals.js"></script>
     <script src="js/sync.js"></script>
     <script src="js/backups.js"></script>
+    <script src="js/koppelen.js"></script>
     <script src="js/feedback.js"></script>
     <script src="js/skore.js"></script>
     <script src="js/controle.js"></script>

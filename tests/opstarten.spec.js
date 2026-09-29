@@ -24,13 +24,10 @@ test("de tool start zonder fouten en toont de versie", async ({ page }) => {
   page.expectNoErrors();
 });
 
-test("de opstartwizard verschijnt enkel bij de eerste keer", async ({ page }) => {
-  await openTool(page, { skipWizard: false });
-  await expect(page.locator("#setupWizard")).toBeVisible();
-  await page.fill("#wizardInitials", "TST");
-  await page.click("#wizardFinish");
-  await expect(page.locator("#setupWizard")).toBeHidden();
+test("na het koppelen komt de opstartwizard niet meer terug", async ({ page }) => {
+  await openTool(page);
   await page.reload();
+  await expect(page.locator("#status")).toHaveText("Opgeslagen in evaluaties-TST.json");
   await expect(page.locator("#setupWizard")).toBeHidden();
   page.expectNoErrors();
 });
@@ -56,8 +53,8 @@ test("alle tabbladen openen zonder fouten", async ({ page }) => {
     await expect(page.locator(knop), tekst).toHaveClass(/active/);
   }
   await page.click("#btnSettings");
-  await page.click("#btnTeam");
-  await expect(page.locator("#folderButtons")).toBeVisible();
+  await page.click("#btnSettingsUser");
+  await expect(page.locator("#userStorage")).toContainText("evaluaties-TST.json");
   page.expectNoErrors();
 });
 
@@ -78,7 +75,7 @@ test("bij Rubrics staat de knop Nieuwe evaluatie boven de lijst", async ({ page 
   page.expectNoErrors();
 });
 
-test("Instellingen: bovenaan één tab, met Algemeen, Klaslijsten, Vakken en Team eronder", async ({ page }) => {
+test("Instellingen: bovenaan één tab, met Algemeen, Gebruiker, Klaslijsten, Vakken en Team eronder", async ({ page }) => {
   await openTool(page);
   // Bovenaan geen aparte tabs meer voor Klaslijsten en Team.
   await expect(page.locator(".topbar .nav-btn")).toHaveText(["Evalueren", "Rubrics", "Controle", "Skore", "Instellingen"]);
@@ -86,7 +83,7 @@ test("Instellingen: bovenaan één tab, met Algemeen, Klaslijsten, Vakken en Tea
 
   await page.click("#btnSettings");
   await expect(page.locator("#settingsTabs")).toBeVisible();
-  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Klaslijsten", "Vakken", "Team"]);
+  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Gebruiker", "Klaslijsten", "Vakken", "Team"]);
   await expect(page.locator("#btnSettingsGeneral")).toHaveClass(/active/);
   await expect(page.locator("#generalCard")).toBeVisible();
   await expect(page.locator("#generalVersion")).toContainText(await page.evaluate(() => APP_VERSION));

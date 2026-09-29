@@ -21,7 +21,7 @@ function openTeam() {
     if (chosen) $("teamYear").value = chosen;
   }
   ensureSelfInTeam();
-  renderFolderSection();
+  renderBackupList();
   renderMembers();
   renderTeamClasses();
   showView("team");
@@ -31,7 +31,7 @@ function openTeam() {
 
 /* Je eigen initialen horen er altijd bij te staan. */
 function ensureSelfInTeam() {
-  var me = cleanAssessor($("assessor").value || db.assessor);
+  var me = cleanAssessor(db.assessor);
   if (!me) return;
   if (!db.team) db.team = emptyTeam();
   if (!db.team.members[me]) {
@@ -52,7 +52,7 @@ function touchTeam() {
 function renderMembers() {
   var host = $("memberRows");
   host.innerHTML = "";
-  var me = cleanAssessor($("assessor").value || db.assessor);
+  var me = cleanAssessor(db.assessor);
   var list = memberList(db);
 
   if (!list.length) {
@@ -87,7 +87,13 @@ function renderMembers() {
     name.addEventListener("input", function () {
       db.team.members[initials].name = this.value;
     });
-    name.addEventListener("change", touchTeam);
+    // Met een eigen tijdstip, zodat een nieuwe naam ook bij collega's
+    // doorkomt (zie mergeTeam hieronder).
+    name.addEventListener("change", function () {
+      db.team.members[initials].updatedAt = Date.now();
+      if (initials === me) renderAssessor();
+      touchTeam();
+    });
     row.appendChild(name);
 
     if (initials === me) {
@@ -200,227 +206,21 @@ function renderTeamClasses() {
 
 
 
-/* ------------------------------------------------------------------
-   GEDEELDE MAP
-   ------------------------------------------------------------------ */
-
-function renderFolderSection() {
-  renderBackupList();
-  var buttons = $("folderButtons");
-  var state = $("folderState");
-  buttons.innerHTML = "";
-  state.innerHTML = "";
-
-  if (!FOLDER_SUPPORTED) {
-    var off = el("div", "folder-state off");
-    off.appendChild(document.createTextNode(
-      "Deze browser kan geen map onthouden. Gebruik Chrome of Edge, of wissel bestanden uit met " +
-      "'Werk van collega toevoegen' op het evaluatiescherm.",
-    ));
-    state.appendChild(off);
-    return;
-  }
-
-  var pick = el("button", "btn-primary", folderHandle ? "Andere map kiezen" : "Gedeelde map kiezen");
-  pick.type = "button";
-  pick.addEventListener("click", pickFolder);
-  buttons.appendChild(pick);
-
-  if (pendingFolder && !folderHandle) {
-    var again = el("button", "btn-primary", "Verbinden met " + pendingFolder.name);
-    again.type = "button";
-    again.addEventListener("click", reconnectFolder);
-    buttons.innerHTML = "";
-    buttons.appendChild(again);
-    var pick2 = el("button", "btn-ghost", "Andere map kiezen");
-    pick2.type = "button";
-    pick2.addEventListener("click", pickFolder);
-    buttons.appendChild(pick2);
-
-    var waiting = el("div", "folder-state off");
-    waiting.appendChild(document.createTextNode(
-      "Je werkte eerder in " + pendingFolder.name + ", maar de browser vraagt elke sessie opnieuw " +
-      "toestemming. Tot je verbindt, blijft je werk alleen in deze browser staan.",
-    ));
-    state.appendChild(waiting);
-    return;
-  }
-
-  if (folderHandle) {
-    var forget = el("button", "btn-ghost", "Map loskoppelen");
-    forget.type = "button";
-    forget.addEventListener("click", forgetFolder);
-    buttons.appendChild(forget);
-
-    var box = el("div", "folder-state");
-    box.appendChild(document.createTextNode("Verbonden met "));
-    box.appendChild(el("code", null, folderName));
-    box.appendChild(document.createTextNode(". Jouw werk gaat naar "));
-    box.appendChild(el("code", null, teamFileName(db.assessor)));
-    state.appendChild(box);
-  } else {
-    var idle = el("div", "folder-state off");
-    idle.appendChild(document.createTextNode(
-      "Nog geen map gekozen. Zonder map kan je nog altijd bestanden uitwisselen met " +
-      "'Werk van collega toevoegen'.",
-    ));
-    state.appendChild(idle);
-  }
-}
-
-
-
-/* Kernlogica van het verbinden met een map. Rapporteert via callbacks in
-   plaats van rechtstreeks een melding te tonen, zodat zowel het gewone
-   Teamscherm als de opstartwizard hun eigen plek voor de uitkomst kunnen
-   gebruiken. */
-function connectToFolder(onSuccess, onError) {
-  var me = cleanAssessor($("assessor").value || db.assessor);
-  if (!me) {
-    onError("Vul eerst je initialen in", "Die bepalen hoe jouw bestand in de gedeelde map gaat heten.");
-    return;
-  }
-
-  window
-    .showDirectoryPicker({ mode: "readwrite" })
-    .then(function (handle) {
-      return checkOwnFile(handle, teamFileName(me), instanceId).then(function (check) {
-        if (check.conflict) {
-          var proceed = confirm(
-            "Let op: in deze map staat al " + check.name + ", en dat bestand komt van een ander toestel.\n\n" +
-            "Waarschijnlijk gebruikt een collega dezelfde initialen als jij, of werk je hier vanaf een tweede toestel.\n\n" +
-            "Doorgaan overschrijft dat bestand met jouw gegevens. Kies anders eerst andere initialen.\n\n" +
-            "Toch doorgaan?",
-          );
-          if (!proceed) return null;
-        }
-        return handle;
-      });
-    })
-    .then(function (handle) {
-      if (!handle) return null;
-      folderHandle = handle;
-      folderName = handle.name;
-      return idbPut("teamFolder", handle).then(function () {
-        return attachOwnFile();
-      }).then(function () { return handle; });
-    })
-    .then(function (handle) {
-      if (!handle || !folderHandle) return;
-      renderFolderSection();
-      updateStatus();
-      onSuccess(folderName);
-    })
-    .catch(function (err) {
-      if (err && err.name === "AbortError") return;
-      onError("Map koppelen lukte niet", err && err.message ? err.message : "Probeer het opnieuw.");
-    });
-}
-
-function pickFolder() {
-  connectToFolder(
-    function (name) {
-      showNotice(
-        "good", "Map verbonden",
-        "Jouw werk wordt vanaf nu bewaard in " + teamFileName(db.assessor) + " in " + name +
-          ". Klik op Team bijwerken om het werk van je collega's op te halen.",
-      );
-    },
-    function (title, body) { showNotice("warn", title, body); },
-  );
-}
-
-
-
-/* Zorgt dat 'Opslaan' naar jouw bestand in de gedeelde map schrijft. */
-function attachOwnFile() {
-  if (!folderHandle) return Promise.resolve();
-  var name = teamFileName(db.assessor);
-  return folderHandle.getFileHandle(name, { create: true }).then(function (handle) {
-    fileHandle = handle;
-    fileName = name;
-    return writeHandle();
-  });
-}
-
-function forgetFolder() {
-  if (!confirm("Map loskoppelen?\n\nJe bestanden blijven staan waar ze staan. Je kan de map later opnieuw kiezen.")) return;
-  folderHandle = null;
-  folderName = "";
-  pendingFolder = null;
-  idbDelete("teamFolder");
-  renderFolderSection();
-  updateStatus();
-}
-
-
-
-/* Bij het opstarten proberen we de vorige map terug te vinden. De
-   browser kan om nieuwe toestemming vragen; dat vereist een klik. */
-function restoreFolder() {
-  if (!FOLDER_SUPPORTED) return;
-  idbGet("teamFolder")
-    .then(function (handle) {
-      if (!handle) return;
-      return handle.queryPermission({ mode: "readwrite" }).then(function (perm) {
-        if (perm === "granted") {
-          folderHandle = handle;
-          folderName = handle.name;
-          return attachOwnFile().then(function () {
-            renderFolderSection();
-            updateStatus();
-          });
-        }
-        // Toestemming vervallen. Niet in een melding zetten die bij de
-        // eerstvolgende actie verdwijnt, maar in een balk die blijft staan.
-        pendingFolder = handle;
-        updateStatus();
-      });
-    })
-    .catch(function () {});
-}
-
-function reconnectFolder() {
-  if (!pendingFolder) return;
-  var handle = pendingFolder;
-  handle
-    .requestPermission({ mode: "readwrite" })
-    .then(function (perm) {
-      if (perm !== "granted") {
-        showNotice(
-          "warn",
-          "Geen toestemming gekregen",
-          "Zonder toegang tot de map blijft je werk alleen in deze browser staan. Probeer het opnieuw, of kies de map opnieuw via het Teamscherm.",
-        );
-        return;
-      }
-      folderHandle = handle;
-      folderName = handle.name;
-      pendingFolder = null;
-      return attachOwnFile().then(function () {
-        renderFolderSection();
-        updateStatus();
-        syncTeam(true);
-        showNotice("good", "Map weer verbonden", "Je werk is bewaard in " + fileName + " in " + folderName + ".");
-      });
-    })
-    .catch(function () {});
-}
-
-
-
 /* --- het werk van iedereen ophalen --- */
 
 function syncTeam(quiet) {
   if (!folderHandle) {
-    showNotice("info", "Nog geen gedeelde map", "Kies er een via het Teamscherm, dan haal je met één klik het werk van iedereen op.");
+    showNotice("info", "Nog geen gedeelde map", "Koppel eerst de gedeelde map bij Instellingen, Gebruiker.");
     return;
   }
 
   $("btnSyncTeam").disabled = true;
   $("btnSyncTeam").textContent = "Bezig…";
 
-  readTeamFolder(folderHandle, teamFileName(db.assessor), CONFIG)
+  // Eerst je eigen bestand: een ander toestel kan het intussen aangevuld
+  // hebben (sinds 1.32.0, zie js/koppelen.js).
+  pullOwnFile()
+    .then(function () { return readTeamFolder(folderHandle, teamFileName(db.assessor), CONFIG); })
     .then(function (result) {
       var totals = { added: 0, updated: 0, skipped: 0 };
       var classes = [];
@@ -583,13 +383,21 @@ function mergeTeam(target, incoming) {
 
   Object.keys(incoming.members || {}).forEach(function (initials) {
     var incMember = incoming.members[initials] || {};
-    if (!target.team.members[initials]) {
-      target.team.members[initials] = { name: incMember.name || "" };
+    var cur = target.team.members[initials];
+    if (!cur) {
+      target.team.members[initials] = { name: incMember.name || "", updatedAt: incMember.updatedAt || 0 };
       changed = true;
-    } else if (!target.team.members[initials].name && incMember.name) {
-      // Een ingevulde naam wordt nooit overschreven; een lege naam mag
-      // wel aangevuld worden vanuit een ander bestand.
-      target.team.members[initials].name = incMember.name;
+    } else if (incMember.name && (incMember.updatedAt || 0) > (cur.updatedAt || 0)) {
+      // Sinds 1.32.0: een naam die iemand bewust wijzigde (Instellingen,
+      // Gebruiker, of het Teamscherm) heeft een eigen tijdstip en wint
+      // dan van een oudere naam.
+      if (cur.name !== incMember.name) changed = true;
+      cur.name = incMember.name;
+      cur.updatedAt = incMember.updatedAt;
+    } else if (!cur.name && incMember.name) {
+      // Een ingevulde naam wordt nooit overschreven door een naam zonder
+      // tijdstip; een lege naam mag wel aangevuld worden.
+      cur.name = incMember.name;
       changed = true;
     }
   });
