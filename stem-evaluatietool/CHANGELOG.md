@@ -13,6 +13,17 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.36.0 · 30 september 2026
+
+**Periodes bij Instellingen**
+
+- De periodes van het schooljaar stel je nu in bij Instellingen, in de
+  nieuwe tab **Periodes**. Eerder stonden ze onderaan het tabblad Skore,
+  onder "Periodes van dit schooljaar".
+- Onderaan Skore brengt de knop **Instellingen, Periodes** je er meteen
+  naartoe.
+- Wijzigingen die je niet opslaat, vervallen zodra je het scherm verlaat.
+
 ## 1.35.0 · 30 september 2026
 
 **Alle leerlingen samen in beeld**
