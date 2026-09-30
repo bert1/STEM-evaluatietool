@@ -152,3 +152,48 @@ test("groeigrafiek: een combinatie van klassen telt mee bij elke klas", async ({
   expect(uitkomst).toEqual({ eigen: 1, leerling: 1, andere: 0 });
   page.expectNoErrors();
 });
+
+/* Sinds 1.35.0: alle leerlingen samen in beeld, zonder schuifbalk, en
+   bij twee klassen loopt geen naam over twee regels. */
+test("leerlingenlijst: geen schuifbalk en elke naam op één regel, ook bij twee klassen", async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 768 });
+  await openTool(page);
+  for (const tweeKlassen of [false, true]) {
+    if (tweeKlassen) await kiesTweeKlassen(page);
+    else await kiesKlasEnEvaluatie(page);
+    if (!tweeKlassen) await beoordeel(page, 0);
+    const maat = await page.evaluate(() => {
+      const grid = document.getElementById("studentGrid");
+      const labels = Array.from(grid.querySelectorAll(".student"));
+      return {
+        aantal: labels.length,
+        klassen: cur.klassen.length,
+        schuift: grid.scrollHeight > grid.clientHeight + 1,
+        hoogtes: [...new Set(labels.map((l) => Math.round(l.getBoundingClientRect().height)))],
+        afgekapt: labels.map((l) => l.querySelector(".student-name"))
+          .filter((n) => n.scrollWidth > n.clientWidth).map((n) => n.textContent),
+      };
+    });
+    expect(maat.klassen).toBe(tweeKlassen ? 2 : 1);
+    expect(maat.aantal).toBeGreaterThan(10);
+    expect(maat.schuift).toBe(false);
+    expect(maat.hoogtes).toHaveLength(1);
+    expect(maat.afgekapt).toEqual([]);
+    if (!tweeKlassen) await page.reload();
+  }
+  page.expectNoErrors();
+});
+
+/* Sinds 1.35.0: de teller per beoordelaar telt ook beoordelingen die in
+   een andere klaskeuze gemaakt zijn, net als "x van y beoordeeld". */
+test("teller per beoordelaar telt beoordelingen uit een combinatie van klassen mee", async ({ page }) => {
+  await openTool(page);
+  await kiesTweeKlassen(page);
+  await beoordeel(page, 0);
+  const sel = await page.evaluate(() => ({ year: cur.year, evaluation: cur.evaluation, klas: cur.studentKlasMap[rows()[0].students[0]] }));
+  await page.evaluate((s) => openEvaluationFor(s.year, s.klas, s.evaluation), sel);
+  expect(await page.evaluate(() => cur.klassen.length)).toBe(1);
+  await expect(page.locator("#progressText")).toContainText("1 van");
+  await expect(page.locator("#teamProgress .who-chip", { hasText: "TST" })).toHaveText("TST: 1");
+  page.expectNoErrors();
+});

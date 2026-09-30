@@ -352,6 +352,7 @@ function renderStudents() {
   var list = data.names;
   var done = evaluatedMap();
   var showKlasBadge = cur.klassen.length > 1;
+  grid.classList.toggle("multi-klas", showKlasBadge);
 
   list.forEach(function (student) {
     var label = el("label", "student");
@@ -361,7 +362,8 @@ function renderStudents() {
     cb.className = "student-cb";
     cb.addEventListener("change", updateTotals);
     label.appendChild(cb);
-    label.appendChild(el("span", null, student));
+    label.appendChild(el("span", "student-name", student));
+    label.title = student;
 
     var right = el("span", "student-right");
     if (showKlasBadge && data.klasByName[student]) {
@@ -374,7 +376,7 @@ function renderStudents() {
       // Bewerken in de tabel onderaan (dan telt die rij hier niet mee).
       cb.disabled = true;
       label.classList.add("done");
-      label.title = "Al beoordeeld door " + done[student] + ". Aanpassen kan met Bewerken in de tabel onderaan.";
+      label.title = student + ": al beoordeeld door " + done[student] + ". Aanpassen kan met Bewerken in de tabel onderaan.";
     }
     label.appendChild(right);
 
@@ -405,13 +407,33 @@ function renderProgress(list, done) {
 
 
 
+/* Alle rijen van dit jaar en dit evaluatiemoment, over elke
+   klas(-combinatie) heen, met enkel de leerlingen van de huidige
+   klaskeuze. Zelfde afbakening als evaluatedMap(), zodat de teller per
+   beoordelaar klopt met "x van y leerlingen beoordeeld" (sinds 1.35.0;
+   daarvoor telde enkel de sessie van precies deze klaskeuze). */
+function rowsForSelection() {
+  var out = [];
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year !== cur.year || p.evaluation !== cur.evaluation) return;
+    (db.sessions[key] || []).forEach(function (r) {
+      var students = (r.students || []).filter(function (s) {
+        return cur.klassen.indexOf(klasOfStudentInRow(db, cur.year, r, s, p.klas)) !== -1;
+      });
+      if (students.length) out.push({ assessor: r.assessor, students: students });
+    });
+  });
+  return out;
+}
+
 /* Wie van het team heeft hoeveel gedaan in deze klas? */
 function renderTeamProgress(list) {
   var host = $("teamProgress");
   host.innerHTML = "";
 
   var assigned = teamForKlassen(db, cur.year, cur.klassen);
-  var prog = progressByAssessor(rows(), list);
+  var prog = progressByAssessor(rowsForSelection(), list);
   var seen = Object.keys(prog.byAssessor);
   var everyone = assigned.slice();
   seen.forEach(function (a) { if (everyone.indexOf(a) === -1) everyone.push(a); });
