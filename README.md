@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.34.1.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.34.3.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -223,7 +223,9 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
    zoeken (hoofdletters en accenten maken niet uit). Blijft er één evaluatie
    over, dan kies je die met **Enter**.
 5. Vink de **leerling** aan. Voor **groepswerk** vink je alle leerlingen van
-   de groep aan: ze krijgen dezelfde score.
+   de groep aan: ze krijgen dezelfde score. Wie al beoordeeld is, heeft een
+   groen label met de initialen van de beoordelaar en kan je niet meer
+   aanvinken. Zo beoordeelt niemand een leerling per ongeluk twee keer.
 6. Klik per criterium op het juiste **niveau**.
 7. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
    **feedforward** (wat doet de leerling de volgende keer anders) in. Die
@@ -244,7 +246,9 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
   hoeven niet alle criteria ingevuld te zijn, en telt het niet mee in de
   controle en in Skore.
 - **Bewerken of verwijderen:** onderaan staat een tabel met alle
-  beoordelingen van deze klas. Gebruik **Bewerk** of **Verwijder**.
+  beoordelingen van deze klas. Gebruik **Bewerk** of **Verwijder**. Wil je
+  een leerling die al beoordeeld is aanpassen, gebruik dan **Bewerk** bij
+  die rij: dan kan je die leerling weer aanvinken.
 - **Kopieer tabel** en **Exporteren naar Excel** zetten die tabel over naar
   Excel.
 - De tool onthoudt de **datum** van elke beoordeling. Die bepaalt in welke

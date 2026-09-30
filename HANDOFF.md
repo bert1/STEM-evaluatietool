@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 30 september 2026, versie **1.34.1**.
+Laatst bijgewerkt: 30 september 2026, versie **1.34.3**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,29 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.34.1)
+## Volledige featurelijst (huidige stand, 1.34.3)
+
+- **Groeigrafiek met combinaties van klassen** (1.34.3):
+  `goalTrendSeries()` in `js/goals.js` filtert niet meer op de sessieklas
+  (`p.klas`) maar per leerling met `klasOfStudentInRow()`. Test
+  "groeigrafiek: ..." in `tests/evalueren.spec.js` (2de jaar, want enkel
+  dat jaar heeft leerplandoelen).
+
+- **Al beoordeeld: blijft herkend, vinkje uit** (1.34.2). Bug gemeld door
+  de gebruiker: in een combinatiesessie ("1WM+1WTa") stond na heropenen
+  enkel de laatst opgeslagen leerling nog als beoordeeld. `normaliseDb()`
+  liet `row.studentKlas` vallen, en de terugval `p.klas` is voor een
+  combinatie geen echte klas. Nu: `normaliseDb()` bewaart het veld
+  (`cleanStudentKlas()`), en overal waar de klas van een leerling in een
+  rij nodig is, gebruik `klasOfStudentInRow(dbObj, year, row, name,
+  p.klas)` in `js/rosters.js` (zoekt bij een combinatie in de
+  klaslijsten). Gebruikt in `evaluatedMap()`, `collectResults()`,
+  `coverageMatrix()`, `collectSkore()`, `controleScan()` en
+  `migrateStudentEvaluations()`, en sinds 1.34.3 ook in
+  `goalTrendSeries()`. Niet in `rowKlasLabel()` (toont de combinatie).
+  `renderStudents()` zet `cb.disabled` en de klasse `done` bij wie al
+  beoordeeld is; `editRow()` sluit zijn eigen rij uit via `form.editId`.
+  Testen in `tests/evalueren.spec.js` (met `page.reload()`).
 
 - **Geen automatische volgende leerling** (1.34.1): op vraag van de
   gebruiker weg. Na **Opslaan** blijft het formulier leeg, zonder

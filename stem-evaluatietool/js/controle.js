@@ -127,7 +127,7 @@ function controleScan(year) {
     (db.sessions[key] || []).forEach(function (row) {
       var date = rowDateIso(row);
       (row.students || []).forEach(function (s) {
-        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var klas = klasOfStudentInRow(db, year, row, s, p.klas);
         var k = p.evaluation + "||" + klas;
         if (!out[k]) out[k] = { students: {}, dates: [], rowDates: {} };
         var cell = out[k];

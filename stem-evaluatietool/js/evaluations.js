@@ -335,7 +335,7 @@ function evaluatedMap() {
     (db.sessions[key] || []).forEach(function (r) {
       if (r.id === form.editId) return;
       (r.students || []).forEach(function (s) {
-        var klas = (r.studentKlas && r.studentKlas[s]) || p.klas;
+        var klas = klasOfStudentInRow(db, cur.year, r, s, p.klas);
         if (cur.klassen.indexOf(klas) === -1) return;
         map[s] = r.assessor || "?";
       });
@@ -369,7 +369,12 @@ function renderStudents() {
     }
     if (done[student]) {
       right.appendChild(el("span", "who", done[student]));
-      label.title = "Al beoordeeld door " + done[student];
+      // Al beoordeeld: niet meer aan te vinken, zodat niemand een
+      // leerling per ongeluk twee keer beoordeelt. Aanpassen kan via
+      // Bewerken in de tabel onderaan (dan telt die rij hier niet mee).
+      cb.disabled = true;
+      label.classList.add("done");
+      label.title = "Al beoordeeld door " + done[student] + ". Aanpassen kan met Bewerken in de tabel onderaan.";
     }
     label.appendChild(right);
 

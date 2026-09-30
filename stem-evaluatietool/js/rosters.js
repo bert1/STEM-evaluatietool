@@ -145,7 +145,7 @@ function migrateStudentEvaluations(year, student, toKlas, fromKlas) {
 
       if (!row.studentKlas) {
         row.studentKlas = {};
-        row.students.forEach(function (s) { row.studentKlas[s] = p.klas; });
+        row.students.forEach(function (s) { row.studentKlas[s] = klasOfStudentInRow(db, year, row, s, p.klas); });
       }
       row.studentKlas[student] = toKlas;
       row.updatedAt = now;
@@ -823,6 +823,23 @@ function studentsForKlassen(db, year, klassen) {
   });
   names.sort(function (a, b) { return a.localeCompare(b, "nl"); });
   return { names: names, klasByName: seen };
+}
+
+
+
+/* De echte klas van één leerling in een opgeslagen rij. Eerst
+   row.studentKlas. Ontbreekt dat (rijen van vóór 1.14.0, of rijen die
+   tot 1.34.2 hun studentKlas verloren bij het inlezen van het bestand),
+   dan de klas van de sessie. Is die sessie een combinatie ("1WM+1WTa"),
+   dan zoeken we de leerling op in de klaslijsten van die klassen. */
+function klasOfStudentInRow(dbObj, year, row, name, sessionKlas) {
+  if (row.studentKlas && row.studentKlas[name]) return row.studentKlas[name];
+  if (String(sessionKlas || "").indexOf("+") === -1) return sessionKlas;
+  var parts = sessionKlas.split("+");
+  for (var i = 0; i < parts.length; i++) {
+    if (studentsFor(dbObj, year, parts[i]).indexOf(name) !== -1) return parts[i];
+  }
+  return sessionKlas;
 }
 
 

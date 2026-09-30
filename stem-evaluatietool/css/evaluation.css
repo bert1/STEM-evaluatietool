@@ -136,6 +136,9 @@
 }
 .student:hover { background: var(--primary-soft); }
 .student input { accent-color: var(--primary); width: 16px; height: 16px; flex: none; }
+.student.done { cursor: default; color: var(--muted); }
+.student.done:hover { background: transparent; }
+.student.done input { cursor: not-allowed; }
 .student .student-right {
   margin-left: auto;
   display: flex;

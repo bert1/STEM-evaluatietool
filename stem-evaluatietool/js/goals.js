@@ -206,7 +206,6 @@ function goalTrendSeries(db, year, goalKey, klas, student) {
     Object.keys(db.sessions || {}).forEach(function (key) {
       var p = parseSessionKey(key);
       if (p.year !== year || p.evaluation !== evName) return;
-      if (klas && klas !== "*" && p.klas !== klas) return;
 
       (db.sessions[key] || []).forEach(function (row) {
         if (row.formative) return; // tellen niet mee voor de eindlijn
@@ -221,6 +220,9 @@ function goalTrendSeries(db, year, goalKey, klas, student) {
 
         (row.students || []).forEach(function (name) {
           if (student && name !== student) return;
+          // De echte klas van deze leerling, niet die van de sessie: een
+          // combinatie als "1WM+1WTa" hoort zo bij beide klassen (1.34.3).
+          if (klas && klas !== "*" && klasOfStudentInRow(db, year, row, name, p.klas) !== klas) return;
           if (!perStudentVals[name]) perStudentVals[name] = [];
           perStudentVals[name].push(avgRow);
           when.push(row.updatedAt || 0);

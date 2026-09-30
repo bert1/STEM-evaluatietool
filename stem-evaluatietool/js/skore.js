@@ -168,7 +168,7 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
       var groupTotal = rowTotal(row, rubrics);
 
       (row.students || []).forEach(function (name) {
-        var studentKlas = (row.studentKlas && row.studentKlas[name]) || p.klas;
+        var studentKlas = klasOfStudentInRow(dbObj, year, row, name, p.klas);
         if (studentKlas !== klas) return;
 
         if (!byEval[p.evaluation]) {
