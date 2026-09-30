@@ -754,8 +754,6 @@ function saveEvaluation() {
   if (i !== -1) list[i] = row;
   else list.push(row);
 
-  var wasSingleStudent = students.length === 1;
-
   persist();
   clearNotice();
   updateSafetyBar();
@@ -763,29 +761,9 @@ function saveEvaluation() {
   renderStudents();
   renderTable();
 
-  // Enkel bij één leerling tegelijk springt de tool automatisch door —
-  // bij groepswerk is er geen eenduidige "volgende", dus daar blijft het
-  // formulier gewoon leeg staan zoals voorheen.
-  if (wasSingleStudent) advanceToNextStudent();
-}
-
-/* Vinkt automatisch de eerstvolgende nog niet beoordeelde leerling aan
-   en zet de focus meteen op het eerste criterium — samen met de
-   cijfertoetsen (zie initScoringShortcuts) kan je zo een hele klas
-   doorlopen zonder de muis aan te raken. */
-function advanceToNextStudent() {
-  var list = studentsForKlassen(db, cur.year, cur.klassen).names;
-  var done = evaluatedMap();
-  var next = list.filter(function (s) { return !done[s]; })[0];
-  if (!next) return; // iedereen beoordeeld — renderProgress toont dat al
-
-  var cb = document.querySelector('.student-cb[value="' + cssEscape(next) + '"]');
-  if (!cb) return;
-  cb.checked = true;
-  updateTotals();
-
-  var firstBtn = $("rubrics").querySelector(".option-btn");
-  if (firstBtn) firstBtn.focus();
+  // Sinds 1.34.1 vinkt de tool na het opslaan geen volgende leerling
+  // meer aan: leerkrachten beoordelen vaak in willekeurige volgorde.
+  // Na het opslaan staat er dus geen enkele leerling aangevinkt.
 }
 
 function resetForm() {

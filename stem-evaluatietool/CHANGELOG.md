@@ -13,6 +13,16 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.34.1 · 30 september 2026
+
+**Geen automatische volgende leerling meer na Opslaan**
+
+- Na het opslaan van één leerling vinkte de tool vanzelf de eerste nog
+  niet beoordeelde leerling aan. Omdat leerkrachten vaak in willekeurige
+  volgorde beoordelen, stond dan telkens de verkeerde leerling klaar.
+  Nu staat er na **Opslaan** geen leerling meer aangevinkt en kies je zelf
+  wie volgt.
+
 ## 1.34.0 · 29 september 2026
 
 **De handleiding in de tool: Instellingen, Help**

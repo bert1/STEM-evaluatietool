@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 29 september 2026, versie **1.34.0**.
+Laatst bijgewerkt: 30 september 2026, versie **1.34.1**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,8 +90,12 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.34.0)
+## Volledige featurelijst (huidige stand, 1.34.1)
 
+- **Geen automatische volgende leerling** (1.34.1): op vraag van de
+  gebruiker weg. Na **Opslaan** blijft het formulier leeg, zonder
+  aangevinkte leerling (er wordt vaak willekeurig beoordeeld).
+  `advanceToNextStudent()` is verwijderd; test in `evalueren.spec.js`.
 - **Help: de handleiding in de tool** (1.34.0, `js/help.js`, laadt na
   `koppelen.js`). Gevraagd door de gebruiker: README.md als onderdeel
   Help bij Instellingen, altijd bijgewerkt. **Hoe het in sync blijft:**
@@ -821,8 +825,8 @@ direct daarna). `build.js` schrijft naar `dist/`
 - **Cijfertoetsen en automatisch doorschuiven** (1.11.0): toetsen 1-9
   scoren het criterium waar de focus op staat en springen automatisch
   naar het volgende (`initScoringShortcuts()` in `js/evaluations.js`).
-  Na opslaan van één leerling (niet bij groepswerk) schuift de tool door
-  naar de eerstvolgende onbeoordeelde leerling (`advanceToNextStudent()`).
+  Het automatisch doorschuiven naar de volgende leerling na opslaan is
+  sinds 1.34.1 weg (op vraag van de gebruiker).
   **Belangrijke valkuil, al één keer misgegaan:** checkboxes zijn ook
   `<input>`-elementen — een simpele `tagName === "INPUT"`-check om
   tekstvelden te beschermen blokkeert dan óók de sneltoetsen na het
