@@ -13,6 +13,16 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.34.3 · 30 september 2026
+
+**Groeigrafiek: combinaties van klassen tellen mee**
+
+- De groeigrafiek van de leerplandoelen toonde bij een klas enkel de
+  beoordelingen die met die ene klas gemaakt waren. Wat je beoordeelde
+  met een combinatie van klassen (bijvoorbeeld 1WM + 1WTa) ontbrak, ook
+  in de lijn van één leerling. Nu telt elke leerling mee bij de eigen
+  klas (`goalTrendSeries()` gebruikt `klasOfStudentInRow()`).
+
 ## 1.34.2 · 30 september 2026
 
 **Al beoordeelde leerlingen blijven herkend, ook na heropenen**

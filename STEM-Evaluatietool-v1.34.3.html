@@ -2845,7 +2845,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.34.2.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.34.3.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -5810,7 +5810,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.34.2";
+var APP_VERSION = "1.34.3";
 
 var DB_VERSION = 4;
 
@@ -13839,7 +13839,6 @@ function goalTrendSeries(db, year, goalKey, klas, student) {
     Object.keys(db.sessions || {}).forEach(function (key) {
       var p = parseSessionKey(key);
       if (p.year !== year || p.evaluation !== evName) return;
-      if (klas && klas !== "*" && p.klas !== klas) return;
 
       (db.sessions[key] || []).forEach(function (row) {
         if (row.formative) return; // tellen niet mee voor de eindlijn
@@ -13854,6 +13853,9 @@ function goalTrendSeries(db, year, goalKey, klas, student) {
 
         (row.students || []).forEach(function (name) {
           if (student && name !== student) return;
+          // De echte klas van deze leerling, niet die van de sessie: een
+          // combinatie als "1WM+1WTa" hoort zo bij beide klassen (1.34.3).
+          if (klas && klas !== "*" && klasOfStudentInRow(db, year, row, name, p.klas) !== klas) return;
           if (!perStudentVals[name]) perStudentVals[name] = [];
           perStudentVals[name].push(avgRow);
           when.push(row.updatedAt || 0);
