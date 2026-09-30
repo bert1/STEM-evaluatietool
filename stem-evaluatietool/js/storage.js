@@ -396,6 +396,7 @@ function refreshAll() {
   if (currentView === "subjects") renderSubjectSection();
   if (currentView === "evals" && !draft) renderEvalList();
   periodDraft = null; // ander schooljaar of samengevoegd: opnieuw vertrekken van wat bewaard is
+  if (currentView === "periods") renderPeriodEditor();
   if (currentView === "skore") {
     fillSkoreSelectors(false);
     renderSkore();

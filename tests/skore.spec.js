@@ -103,9 +103,9 @@ test("overgezet naar Skore aanvinken blijft bewaard", async ({ page }) => {
 
 test("periodes aanpassen, met controle op de volgorde", async ({ page }) => {
   await openTool(page);
-  await page.click("#btnSkore");
-  await page.click("#skorePeriodsWrap summary");
-  await expect(page.locator("#skorePeriodEditor")).toContainText("voorgestelde data");
+  await page.click("#btnSettings");
+  await page.click("#btnSettingsPeriods");
+  await expect(page.locator("#periodEditor")).toContainText("voorgestelde data");
 
   await page.locator(".period-start").nth(1).fill("2026-08-01");
   await page.click("#btnSavePeriods");
@@ -114,6 +114,7 @@ test("periodes aanpassen, met controle op de volgorde", async ({ page }) => {
   await page.locator(".period-start").nth(1).fill("2026-10-20");
   await page.click("#btnSavePeriods");
   await expect(page.locator("#notice")).toContainText("Periodes opgeslagen");
+  await page.click("#btnSkore");
   await expect(page.locator("#skorePeriod option").nth(0)).toContainText("t/m 19 okt");
   await page.reload();
   await page.click("#btnSkore");
@@ -166,26 +167,25 @@ test("samenvoegen: nieuwste periodes winnen, overgezet-vinkjes gaan nooit verlor
   expect(r).toEqual({ naam: "A", k1: false, k2: true });
 });
 
-test("een laat toggle-event wist geen net ingevulde periodedatum (trage computer)", async ({ page }) => {
+test("Periodes staat bij Instellingen, en Skore verwijst ernaar", async ({ page }) => {
   await openTool(page);
   await page.click("#btnSkore");
-  await page.click("#skorePeriodsWrap summary");
-  await page.locator(".period-start").nth(1).fill("2026-08-01");
-  // Op een trage computer komt het toggle-event van het openklappen pas nu.
-  await page.evaluate(() => $("skorePeriodsWrap").dispatchEvent(new Event("toggle")));
-  await expect(page.locator(".period-start").nth(1)).toHaveValue("2026-08-01");
-  await page.click("#btnSavePeriods");
-  await expect(page.locator("#notice")).toContainText("GE2 begint niet na GE1");
+  await expect(page.locator("#skoreCard .period-row")).toHaveCount(0);
+  await page.click("#btnSkorePeriods");
+  await expect(page.locator("#periodsCard")).toBeVisible();
+  await expect(page.locator("#settingsTabs")).toBeVisible();
+  await expect(page.locator("#btnSettingsPeriods")).toHaveClass(/active/);
+  await expect(page.locator(".period-row")).toHaveCount(5); // vier periodes en de einddatum
   page.expectNoErrors();
 });
 
-test("niet-bewaarde periodes vervallen na dichtklappen", async ({ page }) => {
+test("niet-bewaarde periodes vervallen na weggaan", async ({ page }) => {
   await openTool(page);
-  await page.click("#btnSkore");
-  await page.click("#skorePeriodsWrap summary");
+  await page.click("#btnSettings");
+  await page.click("#btnSettingsPeriods");
   await page.locator(".period-start").nth(1).fill("2026-10-25");
-  await page.click("#skorePeriodsWrap summary"); // dicht, zonder opslaan
-  await page.click("#skorePeriodsWrap summary"); // weer open
+  await page.click("#btnSettingsGeneral"); // weg, zonder opslaan
+  await page.click("#btnSettingsPeriods"); // terug
   await expect(page.locator(".period-start").nth(1)).toHaveValue("2026-10-11");
   page.expectNoErrors();
 });

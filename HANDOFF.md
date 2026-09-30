@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 30 september 2026, versie **1.35.0**.
+Laatst bijgewerkt: 30 september 2026, versie **1.36.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,17 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.35.0)
+## Volledige featurelijst (huidige stand, 1.36.0)
+
+- **Tab Periodes bij Instellingen** (1.36.0, gevraagd door de gebruiker).
+  De periode-editor (`renderPeriodEditor()`, `savePeriodDraft()` in
+  `js/skore.js`) staat in `#periodsCard` (`#periodEditor`), view
+  `periods` in `VIEWS`/`NAV`/`SETTINGS_VIEWS`. `openPeriods()` zet
+  `periodDraft` op null, dus niet-bewaarde wijzigingen vervallen bij elk
+  openen; het oude `<details id="skorePeriodsWrap">` en zijn
+  toggle-handler zijn weg. Skore toont onderaan een knop
+  `#btnSkorePeriods` naar de tab. `refreshAll()` tekent de editor opnieuw
+  als die open staat.
 
 - **Leerlingenlijst zonder schuifbalk** (1.35.0, gevraagd door de
   gebruiker: "alles in één scherm, anders vergeet je een naam").

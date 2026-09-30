@@ -19,7 +19,7 @@ test("het gebouwde bestand bevat de huidige README, letterlijk", async () => {
 test("Help staat als laatste onderdeel bij Instellingen en toont elk hoofdstuk", async ({ page }) => {
   await openTool(page);
   await page.click("#btnSettings");
-  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Gebruiker", "Klaslijsten", "Vakken", "Team", "Help"]);
+  await expect(page.locator("#settingsTabs .nav-btn")).toHaveText(["Algemeen", "Gebruiker", "Klaslijsten", "Vakken", "Periodes", "Team", "Help"]);
   await page.click("#btnSettingsHelp");
   await expect(page.locator("#helpCard")).toBeVisible();
   await expect(page.locator("#btnSettingsHelp")).toHaveClass(/active/);

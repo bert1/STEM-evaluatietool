@@ -127,6 +127,7 @@
           <button type="button" class="nav-btn" id="btnSettingsUser">Gebruiker</button>
           <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
           <button type="button" class="nav-btn" id="btnSubjects">Vakken</button>
+          <button type="button" class="nav-btn" id="btnSettingsPeriods">Periodes</button>
           <button type="button" class="nav-btn" id="btnTeam">Team</button>
           <button type="button" class="nav-btn" id="btnSettingsHelp">Help</button>
         </div>
@@ -423,6 +424,17 @@
           </div>
           <div id="subjectList"></div>
         </section>
+      </div>
+
+      <div class="card hidden" id="periodsCard">
+        <h2>
+          Periodes
+          <span class="sub">De rapportperiodes van dit schooljaar</span>
+          <button type="button" class="btn-ghost btn-small" id="btnClosePeriods" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+        <div id="periodEditor"></div>
       </div>
 
       <div class="card hidden" id="evalCard">
@@ -805,10 +817,10 @@
 
         <div id="skoreBody"></div>
 
-        <details id="skorePeriodsWrap" style="margin-top: 22px">
-          <summary class="section-toggle">Periodes van dit schooljaar</summary>
-          <div id="skorePeriodEditor" style="margin-top: 10px"></div>
-        </details>
+        <p class="hint" style="margin-top: 22px">
+          Kloppen de data van de periodes niet? Pas ze aan bij
+          <button type="button" class="btn-ghost btn-small" id="btnSkorePeriods">Instellingen, Periodes</button>
+        </p>
       </div>
 
       <div id="mainView">

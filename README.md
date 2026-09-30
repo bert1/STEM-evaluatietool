@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.35.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.36.0.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -115,6 +115,7 @@ Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 | **Gebruiker** | Je initialen en naam, en waar je werk bewaard wordt |
 | **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Vakken** | Vakken maken en aanduiden welke klassen ze volgen |
+| **Periodes** | De rapportperiodes (GE1 tot GE4) van dit schooljaar instellen |
 | **Team** | Het werk van je collega's ophalen, wie welke klas geeft, en reservekopieën |
 | **Help** | Deze handleiding. Klik in de inhoud op een hoofdstuk om ernaartoe te gaan. |
 
@@ -591,12 +592,24 @@ Goed om te weten:
   leerling de rubric zoals hij was bij het beoordelen. Had die oude rubric
   een ander maximum, dan rekent de tool het punt om (houd de muis op het
   punt voor uitleg).
-- **Periodes aanpassen:** open onderaan **Periodes van dit schooljaar**. Een
-  periode loopt van haar startdatum tot de dag vóór de volgende periode.
-  Klik op **Periodes opslaan**. Dit hoeft maar één keer per schooljaar, en
-  je collega's krijgen dezelfde indeling.
 
-Periodes 2026-2027:
+### Periodes instellen
+
+De data van de periodes pas je aan bij **Instellingen**, **Periodes**. Onderaan
+het tabblad Skore brengt de knop **Instellingen, Periodes** je er ook naartoe.
+
+1. Vul bij elke periode de **naam** en de datum **vanaf** in. Een periode
+   loopt van haar startdatum tot de dag vóór de volgende periode.
+2. Vul bij **Laatste periode loopt tot en met** de laatste dag in.
+3. Met **Periode toevoegen** en **Verwijderen** maak je meer of minder
+   periodes.
+4. Klik op **Periodes opslaan**.
+
+Dit hoeft maar één keer per schooljaar, en je collega's krijgen dezelfde
+indeling. Ga je weg zonder op te slaan, dan vervallen je wijzigingen. De
+periodes van een oud schooljaar kan je bekijken, maar niet meer wijzigen.
+
+Voorgestelde periodes 2026-2027:
 
 | Periode | Van | Tot en met |
 |---|---|---|
@@ -670,7 +683,7 @@ op **Nu een reservekopie maken**.
 
 1. Open **Instellingen**, kies **Algemeen** en klik op **+ Nieuw schooljaar**.
 2. Lees nieuwe **klaslijsten** in (zie [Klaslijsten](#4-klaslijsten)).
-3. Controleer de **periodes** in het tabblad Skore en sla ze op.
+3. Controleer de **periodes** bij **Instellingen**, **Periodes** en sla ze op.
 
 Rubrics, mappen, team en instellingen blijven behouden. Oude schooljaren kan
 je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
@@ -688,7 +701,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 | Rode balk "Je werk in deze browser kon niet gelezen worden" | Meestal haalt de tool je werk vanzelf terug uit je bestand in de gedeelde map. Download toch eerst de reservekopie. |
 | Oranje balk "Gedeelde map niet verbonden" | Klik op "Verbinden met …". De browser vraagt na een herstart opnieuw toestemming. |
 | Een leerling moet een evaluatie niet krijgen | Controle, Details, "Niet te beoordelen". |
-| Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes onderaan het tabblad Skore. |
+| Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes bij Instellingen, Periodes. |
 | Ik heb per ongeluk iets gewist of overschreven | Team, Reservekopieën: klik op "Terugzetten" bij een tijdstip van vóór de fout. |
 | Ik zie de evaluaties van een collega niet | Instellingen, Team: klik op "Nu bijwerken". Werkt je collega niet in de gedeelde map, voeg hun bestand toe met "Een bestand van buiten de map toevoegen". |
 | Er staat een nieuwe versie van de tool klaar | Download het nieuwe bestand en open het. Je werkbestand blijft gewoon werken. |

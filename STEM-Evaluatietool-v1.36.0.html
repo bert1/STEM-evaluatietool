@@ -1998,6 +1998,7 @@ table.feedup-table td {
           <button type="button" class="nav-btn" id="btnSettingsUser">Gebruiker</button>
           <button type="button" class="nav-btn" id="btnRoster">Klaslijsten</button>
           <button type="button" class="nav-btn" id="btnSubjects">Vakken</button>
+          <button type="button" class="nav-btn" id="btnSettingsPeriods">Periodes</button>
           <button type="button" class="nav-btn" id="btnTeam">Team</button>
           <button type="button" class="nav-btn" id="btnSettingsHelp">Help</button>
         </div>
@@ -2294,6 +2295,17 @@ table.feedup-table td {
           </div>
           <div id="subjectList"></div>
         </section>
+      </div>
+
+      <div class="card hidden" id="periodsCard">
+        <h2>
+          Periodes
+          <span class="sub">De rapportperiodes van dit schooljaar</span>
+          <button type="button" class="btn-ghost btn-small" id="btnClosePeriods" style="margin-left: auto">
+            Terug naar evalueren
+          </button>
+        </h2>
+        <div id="periodEditor"></div>
       </div>
 
       <div class="card hidden" id="evalCard">
@@ -2676,10 +2688,10 @@ table.feedup-table td {
 
         <div id="skoreBody"></div>
 
-        <details id="skorePeriodsWrap" style="margin-top: 22px">
-          <summary class="section-toggle">Periodes van dit schooljaar</summary>
-          <div id="skorePeriodEditor" style="margin-top: 10px"></div>
-        </details>
+        <p class="hint" style="margin-top: 22px">
+          Kloppen de data van de periodes niet? Pas ze aan bij
+          <button type="button" class="btn-ghost btn-small" id="btnSkorePeriods">Instellingen, Periodes</button>
+        </p>
       </div>
 
       <div id="mainView">
@@ -2857,7 +2869,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.35.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.36.0.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -2967,6 +2979,7 @@ Klik je op **Instellingen**, dan kies je daaronder het onderdeel:
 | **Gebruiker** | Je initialen en naam, en waar je werk bewaard wordt |
 | **Klaslijsten** | Klassen inlezen uit Smartschool |
 | **Vakken** | Vakken maken en aanduiden welke klassen ze volgen |
+| **Periodes** | De rapportperiodes (GE1 tot GE4) van dit schooljaar instellen |
 | **Team** | Het werk van je collega's ophalen, wie welke klas geeft, en reservekopieën |
 | **Help** | Deze handleiding. Klik in de inhoud op een hoofdstuk om ernaartoe te gaan. |
 
@@ -3443,12 +3456,24 @@ Goed om te weten:
   leerling de rubric zoals hij was bij het beoordelen. Had die oude rubric
   een ander maximum, dan rekent de tool het punt om (houd de muis op het
   punt voor uitleg).
-- **Periodes aanpassen:** open onderaan **Periodes van dit schooljaar**. Een
-  periode loopt van haar startdatum tot de dag vóór de volgende periode.
-  Klik op **Periodes opslaan**. Dit hoeft maar één keer per schooljaar, en
-  je collega's krijgen dezelfde indeling.
 
-Periodes 2026-2027:
+### Periodes instellen
+
+De data van de periodes pas je aan bij **Instellingen**, **Periodes**. Onderaan
+het tabblad Skore brengt de knop **Instellingen, Periodes** je er ook naartoe.
+
+1. Vul bij elke periode de **naam** en de datum **vanaf** in. Een periode
+   loopt van haar startdatum tot de dag vóór de volgende periode.
+2. Vul bij **Laatste periode loopt tot en met** de laatste dag in.
+3. Met **Periode toevoegen** en **Verwijderen** maak je meer of minder
+   periodes.
+4. Klik op **Periodes opslaan**.
+
+Dit hoeft maar één keer per schooljaar, en je collega's krijgen dezelfde
+indeling. Ga je weg zonder op te slaan, dan vervallen je wijzigingen. De
+periodes van een oud schooljaar kan je bekijken, maar niet meer wijzigen.
+
+Voorgestelde periodes 2026-2027:
 
 | Periode | Van | Tot en met |
 |---|---|---|
@@ -3522,7 +3547,7 @@ op **Nu een reservekopie maken**.
 
 1. Open **Instellingen**, kies **Algemeen** en klik op **+ Nieuw schooljaar**.
 2. Lees nieuwe **klaslijsten** in (zie [Klaslijsten](#4-klaslijsten)).
-3. Controleer de **periodes** in het tabblad Skore en sla ze op.
+3. Controleer de **periodes** bij **Instellingen**, **Periodes** en sla ze op.
 
 Rubrics, mappen, team en instellingen blijven behouden. Oude schooljaren kan
 je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
@@ -3540,7 +3565,7 @@ je nog altijd bekijken via de keuzelijst linksboven, maar niet meer wijzigen.
 | Rode balk "Je werk in deze browser kon niet gelezen worden" | Meestal haalt de tool je werk vanzelf terug uit je bestand in de gedeelde map. Download toch eerst de reservekopie. |
 | Oranje balk "Gedeelde map niet verbonden" | Klik op "Verbinden met …". De browser vraagt na een herstart opnieuw toestemming. |
 | Een leerling moet een evaluatie niet krijgen | Controle, Details, "Niet te beoordelen". |
-| Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes onderaan het tabblad Skore. |
+| Een evaluatie staat in de verkeerde Skore-periode | Controleer de periodes bij Instellingen, Periodes. |
 | Ik heb per ongeluk iets gewist of overschreven | Team, Reservekopieën: klik op "Terugzetten" bij een tijdstip van vóór de fout. |
 | Ik zie de evaluaties van een collega niet | Instellingen, Team: klik op "Nu bijwerken". Werkt je collega niet in de gedeelde map, voeg hun bestand toe met "Een bestand van buiten de map toevoegen". |
 | Er staat een nieuwe versie van de tool klaar | Download het nieuwe bestand en open het. Je werkbestand blijft gewoon werken. |
@@ -5825,7 +5850,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.35.0";
+var APP_VERSION = "1.36.0";
 
 var DB_VERSION = 4;
 
@@ -6894,6 +6919,7 @@ function refreshAll() {
   if (currentView === "subjects") renderSubjectSection();
   if (currentView === "evals" && !draft) renderEvalList();
   periodDraft = null; // ander schooljaar of samengevoegd: opnieuw vertrekken van wat bewaard is
+  if (currentView === "periods") renderPeriodEditor();
   if (currentView === "skore") {
     fillSkoreSelectors(false);
     renderSkore();
@@ -17512,7 +17538,6 @@ function openSkore() {
     Object.keys(CONFIG).forEach(function (y) { $("skoreYear").appendChild(new Option(y, y)); });
     if ($("yearSelect").value) $("skoreYear").value = $("yearSelect").value;
   }
-  periodDraft = null;
   fillSkoreSelectors(true);
   renderSkore();
   showView("skore");
@@ -17567,7 +17592,6 @@ function renderSkore() {
 
   $("skorePrev").disabled = pIndex <= 0;
   $("skoreNext").disabled = pIndex >= periods.list.length - 1;
-  renderPeriodEditor();
 
   if (!klas) {
     host.appendChild(el("div", "empty", "Er zijn nog geen klassen voor " + year + "."));
@@ -17783,12 +17807,20 @@ function buildSkoreCopyButton(td, year, evaluation, v, student) {
   return btn;
 }
 
-/* ---- periodes aanpassen ---- */
+/* ---- periodes aanpassen ----
+   Sinds 1.36.0 bij Instellingen, Periodes (eerder onderaan Skore).
+   Niet-bewaarde wijzigingen vervallen telkens je het scherm opent. */
 
 var periodDraft = null;
 
+function openPeriods() {
+  periodDraft = null;
+  renderPeriodEditor();
+  showView("periods");
+}
+
 function renderPeriodEditor() {
-  var host = $("skorePeriodEditor");
+  var host = $("periodEditor");
   if (!host) return;
   var stored = db.schoolYears[db.currentSchoolYear] && db.schoolYears[db.currentSchoolYear].periods;
   if (!periodDraft) periodDraft = JSON.parse(JSON.stringify(periodsFor(db, db.currentSchoolYear)));
@@ -17877,8 +17909,7 @@ function savePeriodDraft() {
   bucket.periods = { list: JSON.parse(JSON.stringify(periodDraft.list)), end: periodDraft.end, updatedAt: Date.now() };
   periodDraft = null;
   persist();
-  fillSkoreSelectors(false);
-  renderSkore();
+  renderPeriodEditor();
   showNotice("good", "Periodes opgeslagen", "De indeling geldt voor " + db.currentSchoolYear + ".");
 }
 
@@ -17892,13 +17923,9 @@ function initSkore() {
   $("skoreScale").addEventListener("change", renderSkore);
   $("skorePrev").addEventListener("click", function () { stepSkorePeriod(-1); });
   $("skoreNext").addEventListener("click", function () { stepSkorePeriod(1); });
-  $("skorePeriodsWrap").addEventListener("toggle", function () {
-    // Niet-bewaarde wijzigingen vervallen bij het DICHTklappen, zodat je
-    // bij het openen vertrekt van wat er echt bewaard is. Bewust niet bij
-    // het openklappen: het toggle-event komt een fractie later, en op een
-    // trage computer zou het dan een net ingevulde datum wissen.
-    if (!this.open) { periodDraft = null; renderPeriodEditor(); }
-  });
+  $("btnSkorePeriods").addEventListener("click", openPeriods);
+  $("btnSettingsPeriods").addEventListener("click", openPeriods);
+  $("btnClosePeriods").addEventListener("click", goHome);
 }
 
 
@@ -18699,15 +18726,15 @@ function init() {
 /* evaluatiescherm in plaats van eronder open te blijven staan.        */
 /* ------------------------------------------------------------------ */
 
-var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard", user: "userCard", help: "helpCard" }
+var VIEWS = { main: "mainView", roster: "rosterCard", evals: "evalCard", team: "teamCard", results: "resultsCard2", skore: "skoreCard", general: "generalCard", subjects: "subjectsCard", user: "userCard", periods: "periodsCard", help: "helpCard" }
 
-var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects", user: "btnSettingsUser", help: "btnSettingsHelp" }
+var NAV = { main: "btnHome", roster: "btnRoster", evals: "btnEvals", team: "btnTeam", results: "btnResults", skore: "btnSkore", general: "btnSettingsGeneral", subjects: "btnSubjects", user: "btnSettingsUser", periods: "btnSettingsPeriods", help: "btnSettingsHelp" }
 
 /* Sinds 1.29.0 staan Klaslijsten en Team onder één tab Instellingen, met
    een eigen rij knoppen erboven. Zo blijft de bovenste rij kort, ook als
    er later instellingen bijkomen: voeg die hier en in openSettingsView()
    toe, niet bovenaan. */
-var SETTINGS_VIEWS = ["general", "user", "roster", "subjects", "team", "help"];
+var SETTINGS_VIEWS = ["general", "user", "roster", "subjects", "periods", "team", "help"];
 
 var lastSettingsView = "general";
 
@@ -18762,6 +18789,7 @@ function openSettingsView(name) {
   else if (name === "team") openTeam();
   else if (name === "subjects") openSubjects();
   else if (name === "user") openUser();
+  else if (name === "periods") openPeriods();
   else if (name === "help") openHelp();
   else openGeneral();
 }

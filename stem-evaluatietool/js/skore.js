@@ -254,7 +254,6 @@ function openSkore() {
     Object.keys(CONFIG).forEach(function (y) { $("skoreYear").appendChild(new Option(y, y)); });
     if ($("yearSelect").value) $("skoreYear").value = $("yearSelect").value;
   }
-  periodDraft = null;
   fillSkoreSelectors(true);
   renderSkore();
   showView("skore");
@@ -309,7 +308,6 @@ function renderSkore() {
 
   $("skorePrev").disabled = pIndex <= 0;
   $("skoreNext").disabled = pIndex >= periods.list.length - 1;
-  renderPeriodEditor();
 
   if (!klas) {
     host.appendChild(el("div", "empty", "Er zijn nog geen klassen voor " + year + "."));
@@ -525,12 +523,20 @@ function buildSkoreCopyButton(td, year, evaluation, v, student) {
   return btn;
 }
 
-/* ---- periodes aanpassen ---- */
+/* ---- periodes aanpassen ----
+   Sinds 1.36.0 bij Instellingen, Periodes (eerder onderaan Skore).
+   Niet-bewaarde wijzigingen vervallen telkens je het scherm opent. */
 
 var periodDraft = null;
 
+function openPeriods() {
+  periodDraft = null;
+  renderPeriodEditor();
+  showView("periods");
+}
+
 function renderPeriodEditor() {
-  var host = $("skorePeriodEditor");
+  var host = $("periodEditor");
   if (!host) return;
   var stored = db.schoolYears[db.currentSchoolYear] && db.schoolYears[db.currentSchoolYear].periods;
   if (!periodDraft) periodDraft = JSON.parse(JSON.stringify(periodsFor(db, db.currentSchoolYear)));
@@ -619,8 +625,7 @@ function savePeriodDraft() {
   bucket.periods = { list: JSON.parse(JSON.stringify(periodDraft.list)), end: periodDraft.end, updatedAt: Date.now() };
   periodDraft = null;
   persist();
-  fillSkoreSelectors(false);
-  renderSkore();
+  renderPeriodEditor();
   showNotice("good", "Periodes opgeslagen", "De indeling geldt voor " + db.currentSchoolYear + ".");
 }
 
@@ -634,11 +639,7 @@ function initSkore() {
   $("skoreScale").addEventListener("change", renderSkore);
   $("skorePrev").addEventListener("click", function () { stepSkorePeriod(-1); });
   $("skoreNext").addEventListener("click", function () { stepSkorePeriod(1); });
-  $("skorePeriodsWrap").addEventListener("toggle", function () {
-    // Niet-bewaarde wijzigingen vervallen bij het DICHTklappen, zodat je
-    // bij het openen vertrekt van wat er echt bewaard is. Bewust niet bij
-    // het openklappen: het toggle-event komt een fractie later, en op een
-    // trage computer zou het dan een net ingevulde datum wissen.
-    if (!this.open) { periodDraft = null; renderPeriodEditor(); }
-  });
+  $("btnSkorePeriods").addEventListener("click", openPeriods);
+  $("btnSettingsPeriods").addEventListener("click", openPeriods);
+  $("btnClosePeriods").addEventListener("click", goHome);
 }
