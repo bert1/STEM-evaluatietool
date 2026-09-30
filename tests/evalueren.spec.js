@@ -36,6 +36,20 @@ test("een leerling beoordelen, opslaan en terugzien bij Controle", async ({ page
   page.expectNoErrors();
 });
 
+test("na het opslaan wordt geen volgende leerling aangevinkt", async ({ page }) => {
+  await openTool(page);
+  await kiesKlasEnEvaluatie(page);
+  await page.locator("#studentGrid .student-cb").nth(2).check();
+  const kaarten = page.locator("#rubrics .rubric-card");
+  const n = await kaarten.count();
+  for (let i = 0; i < n; i++) await kaarten.nth(i).locator(".option-btn").last().click();
+  await page.click("#btnSave");
+
+  expect(await page.evaluate(() => rows().length)).toBe(1);
+  await expect(page.locator("#studentGrid .student-cb:checked")).toHaveCount(0);
+  page.expectNoErrors();
+});
+
 test("opslaan zonder alle criteria geeft een duidelijke melding", async ({ page }) => {
   await openTool(page);
   await kiesKlasEnEvaluatie(page);

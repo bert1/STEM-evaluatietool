@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.34.0.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.34.1.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -229,7 +229,8 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
    **feedforward** (wat doet de leerling de volgende keer anders) in. Die
    tekst komt later mee in de feedback die je vanuit het tabblad Skore
    naar Smartschool kopieert.
-8. Klik op **Opslaan**. De tool vinkt meteen de volgende leerling aan.
+8. Klik op **Opslaan**. Daarna staat er geen leerling meer aangevinkt:
+   kies zelf wie je als volgende beoordeelt, in de volgorde die jij wil.
 
 **Handig om te weten:**
 
