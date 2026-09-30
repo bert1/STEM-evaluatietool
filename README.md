@@ -5,7 +5,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.34.3.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.35.0.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -226,6 +226,9 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
    de groep aan: ze krijgen dezelfde score. Wie al beoordeeld is, heeft een
    groen label met de initialen van de beoordelaar en kan je niet meer
    aanvinken. Zo beoordeelt niemand een leerling per ongeluk twee keer.
+   Alle leerlingen staan altijd samen in beeld, ook als je meerdere klassen
+   kiest: je hoeft niet te schuiven en vergeet niemand. Bij meerdere klassen
+   staat de klas naast elke naam.
 6. Klik per criterium op het juiste **niveau**.
 7. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
    **feedforward** (wat doet de leerling de volgende keer anders) in. Die

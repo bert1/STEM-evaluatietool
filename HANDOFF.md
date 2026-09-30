@@ -1,6 +1,6 @@
 # HANDOFF — STEM Evaluatietool
 
-Laatst bijgewerkt: 30 september 2026, versie **1.34.3**.
+Laatst bijgewerkt: 30 september 2026, versie **1.35.0**.
 
 Dit document vat samen waar het project staat, zodat een nieuwe sessie hiermee
 kan starten zonder de volledige geschiedenis opnieuw te moeten meegeven. Geef
@@ -90,7 +90,19 @@ geschiedenis per versie.
 `build.js` schrijft altijd **twee** bestanden: een vaste naam (voor de
 testreeks) en een versie-benoemde kopie (voor de gebruiker).
 
-## Volledige featurelijst (huidige stand, 1.34.3)
+## Volledige featurelijst (huidige stand, 1.35.0)
+
+- **Leerlingenlijst zonder schuifbalk** (1.35.0, gevraagd door de
+  gebruiker: "alles in één scherm, anders vergeet je een naam").
+  `.checkbox-grid` heeft geen `max-height`/`overflow` meer; bij meerdere
+  klassen krijgt `#studentGrid` de klasse `multi-klas` (bredere
+  kolommen, 290px). De naam staat in `.student-name` (één regel, met
+  `title`). Test "leerlingenlijst: geen schuifbalk ..." meet bij
+  1366x768 dat niets schuift, alle rijen even hoog zijn en geen naam
+  afgekapt is. Zelfde versie: `renderTeamProgress()` telt via
+  `rowsForSelection()` over alle sessies van dit evaluatiemoment
+  (zelfde afbakening als `evaluatedMap()`), en de hint in `index.html`
+  spreekt niet meer over doorschuiven.
 
 - **Groeigrafiek met combinaties van klassen** (1.34.3):
   `goalTrendSeries()` in `js/goals.js` filtert niet meer op de sessieklas

@@ -1549,14 +1549,19 @@ button.status.status-action { outline: 2px solid currentColor; outline-offset: 1
 
 .checkbox-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: 6px;
-  padding: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 2px 6px;
+  padding: 10px 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  max-height: 260px;
-  overflow-y: auto;
   background: #fcfdfe;
+}
+/* Sinds 1.35.0: geen vaste hoogte en geen schuifbalk meer. Alle
+   leerlingen staan altijd samen in beeld, zodat je niemand vergeet.
+   Bij meerdere klassen komt er een klaslabel bij: bredere kolommen,
+   zodat een naam niet over twee regels loopt. */
+.checkbox-grid.multi-klas {
+  grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
 }
 .student {
   display: flex;
@@ -1577,6 +1582,13 @@ button.status.status-action { outline: 2px solid currentColor; outline-offset: 1
 .student.done { cursor: default; color: var(--muted); }
 .student.done:hover { background: transparent; }
 .student.done input { cursor: not-allowed; }
+.student .student-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .student .student-right {
   margin-left: auto;
   display: flex;
@@ -2740,7 +2752,7 @@ table.feedup-table td {
 
         <p class="hint" style="margin: -6px 0 14px">
           Typ <strong>1-5</strong> om een criterium te scoren. De tool springt automatisch naar het
-          volgende. Na het opslaan van één leerling schuift de tool door naar de eerstvolgende.
+          volgende. Na het opslaan kies je zelf wie je als volgende beoordeelt.
         </p>
 
         <div class="progress-wrap">
@@ -2845,7 +2857,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.34.3.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.35.0.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -3066,6 +3078,9 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
    de groep aan: ze krijgen dezelfde score. Wie al beoordeeld is, heeft een
    groen label met de initialen van de beoordelaar en kan je niet meer
    aanvinken. Zo beoordeelt niemand een leerling per ongeluk twee keer.
+   Alle leerlingen staan altijd samen in beeld, ook als je meerdere klassen
+   kiest: je hoeft niet te schuiven en vergeet niemand. Bij meerdere klassen
+   staat de klas naast elke naam.
 6. Klik per criterium op het juiste **niveau**.
 7. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
    **feedforward** (wat doet de leerling de volgende keer anders) in. Die
@@ -5810,7 +5825,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.34.3";
+var APP_VERSION = "1.35.0";
 
 var DB_VERSION = 4;
 
@@ -9672,6 +9687,7 @@ function renderStudents() {
   var list = data.names;
   var done = evaluatedMap();
   var showKlasBadge = cur.klassen.length > 1;
+  grid.classList.toggle("multi-klas", showKlasBadge);
 
   list.forEach(function (student) {
     var label = el("label", "student");
@@ -9681,7 +9697,8 @@ function renderStudents() {
     cb.className = "student-cb";
     cb.addEventListener("change", updateTotals);
     label.appendChild(cb);
-    label.appendChild(el("span", null, student));
+    label.appendChild(el("span", "student-name", student));
+    label.title = student;
 
     var right = el("span", "student-right");
     if (showKlasBadge && data.klasByName[student]) {
@@ -9694,7 +9711,7 @@ function renderStudents() {
       // Bewerken in de tabel onderaan (dan telt die rij hier niet mee).
       cb.disabled = true;
       label.classList.add("done");
-      label.title = "Al beoordeeld door " + done[student] + ". Aanpassen kan met Bewerken in de tabel onderaan.";
+      label.title = student + ": al beoordeeld door " + done[student] + ". Aanpassen kan met Bewerken in de tabel onderaan.";
     }
     label.appendChild(right);
 
@@ -9725,13 +9742,33 @@ function renderProgress(list, done) {
 
 
 
+/* Alle rijen van dit jaar en dit evaluatiemoment, over elke
+   klas(-combinatie) heen, met enkel de leerlingen van de huidige
+   klaskeuze. Zelfde afbakening als evaluatedMap(), zodat de teller per
+   beoordelaar klopt met "x van y leerlingen beoordeeld" (sinds 1.35.0;
+   daarvoor telde enkel de sessie van precies deze klaskeuze). */
+function rowsForSelection() {
+  var out = [];
+  Object.keys(db.sessions || {}).forEach(function (key) {
+    var p = parseSessionKey(key);
+    if (p.year !== cur.year || p.evaluation !== cur.evaluation) return;
+    (db.sessions[key] || []).forEach(function (r) {
+      var students = (r.students || []).filter(function (s) {
+        return cur.klassen.indexOf(klasOfStudentInRow(db, cur.year, r, s, p.klas)) !== -1;
+      });
+      if (students.length) out.push({ assessor: r.assessor, students: students });
+    });
+  });
+  return out;
+}
+
 /* Wie van het team heeft hoeveel gedaan in deze klas? */
 function renderTeamProgress(list) {
   var host = $("teamProgress");
   host.innerHTML = "";
 
   var assigned = teamForKlassen(db, cur.year, cur.klassen);
-  var prog = progressByAssessor(rows(), list);
+  var prog = progressByAssessor(rowsForSelection(), list);
   var seen = Object.keys(prog.byAssessor);
   var everyone = assigned.slice();
   seen.forEach(function (a) { if (everyone.indexOf(a) === -1) everyone.push(a); });

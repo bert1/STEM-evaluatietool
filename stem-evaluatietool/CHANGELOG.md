@@ -13,6 +13,23 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.35.0 · 30 september 2026
+
+**Alle leerlingen samen in beeld**
+
+- De leerlingenlijst bij Evalueren heeft geen schuifbalk meer: alle
+  leerlingen staan altijd samen in beeld, zodat je niemand vergeet.
+- Bij meerdere klassen zijn de kolommen breder, zodat een naam met het
+  klaslabel en de initialen van de beoordelaar niet meer over twee regels
+  loopt en de rijen gelijk blijven.
+- De teller per beoordelaar (bijvoorbeeld "BOLB: 10") en "nog ..." tellen
+  nu ook beoordelingen mee die met een andere klaskeuze gemaakt zijn,
+  zoals "x van y leerlingen beoordeeld" al deed. Eerder stond er bij één
+  klas "BOLB: 0" terwijl die leerlingen in een combinatie beoordeeld
+  waren.
+- De uitleg bovenaan het formulier zegt niet meer dat de tool na het
+  opslaan doorschuift naar de volgende leerling (weg sinds 1.34.1).
+
 ## 1.34.3 · 30 september 2026
 
 **Groeigrafiek: combinaties van klassen tellen mee**
