@@ -1574,6 +1574,9 @@ button.status.status-action { outline: 2px solid currentColor; outline-offset: 1
 }
 .student:hover { background: var(--primary-soft); }
 .student input { accent-color: var(--primary); width: 16px; height: 16px; flex: none; }
+.student.done { cursor: default; color: var(--muted); }
+.student.done:hover { background: transparent; }
+.student.done input { cursor: not-allowed; }
 .student .student-right {
   margin-left: auto;
   display: flex;
@@ -2842,7 +2845,7 @@ controleert wat er nog ontbreekt en ziet per rapportperiode welke punten je
 nog in Skore moet zetten. De tool werkt volledig offline: je gegevens blijven
 op je eigen computer en in je eigen OneDrive.
 
-> **Huidige versie: 1.34.1.** Het versienummer staat ook rechtsboven in de
+> **Huidige versie: 1.34.2.** Het versienummer staat ook rechtsboven in de
 > tool. Deze handleiding staat ook in de tool zelf: **Instellingen**, **Help**.
 > Wat er per versie veranderd is, lees je in
 > [`stem-evaluatietool/CHANGELOG.md`](stem-evaluatietool/CHANGELOG.md).
@@ -3060,7 +3063,9 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
    zoeken (hoofdletters en accenten maken niet uit). Blijft er één evaluatie
    over, dan kies je die met **Enter**.
 5. Vink de **leerling** aan. Voor **groepswerk** vink je alle leerlingen van
-   de groep aan: ze krijgen dezelfde score.
+   de groep aan: ze krijgen dezelfde score. Wie al beoordeeld is, heeft een
+   groen label met de initialen van de beoordelaar en kan je niet meer
+   aanvinken. Zo beoordeelt niemand een leerling per ongeluk twee keer.
 6. Klik per criterium op het juiste **niveau**.
 7. Vul eventueel **feedback** (wat ging goed, wat kon beter) en
    **feedforward** (wat doet de leerling de volgende keer anders) in. Die
@@ -3081,7 +3086,9 @@ In Firefox of Safari kan de tool niet vanzelf in de gedeelde map bewaren.
   hoeven niet alle criteria ingevuld te zijn, en telt het niet mee in de
   controle en in Skore.
 - **Bewerken of verwijderen:** onderaan staat een tabel met alle
-  beoordelingen van deze klas. Gebruik **Bewerk** of **Verwijder**.
+  beoordelingen van deze klas. Gebruik **Bewerk** of **Verwijder**. Wil je
+  een leerling die al beoordeeld is aanpassen, gebruik dan **Bewerk** bij
+  die rij: dan kan je die leerling weer aanvinken.
 - **Kopieer tabel** en **Exporteren naar Excel** zetten die tabel over naar
   Excel.
 - De tool onthoudt de **datum** van elke beoordeling. Die bepaalt in welke
@@ -5803,7 +5810,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.34.1";
+var APP_VERSION = "1.34.2";
 
 var DB_VERSION = 4;
 
@@ -6232,6 +6239,24 @@ function convertLegacyExport(obj, config) {
   return db;
 }
 
+/* De klas per leerling van een rij (sinds 1.14.0). Tot 1.34.2 ging dit
+   veld bij het inlezen van het bestand verloren, zodat beoordelingen in
+   een combinatie van klassen na het heropenen niet meer als "al
+   beoordeeld" herkend werden. Geeft undefined als er niets bruikbaars is:
+   dan valt klasOfStudentInRow() terug op de sessie en de klaslijst. */
+function cleanStudentKlas(raw) {
+  if (!raw || typeof raw !== "object") return undefined;
+  var out = {};
+  var any = false;
+  Object.keys(raw).forEach(function (name) {
+    if (typeof raw[name] === "string" && raw[name]) {
+      out[name] = raw[name];
+      any = true;
+    }
+  });
+  return any ? out : undefined;
+}
+
 function splitLegacyNames(names) {
   if (Array.isArray(names)) return names;
   return String(names || "")
@@ -6306,6 +6331,7 @@ function normaliseDb(db) {
           feedback: r.feedback || "",
           feedforward: r.feedforward || "",
           corrections: corrections,
+          studentKlas: cleanStudentKlas(r.studentKlas),
           createdAt: r.createdAt || 0,
           updatedAt: r.updatedAt || 0,
         };
@@ -7167,7 +7193,7 @@ function migrateStudentEvaluations(year, student, toKlas, fromKlas) {
 
       if (!row.studentKlas) {
         row.studentKlas = {};
-        row.students.forEach(function (s) { row.studentKlas[s] = p.klas; });
+        row.students.forEach(function (s) { row.studentKlas[s] = klasOfStudentInRow(db, year, row, s, p.klas); });
       }
       row.studentKlas[student] = toKlas;
       row.updatedAt = now;
@@ -7845,6 +7871,23 @@ function studentsForKlassen(db, year, klassen) {
   });
   names.sort(function (a, b) { return a.localeCompare(b, "nl"); });
   return { names: names, klasByName: seen };
+}
+
+
+
+/* De echte klas van één leerling in een opgeslagen rij. Eerst
+   row.studentKlas. Ontbreekt dat (rijen van vóór 1.14.0, of rijen die
+   tot 1.34.2 hun studentKlas verloren bij het inlezen van het bestand),
+   dan de klas van de sessie. Is die sessie een combinatie ("1WM+1WTa"),
+   dan zoeken we de leerling op in de klaslijsten van die klassen. */
+function klasOfStudentInRow(dbObj, year, row, name, sessionKlas) {
+  if (row.studentKlas && row.studentKlas[name]) return row.studentKlas[name];
+  if (String(sessionKlas || "").indexOf("+") === -1) return sessionKlas;
+  var parts = sessionKlas.split("+");
+  for (var i = 0; i < parts.length; i++) {
+    if (studentsFor(dbObj, year, parts[i]).indexOf(name) !== -1) return parts[i];
+  }
+  return sessionKlas;
 }
 
 
@@ -9612,7 +9655,7 @@ function evaluatedMap() {
     (db.sessions[key] || []).forEach(function (r) {
       if (r.id === form.editId) return;
       (r.students || []).forEach(function (s) {
-        var klas = (r.studentKlas && r.studentKlas[s]) || p.klas;
+        var klas = klasOfStudentInRow(db, cur.year, r, s, p.klas);
         if (cur.klassen.indexOf(klas) === -1) return;
         map[s] = r.assessor || "?";
       });
@@ -9646,7 +9689,12 @@ function renderStudents() {
     }
     if (done[student]) {
       right.appendChild(el("span", "who", done[student]));
-      label.title = "Al beoordeeld door " + done[student];
+      // Al beoordeeld: niet meer aan te vinken, zodat niemand een
+      // leerling per ongeluk twee keer beoordeelt. Aanpassen kan via
+      // Bewerken in de tabel onderaan (dan telt die rij hier niet mee).
+      cb.disabled = true;
+      label.classList.add("done");
+      label.title = "Al beoordeeld door " + done[student] + ". Aanpassen kan met Bewerken in de tabel onderaan.";
     }
     label.appendChild(right);
 
@@ -12687,7 +12735,7 @@ function collectResults(db, year, evaluation, klasFilter) {
         // die per leerling in row.studentKlas; oudere rijen zonder dat
         // veld hadden altijd precies één echte klas per sessie, dus is
         // de klas van de sessie zelf (p.klas) daar het juiste antwoord.
-        var klas = (row.studentKlas && row.studentKlas[name]) || p.klas;
+        var klas = klasOfStudentInRow(db, year, row, name, p.klas);
         classes[klas] = true;
         if (klasFilter && klasFilter !== "*" && klas !== klasFilter) return;
 
@@ -12852,7 +12900,7 @@ function coverageMatrix(db, year) {
     if (p.year !== year) return;
     (db.sessions[key] || []).forEach(function (row) {
       (row.students || []).forEach(function (s) {
-        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var klas = klasOfStudentInRow(db, year, row, s, p.klas);
         var cellKey = klas + "||" + p.evaluation;
         if (!doneBy[cellKey]) doneBy[cellKey] = {};
         doneBy[cellKey][s] = true;
@@ -17339,7 +17387,7 @@ function collectSkore(dbObj, year, klas, periods, periodIndex) {
       var groupTotal = rowTotal(row, rubrics);
 
       (row.students || []).forEach(function (name) {
-        var studentKlas = (row.studentKlas && row.studentKlas[name]) || p.klas;
+        var studentKlas = klasOfStudentInRow(dbObj, year, row, name, p.klas);
         if (studentKlas !== klas) return;
 
         if (!byEval[p.evaluation]) {
@@ -17944,7 +17992,7 @@ function controleScan(year) {
     (db.sessions[key] || []).forEach(function (row) {
       var date = rowDateIso(row);
       (row.students || []).forEach(function (s) {
-        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var klas = klasOfStudentInRow(db, year, row, s, p.klas);
         var k = p.evaluation + "||" + klas;
         if (!out[k]) out[k] = { students: {}, dates: [], rowDates: {} };
         var cell = out[k];

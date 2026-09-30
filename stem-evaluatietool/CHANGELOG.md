@@ -13,6 +13,23 @@ Niet te verwarren met `DB_VERSION` in de broncode — dat is een apart getal
 voor het opslagformaat van een werkbestand, en verandert enkel wanneer de
 opbouw van dat bestand zelf wijzigt (voor migraties van oude bestanden).
 
+## 1.34.2 · 30 september 2026
+
+**Al beoordeelde leerlingen blijven herkend, ook na heropenen**
+
+- Bij een combinatie van klassen (bijvoorbeeld 1WM + 1WTa) verdwenen na
+  het heropenen van de tool de initialen van de beoordelaar bij de
+  leerlingen; enkel de laatst opgeslagen leerling bleef gemarkeerd. De
+  tabel onderaan en de teller per beoordelaar klopten wel. Oorzaak: bij
+  het inlezen van het bestand viel de klas per leerling
+  (`row.studentKlas`) weg (`normaliseDb()`). Die blijft nu bewaard.
+- Rijen die dat veld al kwijt waren, worden toch juist herkend: de tool
+  zoekt de leerling op in de klaslijsten van de combinatie
+  (`klasOfStudentInRow()`). Dat geldt ook voor Resultaten, Controle,
+  Skore en de dekking over het schooljaar.
+- Het vinkje van een leerling die al beoordeeld is, is uitgeschakeld.
+  Aanpassen kan via **Bewerk** in de tabel onderaan.
+
 ## 1.34.1 · 30 september 2026
 
 **Geen automatische volgende leerling meer na Opslaan**

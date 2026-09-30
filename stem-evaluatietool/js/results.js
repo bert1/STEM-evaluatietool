@@ -155,7 +155,7 @@ function collectResults(db, year, evaluation, klasFilter) {
         // die per leerling in row.studentKlas; oudere rijen zonder dat
         // veld hadden altijd precies één echte klas per sessie, dus is
         // de klas van de sessie zelf (p.klas) daar het juiste antwoord.
-        var klas = (row.studentKlas && row.studentKlas[name]) || p.klas;
+        var klas = klasOfStudentInRow(db, year, row, name, p.klas);
         classes[klas] = true;
         if (klasFilter && klasFilter !== "*" && klas !== klasFilter) return;
 
@@ -320,7 +320,7 @@ function coverageMatrix(db, year) {
     if (p.year !== year) return;
     (db.sessions[key] || []).forEach(function (row) {
       (row.students || []).forEach(function (s) {
-        var klas = (row.studentKlas && row.studentKlas[s]) || p.klas;
+        var klas = klasOfStudentInRow(db, year, row, s, p.klas);
         var cellKey = klas + "||" + p.evaluation;
         if (!doneBy[cellKey]) doneBy[cellKey] = {};
         doneBy[cellKey][s] = true;

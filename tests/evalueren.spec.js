@@ -59,3 +59,70 @@ test("opslaan zonder alle criteria geeft een duidelijke melding", async ({ page 
   expect(await page.evaluate(() => rows().length)).toBe(0);
   page.expectNoErrors();
 });
+
+/* Sinds 1.34.2: in een combinatie van klassen bleef na het heropenen van
+   de tool enkel de laatst opgeslagen leerling als "al beoordeeld" staan,
+   omdat de klas per leerling (row.studentKlas) bij het inlezen wegviel. */
+async function kiesTweeKlassen(page) {
+  await page.selectOption("#yearSelect", "1ste jaar");
+  await page.click("#klasMultiInput");
+  await page.locator("#klasMultiPanel .klas-multi-option").nth(0).click();
+  await page.locator("#klasMultiPanel .klas-multi-option").nth(1).click();
+  await page.click("#evalComboInput");
+  await page.locator("#evalComboPanel .eval-combo-option").first().click();
+}
+
+async function beoordeel(page, index) {
+  await page.locator("#studentGrid .student-cb").nth(index).check();
+  const kaarten = page.locator("#rubrics .rubric-card");
+  const n = await kaarten.count();
+  for (let i = 0; i < n; i++) await kaarten.nth(i).locator(".option-btn").last().click();
+  await page.click("#btnSave");
+}
+
+test("beoordeelde leerlingen: naam van de beoordelaar blijft, vinkje uitgeschakeld, ook na heropenen", async ({ page }) => {
+  await openTool(page);
+  await kiesTweeKlassen(page);
+  expect(await page.evaluate(() => cur.klassen.length)).toBe(2);
+  await beoordeel(page, 0);
+  await beoordeel(page, 3);
+
+  const controleer = async () => {
+    for (const i of [0, 3]) {
+      const rij = page.locator("#studentGrid .student").nth(i);
+      await expect(rij.locator(".who")).toHaveText("TST");
+      await expect(rij.locator(".student-cb")).toBeDisabled();
+    }
+    await expect(page.locator("#studentGrid .student").nth(1).locator(".student-cb")).toBeEnabled();
+    await expect(page.locator("#progressText")).toContainText("2 van");
+  };
+  await controleer();
+
+  await page.reload();
+  await expect(page.locator("#setupWizard")).toBeHidden();
+  await kiesTweeKlassen(page);
+  expect(await page.evaluate(() => rows().every((r) => r.studentKlas && Object.keys(r.studentKlas).length === 1))).toBe(true);
+  await controleer();
+
+  // Bewerken maakt de leerling van die rij weer aan te vinken.
+  await page.locator("#tableBody tr").first().locator("button", { hasText: "Bewerk" }).click();
+  await expect(page.locator("#studentGrid .student-cb:checked")).toHaveCount(1);
+  await expect(page.locator("#studentGrid .student-cb:checked")).toBeEnabled();
+  page.expectNoErrors();
+});
+
+test("oudere rij zonder klas per leerling in een combinatie: toch herkend via de klaslijst", async ({ page }) => {
+  await openTool(page);
+  await kiesTweeKlassen(page);
+  await beoordeel(page, 0);
+  await beoordeel(page, 3);
+  await page.evaluate(() => {
+    rows().forEach((r) => { delete r.studentKlas; });
+    renderStudents();
+  });
+  for (const i of [0, 3]) {
+    await expect(page.locator("#studentGrid .student").nth(i).locator(".student-cb")).toBeDisabled();
+  }
+  await expect(page.locator("#progressText")).toContainText("2 van");
+  page.expectNoErrors();
+});

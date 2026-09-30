@@ -128,7 +128,7 @@ function rows() { return db.sessions[cur.key] || []; }
    opslagformaat van een werkbestand, voor migraties. Deze verandert bij
    elke release; DB_VERSION enkel als de opbouw van een werkbestand zelf
    wijzigt. Zie CHANGELOG.md voor wat er per versie veranderd is. */
-var APP_VERSION = "1.34.1";
+var APP_VERSION = "1.34.2";
 
 var DB_VERSION = 4;
 
@@ -557,6 +557,24 @@ function convertLegacyExport(obj, config) {
   return db;
 }
 
+/* De klas per leerling van een rij (sinds 1.14.0). Tot 1.34.2 ging dit
+   veld bij het inlezen van het bestand verloren, zodat beoordelingen in
+   een combinatie van klassen na het heropenen niet meer als "al
+   beoordeeld" herkend werden. Geeft undefined als er niets bruikbaars is:
+   dan valt klasOfStudentInRow() terug op de sessie en de klaslijst. */
+function cleanStudentKlas(raw) {
+  if (!raw || typeof raw !== "object") return undefined;
+  var out = {};
+  var any = false;
+  Object.keys(raw).forEach(function (name) {
+    if (typeof raw[name] === "string" && raw[name]) {
+      out[name] = raw[name];
+      any = true;
+    }
+  });
+  return any ? out : undefined;
+}
+
 function splitLegacyNames(names) {
   if (Array.isArray(names)) return names;
   return String(names || "")
@@ -631,6 +649,7 @@ function normaliseDb(db) {
           feedback: r.feedback || "",
           feedforward: r.feedforward || "",
           corrections: corrections,
+          studentKlas: cleanStudentKlas(r.studentKlas),
           createdAt: r.createdAt || 0,
           updatedAt: r.updatedAt || 0,
         };
